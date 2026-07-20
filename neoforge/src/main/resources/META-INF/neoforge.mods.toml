@@ -1,0 +1,33 @@
+modLoader = "javafml"
+loaderVersion = "[2,)"
+license = "MIT"
+
+[[mods]]
+modId = "codex"
+version = "${version}"
+displayName = "Codex"
+authors = "Replace Me"
+description = '''
+Starter Architectury mod template for Minecraft 26.1.2.
+'''
+
+[[dependencies.codex]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.codex]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.1.2,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.codex]]
+modId = "architectury"
+type = "required"
+versionRange = "[20.0.0,)"
+ordering = "AFTER"
+side = "BOTH"

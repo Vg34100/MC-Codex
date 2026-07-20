@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "codex",
+  "version": "${version}",
+  "name": "Codex",
+  "description": "Starter Architectury mod template for Minecraft 26.1.2.",
+  "authors": [
+    "Replace Me"
+  ],
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.vg.codex.fabric.ModMainFabric"
+    ],
+    "client": [
+      "net.vg.codex.fabric.client.ModMainFabricClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "26.1.2",
+    "java": ">=25",
+    "architectury": ">=20.0.0",
+    "fabric-api": "*"
+  }
+}
