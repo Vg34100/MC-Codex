@@ -3,16 +3,22 @@ package net.vg.codex.network;
 import dev.architectury.networking.NetworkManager;
 import dev.architectury.platform.Platform;
 import dev.architectury.utils.Env;
+import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.vg.codex.advancement.AdvancementPackIO;
 import net.vg.codex.advancement.AdvancementPackSync;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 
 public final class AdvancementEditorNetworking {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AdvancementEditorNetworking.class);
+
     private AdvancementEditorNetworking() {
     }
 
@@ -40,10 +46,26 @@ public final class AdvancementEditorNetworking {
             MinecraftServer server = player.level().getServer();
             HolderLookup.Provider registries = server.registryAccess();
             Path packDir = AdvancementPackSync.externalPackDir();
-            for (var holder : payload.advancements()) {
-                AdvancementPackIO.write(packDir, holder, registries);
+            int written = 0;
+            int failed = 0;
+            for (AdvancementHolder holder : payload.advancements()) {
+                try {
+                    AdvancementPackIO.write(packDir, holder, registries);
+                    written++;
+                } catch (RuntimeException e) {
+                    failed++;
+                    LOGGER.error("Failed to write advancement {}", holder.id(), e);
+                }
             }
-            AdvancementPackSync.onServerStarting(server);
+            if (written > 0) {
+                AdvancementPackSync.onServerStarting(server);
+            }
+            if (failed == 0) {
+                player.sendSystemMessage(Component.literal("Codex: saved " + written + " advancement(s)."));
+            } else {
+                player.sendSystemMessage(Component.literal(
+                        "Codex: saved " + written + ", failed " + failed + " (see server log)."));
+            }
         });
     }
 }

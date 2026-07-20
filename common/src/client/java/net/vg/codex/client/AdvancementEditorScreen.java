@@ -6,31 +6,43 @@ import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.vg.codex.network.SaveAdvancementTreePayload;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Minimal v1 editor: search/select an existing advancement (including vanilla ones) that has
  * display info, edit its title/description, and save. This exists to prove out the
  * command -> network -> screen -> network -> write/reload pipeline end to end before building the
  * full drag-and-connect node graph on top of it.
+ *
+ * <p>Only edited entries are ever sent back to the server - the full snapshot can include
+ * thousands of advancements (including synthetic, non-file-backed ones like per-recipe unlock
+ * advancements), and re-encoding every one of them on every save is both wasteful and unsafe.
  */
 public final class AdvancementEditorScreen extends Screen {
     private static final int ROW_HEIGHT = 14;
-    private static final int MAX_RESULTS = 12;
+    private static final int PANEL_WIDTH = 320;
 
     private final List<AdvancementHolder> current;
     private final List<AdvancementHolder> matches = new ArrayList<>();
     private final List<Button> resultButtons = new ArrayList<>();
+    private final Map<Identifier, AdvancementHolder> dirty = new LinkedHashMap<>();
 
+    private int maxResults;
     private EditBox searchBox;
     private EditBox titleBox;
     private EditBox descriptionBox;
+    private StringWidget statusWidget;
     private AdvancementHolder selected;
 
     public AdvancementEditorScreen(List<AdvancementHolder> advancements) {
@@ -40,33 +52,47 @@ public final class AdvancementEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        int left = this.width / 2 - 150;
-        int top = 32;
+        int left = Math.max(10, (this.width - PANEL_WIDTH) / 2);
+        int panelWidth = Math.min(PANEL_WIDTH, this.width - 20);
+        int top = 16;
+        int searchHeight = 16;
 
-        searchBox = addRenderableWidget(new EditBox(this.font, left, top, 300, 18, Component.literal("Search")));
+        // Detail panel (title/description/buttons/status) is anchored to the bottom of the
+        // screen so it's always visible regardless of screen height or GUI scale, instead of
+        // being pushed off-screen by however many result rows happen to fit above it.
+        int detailHeight = 16 + 4 + 16 + 4 + 20 + 4 + 10;
+        int detailTop = this.height - detailHeight - 10;
+
+        searchBox = addRenderableWidget(new EditBox(this.font, left, top, panelWidth, searchHeight, Component.literal("Search")));
         searchBox.setResponder(text -> refreshResults());
 
+        int resultsTop = top + searchHeight + 6;
+        int resultsBottom = detailTop - 6;
+        maxResults = Math.max(1, (resultsBottom - resultsTop) / ROW_HEIGHT);
+
         resultButtons.clear();
-        for (int i = 0; i < MAX_RESULTS; i++) {
+        for (int i = 0; i < maxResults; i++) {
             int index = i;
-            int y = top + 24 + i * ROW_HEIGHT;
+            int y = resultsTop + i * ROW_HEIGHT;
             Button button = addRenderableWidget(Button.builder(Component.empty(), b -> selectMatch(index))
-                    .bounds(left, y, 300, ROW_HEIGHT - 2)
+                    .bounds(left, y, panelWidth, ROW_HEIGHT - 2)
                     .build());
             button.visible = false;
             resultButtons.add(button);
         }
 
-        int detailTop = top + 24 + MAX_RESULTS * ROW_HEIGHT + 10;
-        titleBox = addRenderableWidget(new EditBox(this.font, left, detailTop, 300, 18, Component.literal("Title")));
-        descriptionBox = addRenderableWidget(new EditBox(this.font, left, detailTop + 22, 300, 18, Component.literal("Description")));
+        titleBox = addRenderableWidget(new EditBox(this.font, left, detailTop, panelWidth, 16, Component.literal("Title")));
+        descriptionBox = addRenderableWidget(new EditBox(this.font, left, detailTop + 20, panelWidth, 16, Component.literal("Description")));
 
+        int buttonWidth = (panelWidth - 10) / 2;
         addRenderableWidget(Button.builder(Component.literal("Apply Edit"), b -> applyEdit())
-                .bounds(left, detailTop + 46, 145, 20)
+                .bounds(left, detailTop + 40, buttonWidth, 20)
                 .build());
         addRenderableWidget(Button.builder(Component.literal("Save"), b -> save())
-                .bounds(left + 155, detailTop + 46, 145, 20)
+                .bounds(left + buttonWidth + 10, detailTop + 40, buttonWidth, 20)
                 .build());
+
+        statusWidget = addRenderableWidget(new StringWidget(left, detailTop + 64, panelWidth, 10, Component.empty(), this.font));
 
         refreshResults();
     }
@@ -85,7 +111,7 @@ public final class AdvancementEditorScreen extends Screen {
                 continue;
             }
             matches.add(holder);
-            if (matches.size() >= MAX_RESULTS) {
+            if (matches.size() >= maxResults) {
                 break;
             }
         }
@@ -94,7 +120,8 @@ public final class AdvancementEditorScreen extends Screen {
             if (i < matches.size()) {
                 AdvancementHolder holder = matches.get(i);
                 DisplayInfo display = holder.value().display().get();
-                button.setMessage(Component.literal(holder.id() + " - " + display.getTitle().getString()));
+                String prefix = dirty.containsKey(holder.id()) ? "* " : "";
+                button.setMessage(Component.literal(prefix + holder.id() + " - " + display.getTitle().getString()));
                 button.visible = true;
                 button.active = true;
             } else {
@@ -112,10 +139,12 @@ public final class AdvancementEditorScreen extends Screen {
         DisplayInfo display = selected.value().display().orElseThrow();
         titleBox.setValue(display.getTitle().getString());
         descriptionBox.setValue(display.getDescription().getString());
+        setStatus("");
     }
 
     private void applyEdit() {
         if (selected == null) {
+            setStatus("Select an advancement first.");
             return;
         }
         DisplayInfo old = selected.value().display().orElseThrow();
@@ -132,7 +161,7 @@ public final class AdvancementEditorScreen extends Screen {
         Advancement oldAdvancement = selected.value();
         Advancement updatedAdvancement = new Advancement(
                 oldAdvancement.parent(),
-                java.util.Optional.of(updated),
+                Optional.of(updated),
                 oldAdvancement.rewards(),
                 oldAdvancement.criteria(),
                 oldAdvancement.requirements(),
@@ -144,11 +173,26 @@ public final class AdvancementEditorScreen extends Screen {
         if (index >= 0) {
             current.set(index, updatedHolder);
         }
+        dirty.put(updatedHolder.id(), updatedHolder);
         selected = updatedHolder;
+        setStatus("Edit applied - not saved yet.");
         refreshResults();
     }
 
     private void save() {
-        NetworkManager.sendToServer(new SaveAdvancementTreePayload(List.copyOf(current)));
+        if (dirty.isEmpty()) {
+            setStatus("Nothing to save - apply an edit first.");
+            return;
+        }
+        NetworkManager.sendToServer(new SaveAdvancementTreePayload(List.copyOf(dirty.values())));
+        setStatus("Sent " + dirty.size() + " edit(s) to the server.");
+        dirty.clear();
+        refreshResults();
+    }
+
+    private void setStatus(String message) {
+        if (statusWidget != null) {
+            statusWidget.setMessage(Component.literal(message));
+        }
     }
 }
