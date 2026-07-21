@@ -3,14 +3,18 @@ package net.vg.codex.advancement;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
+import net.minecraft.server.packs.resources.ResourceProvider;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -69,14 +73,58 @@ public final class AdvancementPackIO {
     }
 
     public static void write(Path packDir, AdvancementHolder holder, HolderLookup.Provider registries) {
-        Path file = fileFor(packDir, holder.id());
         JsonElement json = Advancement.CODEC.encodeStart(RegistryOps.create(JsonOps.INSTANCE, registries), holder.value()).getOrThrow();
+        writeJson(fileFor(packDir, holder.id()), json.getAsJsonObject());
+    }
+
+    /**
+     * True if this id already resolves to a file, either in the editable pack folder or in
+     * whatever datapacks/vanilla data are currently loaded.
+     */
+    public static boolean exists(Path packDir, ResourceProvider resources, Identifier id) {
+        return Files.exists(fileFor(packDir, id)) || resources.getResource(resourceLocationFor(id)).isPresent();
+    }
+
+    /**
+     * Patches only the display block of an already-existing advancement (vanilla or otherwise),
+     * leaving criteria/requirements/rewards untouched as raw JSON. This deliberately avoids
+     * round-tripping the whole advancement through {@link Advancement#CODEC}: some vanilla
+     * advancements fail that codec's stricter encode-side validation (criteria/requirements
+     * consistency) even though they loaded fine, since decode is more lenient than encode.
+     * Patching JSON directly sidesteps that entirely for edits that only ever touch display info.
+     */
+    public static void patchDisplay(Path packDir, ResourceProvider resources, Identifier id, DisplayInfo display, HolderLookup.Provider registries) {
+        JsonObject json = readBaseJson(packDir, resources, id);
+        JsonElement displayJson = DisplayInfo.CODEC.encodeStart(RegistryOps.create(JsonOps.INSTANCE, registries), display).getOrThrow();
+        json.add("display", displayJson);
+        writeJson(fileFor(packDir, id), json);
+    }
+
+    private static JsonObject readBaseJson(Path packDir, ResourceProvider resources, Identifier id) {
+        Path localFile = fileFor(packDir, id);
+        try {
+            if (Files.exists(localFile)) {
+                return JsonParser.parseString(Files.readString(localFile, StandardCharsets.UTF_8)).getAsJsonObject();
+            }
+            try (BufferedReader reader = resources.getResourceOrThrow(resourceLocationFor(id)).openAsReader()) {
+                return JsonParser.parseReader(reader).getAsJsonObject();
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    private static void writeJson(Path file, JsonObject json) {
         try {
             Files.createDirectories(file.getParent());
             Files.writeString(file, GSON.toJson(json), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    private static Identifier resourceLocationFor(Identifier id) {
+        return Identifier.fromNamespaceAndPath(id.getNamespace(), ADVANCEMENT_DIR + "/" + id.getPath() + SUFFIX);
     }
 
     public static void delete(Path packDir, Identifier id) {

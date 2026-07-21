@@ -9,6 +9,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.packs.resources.ResourceProvider;
 import net.vg.codex.advancement.AdvancementPackIO;
 import net.vg.codex.advancement.AdvancementPackSync;
 import org.slf4j.Logger;
@@ -45,12 +46,21 @@ public final class AdvancementEditorNetworking {
             }
             MinecraftServer server = player.level().getServer();
             HolderLookup.Provider registries = server.registryAccess();
+            ResourceProvider resources = server.getResourceManager();
             Path packDir = AdvancementPackSync.externalPackDir();
             int written = 0;
             int failed = 0;
             for (AdvancementHolder holder : payload.advancements()) {
                 try {
-                    AdvancementPackIO.write(packDir, holder, registries);
+                    if (AdvancementPackIO.exists(packDir, resources, holder.id()) && holder.value().display().isPresent()) {
+                        // Existing advancement (vanilla or otherwise): patch just the display
+                        // block as raw JSON rather than round-tripping the whole thing through
+                        // Advancement.CODEC, which some vanilla advancements fail to re-encode
+                        // even though they loaded fine (decode is more lenient than encode).
+                        AdvancementPackIO.patchDisplay(packDir, resources, holder.id(), holder.value().display().get(), registries);
+                    } else {
+                        AdvancementPackIO.write(packDir, holder, registries);
+                    }
                     written++;
                 } catch (RuntimeException e) {
                     failed++;
