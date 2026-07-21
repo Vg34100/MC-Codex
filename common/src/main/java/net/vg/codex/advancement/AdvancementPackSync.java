@@ -13,6 +13,7 @@ import net.minecraft.server.commands.ReloadCommand;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.metadata.pack.PackFormat;
 import net.minecraft.server.packs.metadata.pack.PackMetadataSection;
+import net.minecraft.server.packs.repository.PackRepository;
 import net.minecraft.util.InclusiveRange;
 import net.minecraft.world.level.storage.LevelResource;
 
@@ -22,6 +23,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -45,13 +48,24 @@ public final class AdvancementPackSync {
             ensurePackSkeleton();
             Path worldPackDir = server.getWorldPath(LevelResource.DATAPACK_DIR).resolve(PACK_ID);
             copyTree(externalPackDir(), worldPackDir);
-            // getAvailableIds() (every discovered pack, in arbitrary discovery order) is NOT what
-            // vanilla's own /reload passes here - it uses getSelectedIds(), preserving whatever
-            // priority order was already established, which is what keeps "vanilla" pinned to its
-            // required bottom position instead of potentially overriding our pack. Passing
-            // getAvailableIds() here scrambled that order and let vanilla's own advancement data
-            // win over ours despite our file being valid and enabled.
-            ReloadCommand.reloadPacks(server.getPackRepository().getSelectedIds(), server.createCommandSourceStack());
+
+            // ReloadCommand.reloadPacks() alone does NOT rescan disk for newly-appeared packs -
+            // it only reloads content for whatever's already selected. Rediscovery only happens
+            // inside vanilla's private ReloadCommand.discoverNewPacks(), which real /reload calls
+            // first. On a brand new world, this pack's folder didn't exist yet when the world's
+            // initial pack list was built, so without replicating that discovery step ourselves,
+            // codex_advancements would never get selected for that server's entire lifetime -
+            // reloadPacks would just keep re-selecting the same stale (pack-less) set forever.
+            PackRepository repository = server.getPackRepository();
+            repository.reload();
+            List<String> disabled = server.getWorldData().getDataConfiguration().dataPacks().getDisabled();
+            List<String> selected = new ArrayList<>(repository.getSelectedIds());
+            for (String id : repository.getAvailableIds()) {
+                if (!disabled.contains(id) && !selected.contains(id)) {
+                    selected.add(id);
+                }
+            }
+            ReloadCommand.reloadPacks(selected, server.createCommandSourceStack());
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to sync codex advancement datapack", e);
         }
