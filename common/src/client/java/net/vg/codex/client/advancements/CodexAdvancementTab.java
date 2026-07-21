@@ -81,7 +81,7 @@ public final class CodexAdvancementTab {
     }
 
     public void addAdvancement(AdvancementNode node) {
-        if (node.advancement().display().isEmpty() || widgets.containsKey(node.holder())) {
+        if (widgets.containsKey(node.holder()) || node.advancement().display().isEmpty()) {
             return;
         }
         AdvancementNode parentNode = node.parent();
@@ -90,7 +90,15 @@ public final class CodexAdvancementTab {
         }
         CodexAdvancementWidget parentWidget = widgets.get(parentNode.holder());
         if (parentWidget == null) {
-            return;
+            // AdvancementTree.tasks is a plain (unordered) Set, so replay order from
+            // ClientAdvancements.setListener does not guarantee a parent is added before its
+            // children - walk the actual AdvancementNode.parent() chain (always valid regardless
+            // of set iteration order) to build any missing ancestors first.
+            addAdvancement(parentNode);
+            parentWidget = widgets.get(parentNode.holder());
+            if (parentWidget == null) {
+                return;
+            }
         }
         CodexAdvancementWidget widget = new CodexAdvancementWidget(node, node.advancement().display().get());
         parentWidget.addChild(widget);
@@ -103,6 +111,20 @@ public final class CodexAdvancementTab {
         minY = Math.min(minY, widget.y() - 30);
         maxX = Math.max(maxX, widget.x() + 30);
         maxY = Math.max(maxY, widget.y() + 30);
+    }
+
+    public CodexAdvancementWidget findHovered(int contentX, int contentY, double mouseX, double mouseY) {
+        if (mouseX < contentX || mouseY < contentY || mouseX >= contentX + CONTENT_WIDTH || mouseY >= contentY + CONTENT_HEIGHT) {
+            return null;
+        }
+        double localX = mouseX - contentX + Mth.floor(scrollX);
+        double localY = mouseY - contentY + Mth.floor(scrollY);
+        for (CodexAdvancementWidget widget : widgets.values()) {
+            if (widget.isMouseOver(localX, localY)) {
+                return widget;
+            }
+        }
+        return null;
     }
 
     public void scroll(double dx, double dy) {
@@ -141,8 +163,8 @@ public final class CodexAdvancementTab {
 
     public void extractContents(GuiGraphicsExtractor extractor, int contentX, int contentY, boolean showAll) {
         if (!centered) {
-            scrollX = 117 - (double) (maxX + minX) / 2;
-            scrollY = 56 - (double) (maxY + minY) / 2;
+            scrollX = (double) (maxX + minX) / 2 - 117;
+            scrollY = (double) (maxY + minY) / 2 - 56;
             centered = true;
         }
 

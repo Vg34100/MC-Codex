@@ -88,7 +88,13 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         extractor.text(this.font, title, left + 8, top + 6, 0xFF404040, false);
 
         if (selectedTab != null) {
-            selectedTab.extractContents(extractor, left + WINDOW_INSIDE_X, top + WINDOW_INSIDE_Y, false);
+            int contentX = left + WINDOW_INSIDE_X;
+            int contentY = top + WINDOW_INSIDE_Y;
+            selectedTab.extractContents(extractor, contentX, contentY, false);
+            var hovered = selectedTab.findHovered(contentX, contentY, mouseX, mouseY);
+            if (hovered != null) {
+                extractor.setTooltipForNextFrame(this.font, hovered.display().getTitle(), mouseX, mouseY);
+            }
         }
     }
 

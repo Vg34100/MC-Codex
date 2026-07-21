@@ -63,6 +63,10 @@ public final class CodexAdvancementWidget {
         children.add(child);
     }
 
+    public boolean isMouseOver(double localX, double localY) {
+        return localX >= x && localX < x + 26 && localY >= y && localY < y + 26;
+    }
+
     private boolean isVisible(boolean showAll) {
         if (showAll) {
             return true;
