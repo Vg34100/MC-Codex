@@ -13,6 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -93,7 +94,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             selectedTab.extractContents(extractor, contentX, contentY, false);
             var hovered = selectedTab.findHovered(contentX, contentY, mouseX, mouseY);
             if (hovered != null) {
-                extractor.setTooltipForNextFrame(this.font, hovered.display().getTitle(), mouseX, mouseY);
+                extractor.setComponentTooltipForNextFrame(this.font,
+                        List.of(hovered.display().getTitle(), hovered.display().getDescription()), mouseX, mouseY);
             }
         }
     }
