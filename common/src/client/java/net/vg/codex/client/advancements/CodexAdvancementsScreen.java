@@ -33,6 +33,11 @@ import java.util.Optional;
  * the full unfiltered server snapshot, so hidden/locked advancements are visible and editable too
  * - kept in a completely separate tab map so live ClientAdvancements updates (which keep arriving
  * in the background) never cross-contaminate the edit-mode view.
+ *
+ * <p>For op-permitted players the window is shifted left of screen-center to reserve a details
+ * panel on the right (stable regardless of whether edit mode is currently on, so panel widgets
+ * never need repositioning at runtime) - only whether the player *can* edit changes the layout,
+ * not the moment-to-moment edit-mode toggle state.
  */
 public final class CodexAdvancementsScreen extends Screen implements ClientAdvancements.Listener {
     private static final Identifier WINDOW_LOCATION = Identifier.fromNamespaceAndPath("minecraft", "textures/gui/advancements/window.png");
@@ -40,6 +45,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private static final int WINDOW_HEIGHT = 140;
     private static final int WINDOW_INSIDE_X = 9;
     private static final int WINDOW_INSIDE_Y = 18;
+    private static final int PANEL_WIDTH = 220;
+    private static final int PANEL_GAP = 10;
 
     private final Screen lastScreen;
     private final ClientAdvancements advancements;
@@ -68,6 +75,22 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         this.lastScreen = lastScreen;
     }
 
+    private boolean canEdit() {
+        return this.minecraft.player != null
+                && Commands.LEVEL_GAMEMASTERS.check(this.minecraft.player.permissions());
+    }
+
+    private int windowLeft() {
+        if (canEdit()) {
+            return Math.max(10, (this.width - WINDOW_WIDTH - PANEL_GAP - PANEL_WIDTH) / 2);
+        }
+        return Math.max(10, (this.width - WINDOW_WIDTH) / 2);
+    }
+
+    private int windowTop() {
+        return Math.max(10, (this.height - WINDOW_HEIGHT) / 2);
+    }
+
     @Override
     protected void init() {
         viewTabs.clear();
@@ -78,8 +101,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             advancements.setSelectedTab(first.getRootNode().holder(), true);
         }
 
-        int left = (this.width - WINDOW_WIDTH) / 2;
-        int top = (this.height - WINDOW_HEIGHT) / 2;
+        int left = windowLeft();
+        int top = windowTop();
         addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
                 .bounds(left + WINDOW_WIDTH - 90, top + WINDOW_HEIGHT + 6, 90, 20)
                 .build());
@@ -89,19 +112,27 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                     .bounds(left, top + WINDOW_HEIGHT + 6, 120, 20)
                     .build());
 
-            int panelTop = top + WINDOW_HEIGHT + 34;
-            titleBox = addRenderableWidget(new EditBox(this.font, left, panelTop, WINDOW_WIDTH, 16, Component.literal("Title")));
-            descriptionBox = addRenderableWidget(new EditBox(this.font, left, panelTop + 20, WINDOW_WIDTH, 16, Component.literal("Description")));
-            int buttonWidth = (WINDOW_WIDTH - 10) / 2;
+            int panelLeft = left + WINDOW_WIDTH + PANEL_GAP;
+            int panelTop = top;
+            titleBox = addRenderableWidget(new EditBox(this.font, panelLeft, panelTop, PANEL_WIDTH, 16, Component.literal("Title")));
+            descriptionBox = addRenderableWidget(new EditBox(this.font, panelLeft, panelTop + 20, PANEL_WIDTH, 16, Component.literal("Description")));
+            int buttonWidth = (PANEL_WIDTH - 10) / 2;
             applyEditButton = addRenderableWidget(Button.builder(Component.literal("Apply Edit"), b -> applyEdit())
-                    .bounds(left, panelTop + 40, buttonWidth, 20)
+                    .bounds(panelLeft, panelTop + 40, buttonWidth, 20)
                     .build());
             saveEditsButton = addRenderableWidget(Button.builder(Component.literal("Save"), b -> saveEdits())
-                    .bounds(left + buttonWidth + 10, panelTop + 40, buttonWidth, 20)
+                    .bounds(panelLeft + buttonWidth + 10, panelTop + 40, buttonWidth, 20)
                     .build());
-            statusWidget = addRenderableWidget(new StringWidget(left, panelTop + 64, WINDOW_WIDTH, 10, Component.empty(), this.font));
+            statusWidget = addRenderableWidget(new StringWidget(panelLeft, panelTop + 64, PANEL_WIDTH, 10, Component.empty(), this.font));
 
-            setEditPanelVisible(false);
+            // Screen.init() reruns on every window resize, which recreates these widgets fresh -
+            // restore whatever edit-mode/selection state was already active instead of always
+            // hiding the panel, otherwise resizing the window silently drops the open panel.
+            setEditPanelVisible(editMode);
+            if (editMode && selectedEditWidget != null) {
+                titleBox.setValue(selectedEditWidget.display().getTitle().getString());
+                descriptionBox.setValue(selectedEditWidget.display().getDescription().getString());
+            }
         }
     }
 
@@ -117,11 +148,6 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         if (statusWidget != null) {
             statusWidget.setMessage(Component.literal(message));
         }
-    }
-
-    private boolean canEdit() {
-        return this.minecraft.player != null
-                && Commands.LEVEL_GAMEMASTERS.check(this.minecraft.player.permissions());
     }
 
     private Component editModeLabel() {
@@ -194,8 +220,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     @Override
     public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        int left = (this.width - WINDOW_WIDTH) / 2;
-        int top = (this.height - WINDOW_HEIGHT) / 2;
+        int left = windowLeft();
+        int top = windowTop();
 
         extractor.blit(RenderPipelines.GUI_TEXTURED, WINDOW_LOCATION, left, top, 0.0F, 0.0F, WINDOW_WIDTH, WINDOW_HEIGHT, 256, 256);
 
@@ -229,8 +255,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
         if (event.button() == 0) {
-            int left = (this.width - WINDOW_WIDTH) / 2;
-            int top = (this.height - WINDOW_HEIGHT) / 2;
+            int left = windowLeft();
+            int top = windowTop();
             for (CodexAdvancementTab tab : activeTabs().values()) {
                 if (tab.isMouseOverTabButton(left, top, event.x(), event.y())) {
                     if (editMode) {
