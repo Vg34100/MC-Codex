@@ -45,7 +45,13 @@ public final class AdvancementPackSync {
             ensurePackSkeleton();
             Path worldPackDir = server.getWorldPath(LevelResource.DATAPACK_DIR).resolve(PACK_ID);
             copyTree(externalPackDir(), worldPackDir);
-            ReloadCommand.reloadPacks(server.getPackRepository().getAvailableIds(), server.createCommandSourceStack());
+            // getAvailableIds() (every discovered pack, in arbitrary discovery order) is NOT what
+            // vanilla's own /reload passes here - it uses getSelectedIds(), preserving whatever
+            // priority order was already established, which is what keeps "vanilla" pinned to its
+            // required bottom position instead of potentially overriding our pack. Passing
+            // getAvailableIds() here scrambled that order and let vanilla's own advancement data
+            // win over ours despite our file being valid and enabled.
+            ReloadCommand.reloadPacks(server.getPackRepository().getSelectedIds(), server.createCommandSourceStack());
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to sync codex advancement datapack", e);
         }
