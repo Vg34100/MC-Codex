@@ -15,7 +15,7 @@ public record OpenAdvancementEditorPayload(List<AdvancementHolder> advancements)
             new Type<>(Identifier.fromNamespaceAndPath(ModMain.MOD_ID, "open_advancement_editor"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, OpenAdvancementEditorPayload> STREAM_CODEC =
-            AdvancementHolder.LIST_STREAM_CODEC.map(OpenAdvancementEditorPayload::new, OpenAdvancementEditorPayload::advancements);
+            AdvancementStreamCodecs.HOLDER_LIST_STREAM_CODEC.map(OpenAdvancementEditorPayload::new, OpenAdvancementEditorPayload::advancements);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {

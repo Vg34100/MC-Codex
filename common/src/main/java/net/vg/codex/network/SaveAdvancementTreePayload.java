@@ -15,7 +15,7 @@ public record SaveAdvancementTreePayload(List<AdvancementHolder> advancements) i
             new Type<>(Identifier.fromNamespaceAndPath(ModMain.MOD_ID, "save_advancement_tree"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, SaveAdvancementTreePayload> STREAM_CODEC =
-            AdvancementHolder.LIST_STREAM_CODEC.map(SaveAdvancementTreePayload::new, SaveAdvancementTreePayload::advancements);
+            AdvancementStreamCodecs.HOLDER_LIST_STREAM_CODEC.map(SaveAdvancementTreePayload::new, SaveAdvancementTreePayload::advancements);
 
     @Override
     public Type<? extends CustomPacketPayload> type() {
