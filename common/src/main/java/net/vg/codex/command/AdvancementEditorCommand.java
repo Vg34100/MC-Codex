@@ -2,14 +2,10 @@ package net.vg.codex.command;
 
 import com.mojang.brigadier.CommandDispatcher;
 import dev.architectury.event.events.common.CommandRegistrationEvent;
-import dev.architectury.networking.NetworkManager;
-import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.server.level.ServerPlayer;
-import net.vg.codex.network.OpenAdvancementEditorPayload;
-
-import java.util.List;
+import net.vg.codex.network.AdvancementEditorNetworking;
 
 public final class AdvancementEditorCommand {
     private AdvancementEditorCommand() {
@@ -36,8 +32,7 @@ public final class AdvancementEditorCommand {
     private static int openEditor(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx)
             throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = ctx.getSource().getPlayerOrException();
-        List<AdvancementHolder> advancements = List.copyOf(player.level().getServer().getAdvancements().getAllAdvancements());
-        NetworkManager.sendToPlayer(player, new OpenAdvancementEditorPayload(advancements));
+        AdvancementEditorNetworking.sendSnapshotIfPermitted(player);
         return 1;
     }
 }

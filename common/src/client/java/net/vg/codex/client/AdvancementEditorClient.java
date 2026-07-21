@@ -17,8 +17,16 @@ public final class AdvancementEditorClient {
         // regardless of overload used) - AdvancementEditorNetworking.registerCommon() only
         // registers it separately on a dedicated server, where this client init never runs.
         NetworkManager.registerReceiver(NetworkManager.s2c(), OpenAdvancementEditorPayload.TYPE, OpenAdvancementEditorPayload.STREAM_CODEC,
-                (payload, context) -> context.queue(() ->
-                        Minecraft.getInstance().setScreen(new AdvancementEditorScreen(payload.advancements()))));
+                (payload, context) -> context.queue(() -> {
+                    Minecraft minecraft = Minecraft.getInstance();
+                    if (minecraft.screen instanceof CodexAdvancementsScreen screen) {
+                        screen.enterEditMode(payload.advancements());
+                    } else {
+                        // Fallback for the raw /codex advancements edit command when our screen
+                        // isn't already open - retired once stage 4 reaches parity with this.
+                        minecraft.setScreen(new AdvancementEditorScreen(payload.advancements()));
+                    }
+                }));
 
         ClientGuiEvent.SET_SCREEN.register(screen -> {
             if (!(screen instanceof AdvancementsScreen)) {

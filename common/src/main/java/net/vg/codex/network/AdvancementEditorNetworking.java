@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.util.List;
 
 public final class AdvancementEditorNetworking {
     private static final Logger LOGGER = LoggerFactory.getLogger(AdvancementEditorNetworking.class);
@@ -34,6 +35,21 @@ public final class AdvancementEditorNetworking {
         }
         NetworkManager.registerReceiver(NetworkManager.c2s(), SaveAdvancementTreePayload.TYPE, SaveAdvancementTreePayload.STREAM_CODEC,
                 AdvancementEditorNetworking::handleSave);
+        NetworkManager.registerReceiver(NetworkManager.c2s(), RequestAdvancementSnapshotPayload.TYPE, RequestAdvancementSnapshotPayload.STREAM_CODEC,
+                (payload, context) -> context.queue(() -> {
+                    if (context.getPlayer() instanceof ServerPlayer player) {
+                        sendSnapshotIfPermitted(player);
+                    }
+                }));
+    }
+
+    /** Shared by the /codex advancements edit command and the in-screen edit-mode toggle. */
+    public static void sendSnapshotIfPermitted(ServerPlayer player) {
+        if (!Commands.hasPermission(Commands.LEVEL_GAMEMASTERS).test(player.createCommandSourceStack())) {
+            return;
+        }
+        List<AdvancementHolder> advancements = List.copyOf(player.level().getServer().getAdvancements().getAllAdvancements());
+        NetworkManager.sendToPlayer(player, new OpenAdvancementEditorPayload(advancements));
     }
 
     private static void handleSave(SaveAdvancementTreePayload payload, NetworkManager.PacketContext context) {
