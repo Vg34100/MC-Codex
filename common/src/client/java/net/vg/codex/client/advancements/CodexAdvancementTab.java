@@ -46,7 +46,8 @@ public final class CodexAdvancementTab {
     private int minY;
     private int maxX;
     private int maxY;
-    private boolean centered;
+    private int lastContentWidth = -1;
+    private int lastContentHeight = -1;
 
     private CodexAdvancementTab(int index, AdvancementNode rootNode, DisplayInfo display) {
         this.index = index;
@@ -160,10 +161,14 @@ public final class CodexAdvancementTab {
     }
 
     public void extractContents(GuiGraphicsExtractor extractor, int contentX, int contentY, int contentWidth, int contentHeight, boolean showAll) {
-        if (!centered) {
+        // Re-center whenever the viewport size actually changes (e.g. the window was resized),
+        // not just once ever - otherwise a scroll position computed for one size can end up
+        // clamped/frozen out of view once the viewport grows or shrinks to a different size.
+        if (contentWidth != lastContentWidth || contentHeight != lastContentHeight) {
             scrollX = (double) (maxX + minX) / 2 - (double) contentWidth / 2;
             scrollY = (double) (maxY + minY) / 2 - (double) contentHeight / 2;
-            centered = true;
+            lastContentWidth = contentWidth;
+            lastContentHeight = contentHeight;
         }
 
         extractor.enableScissor(contentX, contentY, contentX + contentWidth, contentY + contentHeight);
