@@ -1,11 +1,19 @@
 package net.vg.codex.client.advancements;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.JsonOps;
 import dev.architectury.networking.NetworkManager;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementNode;
 import net.minecraft.advancements.AdvancementProgress;
+import net.minecraft.advancements.AdvancementRequirements;
 import net.minecraft.advancements.AdvancementTree;
+import net.minecraft.advancements.Criterion;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -17,8 +25,10 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.multiplayer.ClientAdvancements;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.commands.Commands;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.RegistryOps;
 import net.minecraft.util.Mth;
 import net.vg.codex.network.RequestAdvancementSnapshotPayload;
 import net.vg.codex.network.SaveAdvancementTreePayload;
@@ -63,12 +73,23 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private static final int MAX_WINDOW_WIDTH = 900;
     private static final int MAX_WINDOW_HEIGHT = 600;
     private static final int FOOTER_HEIGHT = 26;
+    // Room above the window for the tab strip (drawn at windowTop - 28, 32px tall) - without this
+    // reserved, a tall window could push windowTop small enough that tabs render off the top of
+    // the screen entirely.
+    private static final int HEADER_HEIGHT = 40;
     private static final int SCREEN_MARGIN = 20;
 
     private static final int PANEL_DESIRED_WIDTH = 260;
     private static final int PANEL_MIN_WIDTH = 150;
     private static final int PANEL_GAP = 10;
     private static final int DESCRIPTION_HEIGHT = 60;
+    private static final int MIN_CRITERIA_HEIGHT = 40;
+    private static final int BOTTOM_CONTROLS_HEIGHT = 50;
+
+    // Advancement.CRITERIA_CODEC (the vanilla equivalent) is private - this is the same shape
+    // (an unbounded map of criterion name -> Criterion), built from Criterion.CODEC which is public.
+    private static final Codec<Map<String, Criterion<?>>> CRITERIA_CODEC = Codec.unboundedMap(Codec.STRING, Criterion.CODEC);
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private final Screen lastScreen;
     private final ClientAdvancements advancements;
@@ -87,6 +108,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private final Map<Identifier, AdvancementHolder> dirty = new LinkedHashMap<>();
     private EditBox titleBox;
     private MultiLineEditBox descriptionBox;
+    private MultiLineEditBox criteriaBox;
     private StringWidget statusWidget;
     private Button applyEditButton;
     private Button saveEditsButton;
@@ -119,7 +141,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     }
 
     private int windowHeight() {
-        int available = this.height - FOOTER_HEIGHT - SCREEN_MARGIN;
+        int available = this.height - HEADER_HEIGHT - FOOTER_HEIGHT - SCREEN_MARGIN;
         return Mth.clamp(available, MIN_WINDOW_HEIGHT, MAX_WINDOW_HEIGHT);
     }
 
@@ -129,7 +151,9 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     }
 
     private int windowTop() {
-        return Math.max(10, (this.height - windowHeight() - FOOTER_HEIGHT) / 2);
+        int totalBlockHeight = HEADER_HEIGHT + windowHeight() + FOOTER_HEIGHT;
+        int blockTop = Math.max(10, (this.height - totalBlockHeight) / 2);
+        return blockTop + HEADER_HEIGHT;
     }
 
     private int contentWidth() {
@@ -174,7 +198,16 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                     .setY(panelTop + 20)
                     .setPlaceholder(Component.literal("Description"))
                     .build(this.font, panelWidth, DESCRIPTION_HEIGHT, Component.literal("Description")));
-            int buttonsTop = panelTop + 20 + DESCRIPTION_HEIGHT + 6;
+
+            int criteriaTop = panelTop + 20 + DESCRIPTION_HEIGHT + 6;
+            int buttonsTop = top + windowHeight - BOTTOM_CONTROLS_HEIGHT;
+            int criteriaHeight = Math.max(MIN_CRITERIA_HEIGHT, buttonsTop - criteriaTop - 6);
+            criteriaBox = addRenderableWidget(MultiLineEditBox.builder()
+                    .setX(panelLeft)
+                    .setY(criteriaTop)
+                    .setPlaceholder(Component.literal("Criteria (raw JSON)"))
+                    .build(this.font, panelWidth, criteriaHeight, Component.literal("Criteria (raw JSON)")));
+
             int buttonWidth = (panelWidth - 10) / 2;
             applyEditButton = addRenderableWidget(Button.builder(Component.literal("Apply Edit"), b -> applyEdit())
                     .bounds(panelLeft, buttonsTop, buttonWidth, 20)
@@ -187,8 +220,18 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             if (selectedEditWidget != null) {
                 titleBox.setValue(selectedEditWidget.display().getTitle().getString());
                 descriptionBox.setValue(selectedEditWidget.display().getDescription().getString());
+                criteriaBox.setValue(encodeCriteria(criteriaFor(selectedEditWidget)));
             }
         }
+    }
+
+    private HolderLookup.Provider registries() {
+        return this.minecraft.level.registryAccess();
+    }
+
+    private String encodeCriteria(Map<String, Criterion<?>> criteria) {
+        JsonElement json = CRITERIA_CODEC.encodeStart(RegistryOps.create(JsonOps.INSTANCE, registries()), criteria).getOrThrow();
+        return GSON.toJson(json);
     }
 
     private void setStatus(String message) {
@@ -375,7 +418,14 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         selectedEditWidget = widget;
         titleBox.setValue(widget.display().getTitle().getString());
         descriptionBox.setValue(widget.display().getDescription().getString());
+        criteriaBox.setValue(encodeCriteria(criteriaFor(widget)));
         setStatus("");
+    }
+
+    /** Prior applied-but-unsaved edits (tracked in `dirty`) take precedence over the original. */
+    private Map<String, Criterion<?>> criteriaFor(CodexAdvancementWidget widget) {
+        AdvancementHolder dirtyHolder = dirty.get(widget.node().holder().id());
+        return dirtyHolder != null ? dirtyHolder.value().criteria() : widget.node().advancement().criteria();
     }
 
     private void applyEdit() {
@@ -384,7 +434,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             return;
         }
         DisplayInfo old = selectedEditWidget.display();
-        DisplayInfo updated = new DisplayInfo(
+        DisplayInfo updatedDisplay = new DisplayInfo(
                 old.getIcon(),
                 Component.literal(titleBox.getValue()),
                 Component.literal(descriptionBox.getValue()),
@@ -394,19 +444,37 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                 old.shouldAnnounceChat(),
                 old.isHidden()
         );
+
         Advancement oldAdvancement = selectedEditWidget.node().advancement();
+        Map<String, Criterion<?>> oldCriteria = oldAdvancement.criteria();
+        Map<String, Criterion<?>> newCriteria;
+        try {
+            JsonElement json = JsonParser.parseString(criteriaBox.getValue());
+            newCriteria = CRITERIA_CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, registries()), json).getOrThrow();
+        } catch (RuntimeException e) {
+            setStatus("Invalid criteria JSON: " + e.getMessage());
+            return;
+        }
+        // Requirements name the criteria groups that must be met to complete the advancement.
+        // If the criteria keys didn't change, keep whatever grouping (AND/OR) was already there;
+        // if they did, fall back to requiring all of them - editing custom OR-groupings is not
+        // yet exposed, this is a reasonable default rather than silently keeping stale group names.
+        AdvancementRequirements requirements = newCriteria.keySet().equals(oldCriteria.keySet())
+                ? oldAdvancement.requirements()
+                : AdvancementRequirements.allOf(newCriteria.keySet());
+
         Advancement updatedAdvancement = new Advancement(
                 oldAdvancement.parent(),
-                Optional.of(updated),
+                Optional.of(updatedDisplay),
                 oldAdvancement.rewards(),
-                oldAdvancement.criteria(),
-                oldAdvancement.requirements(),
+                newCriteria,
+                requirements,
                 oldAdvancement.sendsTelemetryEvent(),
                 oldAdvancement.name()
         );
         Identifier id = selectedEditWidget.node().holder().id();
         dirty.put(id, new AdvancementHolder(id, updatedAdvancement));
-        selectedEditWidget.setDisplay(updated);
+        selectedEditWidget.setDisplay(updatedDisplay);
         setStatus("Edit applied - not saved yet.");
     }
 

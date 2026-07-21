@@ -5,14 +5,19 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.advancements.Advancement;
 import net.minecraft.advancements.AdvancementHolder;
+import net.minecraft.advancements.AdvancementRequirements;
+import net.minecraft.advancements.Criterion;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.server.packs.resources.ResourceProvider;
+
+import java.util.Map;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -34,6 +39,9 @@ public final class AdvancementPackIO {
     private static final String ADVANCEMENT_DIR = "advancement";
     private static final String SUFFIX = ".json";
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    // Advancement.CRITERIA_CODEC (the vanilla equivalent) is private - same shape, built from the
+    // public Criterion.CODEC.
+    private static final Codec<Map<String, Criterion<?>>> CRITERIA_CODEC = Codec.unboundedMap(Codec.STRING, Criterion.CODEC);
 
     private AdvancementPackIO() {
     }
@@ -86,17 +94,25 @@ public final class AdvancementPackIO {
     }
 
     /**
-     * Patches only the display block of an already-existing advancement (vanilla or otherwise),
-     * leaving criteria/requirements/rewards untouched as raw JSON. This deliberately avoids
-     * round-tripping the whole advancement through {@link Advancement#CODEC}: some vanilla
-     * advancements fail that codec's stricter encode-side validation (criteria/requirements
-     * consistency) even though they loaded fine, since decode is more lenient than encode.
-     * Patching JSON directly sidesteps that entirely for edits that only ever touch display info.
+     * Patches only the display/criteria/requirements blocks of an already-existing advancement
+     * (vanilla or otherwise), leaving rewards and anything else untouched as raw JSON. This
+     * deliberately avoids round-tripping the whole advancement through {@link Advancement#CODEC}:
+     * some vanilla advancements fail that codec's stricter encode-side validation (criteria/
+     * requirements consistency) even though they loaded fine, since decode is more lenient than
+     * encode. Patching each JSON key directly sidesteps that entirely.
      */
-    public static void patchDisplay(Path packDir, ResourceProvider resources, Identifier id, DisplayInfo display, HolderLookup.Provider registries) {
+    public static void patchEditableFields(Path packDir, ResourceProvider resources, AdvancementHolder holder, HolderLookup.Provider registries) {
+        Identifier id = holder.id();
+        Advancement advancement = holder.value();
         JsonObject json = readBaseJson(packDir, resources, id);
-        JsonElement displayJson = DisplayInfo.CODEC.encodeStart(RegistryOps.create(JsonOps.INSTANCE, registries), display).getOrThrow();
-        json.add("display", displayJson);
+        RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registries);
+
+        if (advancement.display().isPresent()) {
+            json.add("display", DisplayInfo.CODEC.encodeStart(ops, advancement.display().get()).getOrThrow());
+        }
+        json.add("criteria", CRITERIA_CODEC.encodeStart(ops, advancement.criteria()).getOrThrow());
+        json.add("requirements", AdvancementRequirements.CODEC.encodeStart(ops, advancement.requirements()).getOrThrow());
+
         writeJson(fileFor(packDir, id), json);
     }
 

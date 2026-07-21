@@ -68,12 +68,13 @@ public final class AdvancementEditorNetworking {
             int failed = 0;
             for (AdvancementHolder holder : payload.advancements()) {
                 try {
-                    if (AdvancementPackIO.exists(packDir, resources, holder.id()) && holder.value().display().isPresent()) {
-                        // Existing advancement (vanilla or otherwise): patch just the display
-                        // block as raw JSON rather than round-tripping the whole thing through
-                        // Advancement.CODEC, which some vanilla advancements fail to re-encode
-                        // even though they loaded fine (decode is more lenient than encode).
-                        AdvancementPackIO.patchDisplay(packDir, resources, holder.id(), holder.value().display().get(), registries);
+                    if (AdvancementPackIO.exists(packDir, resources, holder.id())) {
+                        // Existing advancement (vanilla or otherwise): patch just the display/
+                        // criteria/requirements blocks as raw JSON rather than round-tripping the
+                        // whole thing through Advancement.CODEC, which some vanilla advancements
+                        // fail to re-encode even though they loaded fine (decode is more lenient
+                        // than encode).
+                        AdvancementPackIO.patchEditableFields(packDir, resources, holder, registries);
                     } else {
                         AdvancementPackIO.write(packDir, holder, registries);
                     }
