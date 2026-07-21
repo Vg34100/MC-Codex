@@ -20,7 +20,7 @@ import java.util.List;
  */
 public final class CodexAdvancementWidget {
     private final AdvancementNode node;
-    private final DisplayInfo display;
+    private DisplayInfo display;
     private final ItemStack icon;
     private final int x;
     private final int y;
@@ -57,6 +57,11 @@ public final class CodexAdvancementWidget {
 
     void setProgress(AdvancementProgress progress) {
         this.progress = progress;
+    }
+
+    /** Edit mode only: updates the display shown after an in-place title/description edit. */
+    public void setDisplay(DisplayInfo display) {
+        this.display = display;
     }
 
     void addChild(CodexAdvancementWidget child) {
