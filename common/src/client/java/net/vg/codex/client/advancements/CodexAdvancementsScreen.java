@@ -10,6 +10,7 @@ import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
@@ -47,6 +48,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private static final int WINDOW_INSIDE_Y = 18;
     private static final int PANEL_WIDTH = 220;
     private static final int PANEL_GAP = 10;
+    private static final int DESCRIPTION_HEIGHT = 60;
 
     private final Screen lastScreen;
     private final ClientAdvancements advancements;
@@ -64,7 +66,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private CodexAdvancementWidget selectedEditWidget;
     private final Map<Identifier, AdvancementHolder> dirty = new LinkedHashMap<>();
     private EditBox titleBox;
-    private EditBox descriptionBox;
+    private MultiLineEditBox descriptionBox;
     private StringWidget statusWidget;
     private Button applyEditButton;
     private Button saveEditsButton;
@@ -129,15 +131,20 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             int panelLeft = left + WINDOW_WIDTH + PANEL_GAP;
             int panelTop = top;
             titleBox = addRenderableWidget(new EditBox(this.font, panelLeft, panelTop, panelWidth, 16, Component.literal("Title")));
-            descriptionBox = addRenderableWidget(new EditBox(this.font, panelLeft, panelTop + 20, panelWidth, 16, Component.literal("Description")));
+            descriptionBox = addRenderableWidget(MultiLineEditBox.builder()
+                    .setX(panelLeft)
+                    .setY(panelTop + 20)
+                    .setPlaceholder(Component.literal("Description"))
+                    .build(this.font, panelWidth, DESCRIPTION_HEIGHT, Component.literal("Description")));
+            int buttonsTop = panelTop + 20 + DESCRIPTION_HEIGHT + 6;
             int buttonWidth = (panelWidth - 10) / 2;
             applyEditButton = addRenderableWidget(Button.builder(Component.literal("Apply Edit"), b -> applyEdit())
-                    .bounds(panelLeft, panelTop + 40, buttonWidth, 20)
+                    .bounds(panelLeft, buttonsTop, buttonWidth, 20)
                     .build());
             saveEditsButton = addRenderableWidget(Button.builder(Component.literal("Save"), b -> saveEdits())
-                    .bounds(panelLeft + buttonWidth + 10, panelTop + 40, buttonWidth, 20)
+                    .bounds(panelLeft + buttonWidth + 10, buttonsTop, buttonWidth, 20)
                     .build());
-            statusWidget = addRenderableWidget(new StringWidget(panelLeft, panelTop + 64, panelWidth, 10, Component.empty(), this.font));
+            statusWidget = addRenderableWidget(new StringWidget(panelLeft, buttonsTop + 24, panelWidth, 10, Component.empty(), this.font));
 
             if (selectedEditWidget != null) {
                 titleBox.setValue(selectedEditWidget.display().getTitle().getString());
