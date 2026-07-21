@@ -34,10 +34,10 @@ import java.util.Optional;
  * - kept in a completely separate tab map so live ClientAdvancements updates (which keep arriving
  * in the background) never cross-contaminate the edit-mode view.
  *
- * <p>For op-permitted players the window is shifted left of screen-center to reserve a details
- * panel on the right (stable regardless of whether edit mode is currently on, so panel widgets
- * never need repositioning at runtime) - only whether the player *can* edit changes the layout,
- * not the moment-to-moment edit-mode toggle state.
+ * <p>The window is only shifted left of screen-center, to make room for a details panel on the
+ * right, while edit mode is actually on - toggling edit mode calls {@link #init(int, int)} again
+ * (the same rebuild Screen already does on window resize) so the whole layout, including the
+ * panel's width, is recomputed fresh against the current screen size every time.
  */
 public final class CodexAdvancementsScreen extends Screen implements ClientAdvancements.Listener {
     private static final Identifier WINDOW_LOCATION = Identifier.fromNamespaceAndPath("minecraft", "textures/gui/advancements/window.png");
@@ -80,9 +80,20 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                 && Commands.LEVEL_GAMEMASTERS.check(this.minecraft.player.permissions());
     }
 
+    private boolean showEditPanel() {
+        return canEdit() && editMode;
+    }
+
+    /** Clamped to whatever's actually left of the window within the current screen width. */
+    private int panelWidth() {
+        int available = this.width - WINDOW_WIDTH - PANEL_GAP - 20;
+        return Math.max(100, Math.min(PANEL_WIDTH, available));
+    }
+
     private int windowLeft() {
-        if (canEdit()) {
-            return Math.max(10, (this.width - WINDOW_WIDTH - PANEL_GAP - PANEL_WIDTH) / 2);
+        if (showEditPanel()) {
+            int totalWidth = WINDOW_WIDTH + PANEL_GAP + panelWidth();
+            return Math.max(10, (this.width - totalWidth) / 2);
         }
         return Math.max(10, (this.width - WINDOW_WIDTH) / 2);
     }
@@ -111,37 +122,28 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             editModeButton = addRenderableWidget(Button.builder(editModeLabel(), b -> toggleEditMode())
                     .bounds(left, top + WINDOW_HEIGHT + 6, 120, 20)
                     .build());
+        }
 
+        if (showEditPanel()) {
+            int panelWidth = panelWidth();
             int panelLeft = left + WINDOW_WIDTH + PANEL_GAP;
             int panelTop = top;
-            titleBox = addRenderableWidget(new EditBox(this.font, panelLeft, panelTop, PANEL_WIDTH, 16, Component.literal("Title")));
-            descriptionBox = addRenderableWidget(new EditBox(this.font, panelLeft, panelTop + 20, PANEL_WIDTH, 16, Component.literal("Description")));
-            int buttonWidth = (PANEL_WIDTH - 10) / 2;
+            titleBox = addRenderableWidget(new EditBox(this.font, panelLeft, panelTop, panelWidth, 16, Component.literal("Title")));
+            descriptionBox = addRenderableWidget(new EditBox(this.font, panelLeft, panelTop + 20, panelWidth, 16, Component.literal("Description")));
+            int buttonWidth = (panelWidth - 10) / 2;
             applyEditButton = addRenderableWidget(Button.builder(Component.literal("Apply Edit"), b -> applyEdit())
                     .bounds(panelLeft, panelTop + 40, buttonWidth, 20)
                     .build());
             saveEditsButton = addRenderableWidget(Button.builder(Component.literal("Save"), b -> saveEdits())
                     .bounds(panelLeft + buttonWidth + 10, panelTop + 40, buttonWidth, 20)
                     .build());
-            statusWidget = addRenderableWidget(new StringWidget(panelLeft, panelTop + 64, PANEL_WIDTH, 10, Component.empty(), this.font));
+            statusWidget = addRenderableWidget(new StringWidget(panelLeft, panelTop + 64, panelWidth, 10, Component.empty(), this.font));
 
-            // Screen.init() reruns on every window resize, which recreates these widgets fresh -
-            // restore whatever edit-mode/selection state was already active instead of always
-            // hiding the panel, otherwise resizing the window silently drops the open panel.
-            setEditPanelVisible(editMode);
-            if (editMode && selectedEditWidget != null) {
+            if (selectedEditWidget != null) {
                 titleBox.setValue(selectedEditWidget.display().getTitle().getString());
                 descriptionBox.setValue(selectedEditWidget.display().getDescription().getString());
             }
         }
-    }
-
-    private void setEditPanelVisible(boolean visible) {
-        titleBox.visible = visible;
-        descriptionBox.visible = visible;
-        applyEditButton.visible = visible;
-        saveEditsButton.visible = visible;
-        statusWidget.visible = visible;
     }
 
     private void setStatus(String message) {
@@ -157,9 +159,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private void toggleEditMode() {
         if (editMode) {
             editMode = false;
-            editModeButton.setMessage(editModeLabel());
-            setEditPanelVisible(false);
             selectedEditWidget = null;
+            this.init(this.width, this.height);
         } else {
             NetworkManager.sendToServer(new RequestAdvancementSnapshotPayload());
             // editMode flips true once the response arrives - see enterEditMode.
@@ -186,10 +187,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         }
 
         editMode = true;
-        if (editModeButton != null) {
-            editModeButton.setMessage(editModeLabel());
-        }
-        setEditPanelVisible(true);
+        this.init(this.width, this.height);
     }
 
     private void addDescendants(CodexAdvancementTab tab, AdvancementNode node) {
