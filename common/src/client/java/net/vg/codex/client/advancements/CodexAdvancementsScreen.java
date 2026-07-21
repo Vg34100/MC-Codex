@@ -70,8 +70,10 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     private static final int MIN_WINDOW_WIDTH = ART_WIDTH;
     private static final int MIN_WINDOW_HEIGHT = ART_HEIGHT;
-    private static final int MAX_WINDOW_WIDTH = 900;
-    private static final int MAX_WINDOW_HEIGHT = 600;
+    // Window grows by scaling the whole 252x140 art up rather than stretching width/height
+    // independently - independent scaling let the window end up a different aspect ratio than
+    // vanilla's depending on the screen's shape, which looked stretched/off.
+    private static final float MAX_WINDOW_SCALE = 3.0F;
     private static final int FOOTER_HEIGHT = 26;
     // Room above the window for the tab strip (drawn at windowTop - 28, 32px tall) - without this
     // reserved, a tall window could push windowTop small enough that tabs render off the top of
@@ -85,6 +87,10 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private static final int DESCRIPTION_HEIGHT = 60;
     private static final int MIN_CRITERIA_HEIGHT = 40;
     private static final int BOTTOM_CONTROLS_HEIGHT = 50;
+
+    private static final float ZOOM_STEP = 0.25F;
+    private static final float MIN_ZOOM = 0.5F;
+    private static final float MAX_ZOOM = 2.5F;
 
     // Advancement.CRITERIA_CODEC (the vanilla equivalent) is private - this is the same shape
     // (an unbounded map of criterion name -> Criterion), built from Criterion.CODEC which is public.
@@ -103,6 +109,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     private boolean isScrolling;
     private Button editModeButton;
+    private float zoom = 1.0F;
 
     private CodexAdvancementWidget selectedEditWidget;
     private final Map<Identifier, AdvancementHolder> dirty = new LinkedHashMap<>();
@@ -117,6 +124,10 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         super(Component.literal("Advancements"));
         this.advancements = advancements;
         this.lastScreen = lastScreen;
+    }
+
+    private void adjustZoom(float delta) {
+        zoom = Mth.clamp(zoom + delta, MIN_ZOOM, MAX_ZOOM);
     }
 
     private boolean canEdit() {
@@ -134,15 +145,22 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         return Math.max(PANEL_MIN_WIDTH, Math.min(PANEL_DESIRED_WIDTH, available));
     }
 
+    /** A single scale factor applied to the whole 252x140 art, so it never distorts proportions. */
+    private float windowScale() {
+        int reservedWidth = showEditPanel() ? panelWidth() + PANEL_GAP : 0;
+        int availableWidth = this.width - reservedWidth - SCREEN_MARGIN;
+        int availableHeight = this.height - HEADER_HEIGHT - FOOTER_HEIGHT - SCREEN_MARGIN;
+        float scaleW = (float) availableWidth / ART_WIDTH;
+        float scaleH = (float) availableHeight / ART_HEIGHT;
+        return Mth.clamp(Math.min(scaleW, scaleH), 1.0F, MAX_WINDOW_SCALE);
+    }
+
     private int windowWidth() {
-        int reserved = showEditPanel() ? panelWidth() + PANEL_GAP : 0;
-        int available = this.width - reserved - SCREEN_MARGIN;
-        return Mth.clamp(available, MIN_WINDOW_WIDTH, MAX_WINDOW_WIDTH);
+        return Math.round(ART_WIDTH * windowScale());
     }
 
     private int windowHeight() {
-        int available = this.height - HEADER_HEIGHT - FOOTER_HEIGHT - SCREEN_MARGIN;
-        return Mth.clamp(available, MIN_WINDOW_HEIGHT, MAX_WINDOW_HEIGHT);
+        return Math.round(ART_HEIGHT * windowScale());
     }
 
     private int windowLeft() {
@@ -180,6 +198,12 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         int windowHeight = windowHeight();
         addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
                 .bounds(left + windowWidth - 90, top + windowHeight + 6, 90, 20)
+                .build());
+        addRenderableWidget(Button.builder(Component.literal("-"), b -> adjustZoom(-ZOOM_STEP))
+                .bounds(left + windowWidth - 90 - 46, top + windowHeight + 6, 20, 20)
+                .build());
+        addRenderableWidget(Button.builder(Component.literal("+"), b -> adjustZoom(ZOOM_STEP))
+                .bounds(left + windowWidth - 90 - 22, top + windowHeight + 6, 20, 20)
                 .build());
 
         if (canEdit()) {
@@ -333,8 +357,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             int contentY = top + BORDER_TOP;
             int contentWidth = contentWidth();
             int contentHeight = contentHeight();
-            selectedTab.extractContents(extractor, contentX, contentY, contentWidth, contentHeight, editMode);
-            var hovered = selectedTab.findHovered(contentX, contentY, contentWidth, contentHeight, mouseX, mouseY);
+            selectedTab.extractContents(extractor, contentX, contentY, contentWidth, contentHeight, zoom, editMode);
+            var hovered = selectedTab.findHovered(contentX, contentY, contentWidth, contentHeight, zoom, mouseX, mouseY);
             if (hovered != null) {
                 extractor.setComponentTooltipForNextFrame(this.font,
                         List.of(hovered.display().getTitle(), hovered.display().getDescription()), mouseX, mouseY);
@@ -404,7 +428,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             if (editMode && selectedEditTab != null) {
                 int contentX = left + BORDER_LEFT;
                 int contentY = top + BORDER_TOP;
-                CodexAdvancementWidget hit = selectedEditTab.findHovered(contentX, contentY, contentWidth(), contentHeight(), event.x(), event.y());
+                CodexAdvancementWidget hit = selectedEditTab.findHovered(contentX, contentY, contentWidth(), contentHeight(), zoom, event.x(), event.y());
                 if (hit != null) {
                     selectEditWidget(hit);
                     return true;
@@ -493,7 +517,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         CodexAdvancementTab selectedTab = activeSelectedTab();
         if (event.button() == 0 && selectedTab != null) {
             isScrolling = true;
-            selectedTab.scroll(-dragX, -dragY, contentWidth(), contentHeight());
+            selectedTab.scroll(-dragX / zoom, -dragY / zoom, contentWidth(), contentHeight(), zoom);
             return true;
         }
         return super.mouseDragged(event, dragX, dragY);
@@ -509,7 +533,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         CodexAdvancementTab selectedTab = activeSelectedTab();
         if (selectedTab != null) {
-            selectedTab.scroll(scrollX * 16.0, scrollY * 16.0, contentWidth(), contentHeight());
+            selectedTab.scroll(scrollX * 16.0, scrollY * 16.0, contentWidth(), contentHeight(), zoom);
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);

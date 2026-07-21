@@ -112,12 +112,12 @@ public final class CodexAdvancementTab {
         maxY = Math.max(maxY, widget.y() + 30);
     }
 
-    public CodexAdvancementWidget findHovered(int contentX, int contentY, int contentWidth, int contentHeight, double mouseX, double mouseY) {
+    public CodexAdvancementWidget findHovered(int contentX, int contentY, int contentWidth, int contentHeight, float zoom, double mouseX, double mouseY) {
         if (mouseX < contentX || mouseY < contentY || mouseX >= contentX + contentWidth || mouseY >= contentY + contentHeight) {
             return null;
         }
-        double localX = mouseX - contentX + Mth.floor(scrollX);
-        double localY = mouseY - contentY + Mth.floor(scrollY);
+        double localX = (mouseX - contentX) / zoom + Mth.floor(scrollX);
+        double localY = (mouseY - contentY) / zoom + Mth.floor(scrollY);
         for (CodexAdvancementWidget widget : widgets.values()) {
             if (widget.isMouseOver(localX, localY)) {
                 return widget;
@@ -126,12 +126,14 @@ public final class CodexAdvancementTab {
         return null;
     }
 
-    public void scroll(double dx, double dy, int contentWidth, int contentHeight) {
-        if (maxX - minX > contentWidth) {
-            scrollX = Mth.clamp(scrollX + dx, minX, maxX - contentWidth);
+    public void scroll(double dx, double dy, int contentWidth, int contentHeight, float zoom) {
+        int visibleWidth = Mth.ceil(contentWidth / zoom);
+        int visibleHeight = Mth.ceil(contentHeight / zoom);
+        if (maxX - minX > visibleWidth) {
+            scrollX = Mth.clamp(scrollX + dx, minX, maxX - visibleWidth);
         }
-        if (maxY - minY > contentHeight) {
-            scrollY = Mth.clamp(scrollY + dy, minY, maxY - contentHeight);
+        if (maxY - minY > visibleHeight) {
+            scrollY = Mth.clamp(scrollY + dy, minY, maxY - visibleHeight);
         }
     }
 
@@ -160,20 +162,26 @@ public final class CodexAdvancementTab {
         // Icon is drawn as part of extractTab for this simplified single-pass tab strip.
     }
 
-    public void extractContents(GuiGraphicsExtractor extractor, int contentX, int contentY, int contentWidth, int contentHeight, boolean showAll) {
-        // Re-center whenever the viewport size actually changes (e.g. the window was resized),
+    public void extractContents(GuiGraphicsExtractor extractor, int contentX, int contentY, int contentWidth, int contentHeight, float zoom, boolean showAll) {
+        // Re-centering (and the tile/scroll math below) works in tree-space, i.e. the amount of
+        // tree actually visible through the viewport - which shrinks as zoom increases.
+        int visibleWidth = Mth.ceil(contentWidth / zoom);
+        int visibleHeight = Mth.ceil(contentHeight / zoom);
+
+        // Re-center whenever the visible area actually changes (window resized or zoom changed),
         // not just once ever - otherwise a scroll position computed for one size can end up
         // clamped/frozen out of view once the viewport grows or shrinks to a different size.
-        if (contentWidth != lastContentWidth || contentHeight != lastContentHeight) {
-            scrollX = (double) (maxX + minX) / 2 - (double) contentWidth / 2;
-            scrollY = (double) (maxY + minY) / 2 - (double) contentHeight / 2;
-            lastContentWidth = contentWidth;
-            lastContentHeight = contentHeight;
+        if (visibleWidth != lastContentWidth || visibleHeight != lastContentHeight) {
+            scrollX = (double) (maxX + minX) / 2 - (double) visibleWidth / 2;
+            scrollY = (double) (maxY + minY) / 2 - (double) visibleHeight / 2;
+            lastContentWidth = visibleWidth;
+            lastContentHeight = visibleHeight;
         }
 
         extractor.enableScissor(contentX, contentY, contentX + contentWidth, contentY + contentHeight);
         extractor.pose().pushMatrix();
         extractor.pose().translate((float) contentX, (float) contentY);
+        extractor.pose().scale(zoom);
 
         Identifier background = display.getBackground()
                 .map(ClientAsset.ResourceTexture::texturePath)
@@ -183,8 +191,8 @@ public final class CodexAdvancementTab {
         int offsetY = Mth.floor(scrollY);
         int tileOffsetX = offsetX % 16;
         int tileOffsetY = offsetY % 16;
-        for (int tileX = -1; tileX <= contentWidth / 16 + 1; tileX++) {
-            for (int tileY = -1; tileY <= contentHeight / 16 + 1; tileY++) {
+        for (int tileX = -1; tileX <= visibleWidth / 16 + 1; tileX++) {
+            for (int tileY = -1; tileY <= visibleHeight / 16 + 1; tileY++) {
                 extractor.blit(RenderPipelines.GUI_TEXTURED, background,
                         -tileOffsetX + 16 * tileX, -tileOffsetY + 16 * tileY, 0.0F, 0.0F, 16, 16, 16, 16);
             }
