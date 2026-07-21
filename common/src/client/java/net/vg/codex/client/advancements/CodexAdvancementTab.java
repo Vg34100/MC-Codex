@@ -27,8 +27,6 @@ import java.util.Optional;
  * and sprites ({@code AdvancementWidgetType}, which is public) exactly.
  */
 public final class CodexAdvancementTab {
-    private static final int CONTENT_WIDTH = 234;
-    private static final int CONTENT_HEIGHT = 113;
     private static final int TAB_WIDTH = 28;
     private static final int TAB_HEIGHT = 32;
     private static final Identifier TAB_SPRITE = Identifier.withDefaultNamespace("advancements/tab_above_middle");
@@ -113,8 +111,8 @@ public final class CodexAdvancementTab {
         maxY = Math.max(maxY, widget.y() + 30);
     }
 
-    public CodexAdvancementWidget findHovered(int contentX, int contentY, double mouseX, double mouseY) {
-        if (mouseX < contentX || mouseY < contentY || mouseX >= contentX + CONTENT_WIDTH || mouseY >= contentY + CONTENT_HEIGHT) {
+    public CodexAdvancementWidget findHovered(int contentX, int contentY, int contentWidth, int contentHeight, double mouseX, double mouseY) {
+        if (mouseX < contentX || mouseY < contentY || mouseX >= contentX + contentWidth || mouseY >= contentY + contentHeight) {
             return null;
         }
         double localX = mouseX - contentX + Mth.floor(scrollX);
@@ -127,12 +125,12 @@ public final class CodexAdvancementTab {
         return null;
     }
 
-    public void scroll(double dx, double dy) {
-        if (maxX - minX > CONTENT_WIDTH) {
-            scrollX = Mth.clamp(scrollX + dx, minX, maxX - CONTENT_WIDTH);
+    public void scroll(double dx, double dy, int contentWidth, int contentHeight) {
+        if (maxX - minX > contentWidth) {
+            scrollX = Mth.clamp(scrollX + dx, minX, maxX - contentWidth);
         }
-        if (maxY - minY > CONTENT_HEIGHT) {
-            scrollY = Mth.clamp(scrollY + dy, minY, maxY - CONTENT_HEIGHT);
+        if (maxY - minY > contentHeight) {
+            scrollY = Mth.clamp(scrollY + dy, minY, maxY - contentHeight);
         }
     }
 
@@ -161,14 +159,14 @@ public final class CodexAdvancementTab {
         // Icon is drawn as part of extractTab for this simplified single-pass tab strip.
     }
 
-    public void extractContents(GuiGraphicsExtractor extractor, int contentX, int contentY, boolean showAll) {
+    public void extractContents(GuiGraphicsExtractor extractor, int contentX, int contentY, int contentWidth, int contentHeight, boolean showAll) {
         if (!centered) {
-            scrollX = (double) (maxX + minX) / 2 - 117;
-            scrollY = (double) (maxY + minY) / 2 - 56;
+            scrollX = (double) (maxX + minX) / 2 - (double) contentWidth / 2;
+            scrollY = (double) (maxY + minY) / 2 - (double) contentHeight / 2;
             centered = true;
         }
 
-        extractor.enableScissor(contentX, contentY, contentX + CONTENT_WIDTH, contentY + CONTENT_HEIGHT);
+        extractor.enableScissor(contentX, contentY, contentX + contentWidth, contentY + contentHeight);
         extractor.pose().pushMatrix();
         extractor.pose().translate((float) contentX, (float) contentY);
 
@@ -180,8 +178,8 @@ public final class CodexAdvancementTab {
         int offsetY = Mth.floor(scrollY);
         int tileOffsetX = offsetX % 16;
         int tileOffsetY = offsetY % 16;
-        for (int tileX = -1; tileX <= CONTENT_WIDTH / 16 + 1; tileX++) {
-            for (int tileY = -1; tileY <= CONTENT_HEIGHT / 16 + 1; tileY++) {
+        for (int tileX = -1; tileX <= contentWidth / 16 + 1; tileX++) {
+            for (int tileY = -1; tileY <= contentHeight / 16 + 1; tileY++) {
                 extractor.blit(RenderPipelines.GUI_TEXTURED, background,
                         -tileOffsetX + 16 * tileX, -tileOffsetY + 16 * tileY, 0.0F, 0.0F, 16, 16, 16, 16);
             }

@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.util.Mth;
 import net.vg.codex.network.RequestAdvancementSnapshotPayload;
 import net.vg.codex.network.SaveAdvancementTreePayload;
 
@@ -35,6 +36,11 @@ import java.util.Optional;
  * - kept in a completely separate tab map so live ClientAdvancements updates (which keep arriving
  * in the background) never cross-contaminate the edit-mode view.
  *
+ * <p>Unlike vanilla's fixed 252x140 window, this one scales with the game window (stage 5) - the
+ * border texture was inspected directly (extracted window.png: a 9px bevel on left/right/bottom,
+ * 18px on top for the title bar, fully transparent middle) so it's drawn as 4 fixed corners plus
+ * tiled edges rather than a single stretched blit, letting it grow to any size without blurring.
+ *
  * <p>The window is only shifted left of screen-center, to make room for a details panel on the
  * right, while edit mode is actually on - toggling edit mode calls {@link #init(int, int)} again
  * (the same rebuild Screen already does on window resize) so the whole layout, including the
@@ -42,11 +48,25 @@ import java.util.Optional;
  */
 public final class CodexAdvancementsScreen extends Screen implements ClientAdvancements.Listener {
     private static final Identifier WINDOW_LOCATION = Identifier.fromNamespaceAndPath("minecraft", "textures/gui/advancements/window.png");
-    private static final int WINDOW_WIDTH = 252;
-    private static final int WINDOW_HEIGHT = 140;
-    private static final int WINDOW_INSIDE_X = 9;
-    private static final int WINDOW_INSIDE_Y = 18;
-    private static final int PANEL_WIDTH = 220;
+
+    // Measured directly from the extracted window.png (256x256 atlas, art occupies 0,0-252,140).
+    private static final int BORDER_LEFT = 9;
+    private static final int BORDER_RIGHT = 9;
+    private static final int BORDER_TOP = 18;
+    private static final int BORDER_BOTTOM = 9;
+    private static final int ART_WIDTH = 252;
+    private static final int ART_HEIGHT = 140;
+    private static final int EDGE_CHUNK = 16;
+
+    private static final int MIN_WINDOW_WIDTH = ART_WIDTH;
+    private static final int MIN_WINDOW_HEIGHT = ART_HEIGHT;
+    private static final int MAX_WINDOW_WIDTH = 900;
+    private static final int MAX_WINDOW_HEIGHT = 600;
+    private static final int FOOTER_HEIGHT = 26;
+    private static final int SCREEN_MARGIN = 20;
+
+    private static final int PANEL_DESIRED_WIDTH = 260;
+    private static final int PANEL_MIN_WIDTH = 150;
     private static final int PANEL_GAP = 10;
     private static final int DESCRIPTION_HEIGHT = 60;
 
@@ -88,20 +108,36 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     /** Clamped to whatever's actually left of the window within the current screen width. */
     private int panelWidth() {
-        int available = this.width - WINDOW_WIDTH - PANEL_GAP - 20;
-        return Math.max(100, Math.min(PANEL_WIDTH, available));
+        int available = this.width - MIN_WINDOW_WIDTH - PANEL_GAP - SCREEN_MARGIN;
+        return Math.max(PANEL_MIN_WIDTH, Math.min(PANEL_DESIRED_WIDTH, available));
+    }
+
+    private int windowWidth() {
+        int reserved = showEditPanel() ? panelWidth() + PANEL_GAP : 0;
+        int available = this.width - reserved - SCREEN_MARGIN;
+        return Mth.clamp(available, MIN_WINDOW_WIDTH, MAX_WINDOW_WIDTH);
+    }
+
+    private int windowHeight() {
+        int available = this.height - FOOTER_HEIGHT - SCREEN_MARGIN;
+        return Mth.clamp(available, MIN_WINDOW_HEIGHT, MAX_WINDOW_HEIGHT);
     }
 
     private int windowLeft() {
-        if (showEditPanel()) {
-            int totalWidth = WINDOW_WIDTH + PANEL_GAP + panelWidth();
-            return Math.max(10, (this.width - totalWidth) / 2);
-        }
-        return Math.max(10, (this.width - WINDOW_WIDTH) / 2);
+        int totalWidth = windowWidth() + (showEditPanel() ? PANEL_GAP + panelWidth() : 0);
+        return Math.max(10, (this.width - totalWidth) / 2);
     }
 
     private int windowTop() {
-        return Math.max(10, (this.height - WINDOW_HEIGHT) / 2);
+        return Math.max(10, (this.height - windowHeight() - FOOTER_HEIGHT) / 2);
+    }
+
+    private int contentWidth() {
+        return windowWidth() - BORDER_LEFT - BORDER_RIGHT;
+    }
+
+    private int contentHeight() {
+        return windowHeight() - BORDER_TOP - BORDER_BOTTOM;
     }
 
     @Override
@@ -116,19 +152,21 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
         int left = windowLeft();
         int top = windowTop();
+        int windowWidth = windowWidth();
+        int windowHeight = windowHeight();
         addRenderableWidget(Button.builder(Component.literal("Done"), b -> onClose())
-                .bounds(left + WINDOW_WIDTH - 90, top + WINDOW_HEIGHT + 6, 90, 20)
+                .bounds(left + windowWidth - 90, top + windowHeight + 6, 90, 20)
                 .build());
 
         if (canEdit()) {
             editModeButton = addRenderableWidget(Button.builder(editModeLabel(), b -> toggleEditMode())
-                    .bounds(left, top + WINDOW_HEIGHT + 6, 120, 20)
+                    .bounds(left, top + windowHeight + 6, 120, 20)
                     .build());
         }
 
         if (showEditPanel()) {
             int panelWidth = panelWidth();
-            int panelLeft = left + WINDOW_WIDTH + PANEL_GAP;
+            int panelLeft = left + windowWidth + PANEL_GAP;
             int panelTop = top;
             titleBox = addRenderableWidget(new EditBox(this.font, panelLeft, panelTop, panelWidth, 16, Component.literal("Title")));
             descriptionBox = addRenderableWidget(MultiLineEditBox.builder()
@@ -227,8 +265,10 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         super.extractRenderState(extractor, mouseX, mouseY, partialTick);
         int left = windowLeft();
         int top = windowTop();
+        int windowWidth = windowWidth();
+        int windowHeight = windowHeight();
 
-        extractor.blit(RenderPipelines.GUI_TEXTURED, WINDOW_LOCATION, left, top, 0.0F, 0.0F, WINDOW_WIDTH, WINDOW_HEIGHT, 256, 256);
+        drawWindowFrame(extractor, left, top, windowWidth, windowHeight);
 
         Map<AdvancementHolder, CodexAdvancementTab> tabs = activeTabs();
         CodexAdvancementTab selectedTab = activeSelectedTab();
@@ -246,14 +286,60 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         extractor.text(this.font, title, left + 8, top + 6, 0xFF404040, false);
 
         if (selectedTab != null) {
-            int contentX = left + WINDOW_INSIDE_X;
-            int contentY = top + WINDOW_INSIDE_Y;
-            selectedTab.extractContents(extractor, contentX, contentY, editMode);
-            var hovered = selectedTab.findHovered(contentX, contentY, mouseX, mouseY);
+            int contentX = left + BORDER_LEFT;
+            int contentY = top + BORDER_TOP;
+            int contentWidth = contentWidth();
+            int contentHeight = contentHeight();
+            selectedTab.extractContents(extractor, contentX, contentY, contentWidth, contentHeight, editMode);
+            var hovered = selectedTab.findHovered(contentX, contentY, contentWidth, contentHeight, mouseX, mouseY);
             if (hovered != null) {
                 extractor.setComponentTooltipForNextFrame(this.font,
                         List.of(hovered.display().getTitle(), hovered.display().getDescription()), mouseX, mouseY);
             }
+        }
+    }
+
+    /**
+     * Draws the window chrome as 4 fixed-size corners plus tiled (not stretched) edges, using the
+     * real vanilla border art, so it can scale to any size without blurring a stretched blit.
+     */
+    private void drawWindowFrame(GuiGraphicsExtractor extractor, int left, int top, int width, int height) {
+        // Corners (native size, no scaling).
+        blitRegion(extractor, left, top, 0, 0, BORDER_LEFT, BORDER_TOP);
+        blitRegion(extractor, left + width - BORDER_RIGHT, top, ART_WIDTH - BORDER_RIGHT, 0, BORDER_RIGHT, BORDER_TOP);
+        blitRegion(extractor, left, top + height - BORDER_BOTTOM, 0, ART_HEIGHT - BORDER_BOTTOM, BORDER_LEFT, BORDER_BOTTOM);
+        blitRegion(extractor, left + width - BORDER_RIGHT, top + height - BORDER_BOTTOM, ART_WIDTH - BORDER_RIGHT, ART_HEIGHT - BORDER_BOTTOM, BORDER_RIGHT, BORDER_BOTTOM);
+
+        // Top/bottom edges, tiled horizontally between the corners.
+        int edgeWidth = width - BORDER_LEFT - BORDER_RIGHT;
+        tileHorizontal(extractor, left + BORDER_LEFT, top, edgeWidth, BORDER_LEFT, 0, BORDER_TOP);
+        tileHorizontal(extractor, left + BORDER_LEFT, top + height - BORDER_BOTTOM, edgeWidth, BORDER_LEFT, ART_HEIGHT - BORDER_BOTTOM, BORDER_BOTTOM);
+
+        // Left/right edges, tiled vertically between the corners.
+        int edgeHeight = height - BORDER_TOP - BORDER_BOTTOM;
+        tileVertical(extractor, left, top + BORDER_TOP, edgeHeight, 0, BORDER_TOP, BORDER_LEFT);
+        tileVertical(extractor, left + width - BORDER_RIGHT, top + BORDER_TOP, edgeHeight, ART_WIDTH - BORDER_RIGHT, BORDER_TOP, BORDER_RIGHT);
+    }
+
+    private void blitRegion(GuiGraphicsExtractor extractor, int x, int y, int u, int v, int w, int h) {
+        extractor.blit(RenderPipelines.GUI_TEXTURED, WINDOW_LOCATION, x, y, (float) u, (float) v, w, h, 256, 256);
+    }
+
+    private void tileHorizontal(GuiGraphicsExtractor extractor, int x, int y, int totalWidth, int u, int v, int chunkHeight) {
+        int drawn = 0;
+        while (drawn < totalWidth) {
+            int w = Math.min(EDGE_CHUNK, totalWidth - drawn);
+            blitRegion(extractor, x + drawn, y, u, v, w, chunkHeight);
+            drawn += w;
+        }
+    }
+
+    private void tileVertical(GuiGraphicsExtractor extractor, int x, int y, int totalHeight, int u, int v, int chunkWidth) {
+        int drawn = 0;
+        while (drawn < totalHeight) {
+            int h = Math.min(EDGE_CHUNK, totalHeight - drawn);
+            blitRegion(extractor, x, y + drawn, u, v, chunkWidth, h);
+            drawn += h;
         }
     }
 
@@ -273,9 +359,9 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                 }
             }
             if (editMode && selectedEditTab != null) {
-                int contentX = left + WINDOW_INSIDE_X;
-                int contentY = top + WINDOW_INSIDE_Y;
-                CodexAdvancementWidget hit = selectedEditTab.findHovered(contentX, contentY, event.x(), event.y());
+                int contentX = left + BORDER_LEFT;
+                int contentY = top + BORDER_TOP;
+                CodexAdvancementWidget hit = selectedEditTab.findHovered(contentX, contentY, contentWidth(), contentHeight(), event.x(), event.y());
                 if (hit != null) {
                     selectEditWidget(hit);
                     return true;
@@ -339,7 +425,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         CodexAdvancementTab selectedTab = activeSelectedTab();
         if (event.button() == 0 && selectedTab != null) {
             isScrolling = true;
-            selectedTab.scroll(-dragX, -dragY);
+            selectedTab.scroll(-dragX, -dragY, contentWidth(), contentHeight());
             return true;
         }
         return super.mouseDragged(event, dragX, dragY);
@@ -355,7 +441,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
         CodexAdvancementTab selectedTab = activeSelectedTab();
         if (selectedTab != null) {
-            selectedTab.scroll(scrollX * 16.0, scrollY * 16.0);
+            selectedTab.scroll(scrollX * 16.0, scrollY * 16.0, contentWidth(), contentHeight());
             return true;
         }
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
