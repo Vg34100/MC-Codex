@@ -1,9 +1,19 @@
 package net.vg.codex.advancement;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.mojang.serialization.JsonOps;
 import dev.architectury.platform.Platform;
 import net.minecraft.SharedConstants;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.commands.ReloadCommand;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.metadata.pack.PackFormat;
+import net.minecraft.server.packs.metadata.pack.PackMetadataSection;
+import net.minecraft.util.InclusiveRange;
 import net.minecraft.world.level.storage.LevelResource;
 
 import java.io.IOException;
@@ -21,6 +31,7 @@ import java.util.stream.Stream;
  */
 public final class AdvancementPackSync {
     public static final String PACK_ID = "codex_advancements";
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private AdvancementPackSync() {
     }
@@ -43,18 +54,20 @@ public final class AdvancementPackSync {
     private static void ensurePackSkeleton() throws IOException {
         Path dir = externalPackDir();
         Files.createDirectories(dir);
-        Path mcmeta = dir.resolve("pack.mcmeta");
-        if (Files.notExists(mcmeta)) {
-            String json = """
-                    {
-                      "pack": {
-                        "pack_format": %d,
-                        "description": "Codex custom advancements"
-                      }
-                    }
-                    """.formatted(SharedConstants.DATA_PACK_FORMAT_MAJOR);
-            Files.writeString(mcmeta, json, StandardCharsets.UTF_8);
-        }
+        // Regenerated on every sync (not just when missing) via the game's own metadata codec,
+        // rather than a hand-written pack_format integer - this MC version requires min_format/
+        // max_format once the format number is past a threshold, and hand-writing that schema
+        // risks going stale again on a future MC update the same way pack_format alone did.
+        var sectionType = PackMetadataSection.forPackType(PackType.SERVER_DATA);
+        PackFormat format = PackFormat.of(SharedConstants.DATA_PACK_FORMAT_MAJOR, SharedConstants.DATA_PACK_FORMAT_MINOR);
+        PackMetadataSection section = new PackMetadataSection(
+                Component.literal("Codex custom advancements"),
+                new InclusiveRange<>(format)
+        );
+        JsonElement sectionJson = sectionType.codec().encodeStart(JsonOps.INSTANCE, section).getOrThrow();
+        JsonObject root = new JsonObject();
+        root.add(sectionType.name(), sectionJson);
+        Files.writeString(dir.resolve("pack.mcmeta"), GSON.toJson(root), StandardCharsets.UTF_8);
     }
 
     private static void copyTree(Path source, Path target) throws IOException {
