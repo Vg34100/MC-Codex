@@ -2,7 +2,9 @@ package net.vg.codex.client.advancements;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
@@ -17,6 +19,7 @@ import net.minecraft.advancements.Criterion;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.StringWidget;
@@ -33,6 +36,7 @@ import net.minecraft.util.Mth;
 import net.vg.codex.network.RequestAdvancementSnapshotPayload;
 import net.vg.codex.network.SaveAdvancementTreePayload;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,8 +89,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private static final int PANEL_MIN_WIDTH = 150;
     private static final int PANEL_GAP = 10;
     private static final int DESCRIPTION_HEIGHT = 60;
-    private static final int MIN_CRITERIA_HEIGHT = 40;
-    private static final int BOTTOM_CONTROLS_HEIGHT = 50;
+    private static final int MAX_CRITERIA_ROWS = 4;
+    private static final int CRITERIA_ROW_HEIGHT = 14;
 
     private static final float ZOOM_STEP = 0.25F;
     private static final float MIN_ZOOM = 0.5F;
@@ -96,6 +100,44 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     // (an unbounded map of criterion name -> Criterion), built from Criterion.CODEC which is public.
     private static final Codec<Map<String, Criterion<?>>> CRITERIA_CODEC = Codec.unboundedMap(Codec.STRING, Criterion.CODEC);
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    /**
+     * Curated common trigger types with simplified single-value fields, so editing criteria means
+     * picking a type and filling in one plain-text value instead of hand-writing JSON. JSON shapes
+     * below were confirmed against real vanilla advancement files (sniper_duel.json for
+     * player_killed_entity, find_fortress.json for location, purple_stained_glass_pane.json for
+     * recipe_unlocked/inventory_changed), not guessed. CUSTOM remains as a raw-JSON escape hatch
+     * for anything not in this curated list.
+     */
+    private enum CriterionType {
+        IMPOSSIBLE("minecraft:impossible", "Impossible", false),
+        TICK("minecraft:tick", "Always (tick)", false),
+        ITEM_OBTAINED("minecraft:inventory_changed", "Item Obtained", true),
+        PLAYER_KILLED_ENTITY("minecraft:player_killed_entity", "Player Killed Entity", true),
+        ENTITY_KILLED_PLAYER("minecraft:entity_killed_player", "Entity Killed Player", true),
+        LOCATION("minecraft:location", "Reached Location", true),
+        RECIPE_UNLOCKED("minecraft:recipe_unlocked", "Recipe Unlocked", true),
+        CUSTOM(null, "Custom (raw JSON)", true);
+
+        final String triggerId;
+        final String label;
+        final boolean hasValue;
+
+        CriterionType(String triggerId, String label, boolean hasValue) {
+            this.triggerId = triggerId;
+            this.label = label;
+            this.hasValue = hasValue;
+        }
+
+        static CriterionType fromTriggerId(String id) {
+            for (CriterionType type : values()) {
+                if (type.triggerId != null && type.triggerId.equals(id)) {
+                    return type;
+                }
+            }
+            return CUSTOM;
+        }
+    }
 
     private final Screen lastScreen;
     private final ClientAdvancements advancements;
@@ -115,10 +157,23 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private final Map<Identifier, AdvancementHolder> dirty = new LinkedHashMap<>();
     private EditBox titleBox;
     private MultiLineEditBox descriptionBox;
-    private MultiLineEditBox criteriaBox;
     private StringWidget statusWidget;
     private Button applyEditButton;
     private Button saveEditsButton;
+
+    // Criteria editor: `criteriaEntries` is the working copy for whichever advancement is
+    // currently selected (raw per-criterion JSON, name -> object), edited via the list + form
+    // below rather than one big hand-written JSON blob.
+    private final Map<String, JsonObject> criteriaEntries = new LinkedHashMap<>();
+    private final List<String> currentCriteriaNames = new ArrayList<>();
+    private String selectedCriterionName;
+    private final List<Button> criteriaListButtons = new ArrayList<>();
+    private Button addCriterionButton;
+    private EditBox criterionNameBox;
+    private CycleButton<CriterionType> criterionTypeButton;
+    private EditBox criterionValueBox;
+    private Button applyCriterionButton;
+    private Button removeCriterionButton;
 
     public CodexAdvancementsScreen(ClientAdvancements advancements, Screen lastScreen) {
         super(Component.literal("Advancements"));
@@ -212,50 +267,82 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                     .build());
         }
 
+        criteriaListButtons.clear();
         if (showEditPanel()) {
             int panelWidth = panelWidth();
             int panelLeft = left + windowWidth + PANEL_GAP;
-            int panelTop = top;
-            titleBox = addRenderableWidget(new EditBox(this.font, panelLeft, panelTop, panelWidth, 16, Component.literal("Title")));
+            int y = top;
+
+            titleBox = addRenderableWidget(new EditBox(this.font, panelLeft, y, panelWidth, 16, Component.literal("Title")));
+            y += 20;
+
             descriptionBox = addRenderableWidget(MultiLineEditBox.builder()
                     .setX(panelLeft)
-                    .setY(panelTop + 20)
+                    .setY(y)
                     .setPlaceholder(Component.literal("Description"))
                     .build(this.font, panelWidth, DESCRIPTION_HEIGHT, Component.literal("Description")));
+            y += DESCRIPTION_HEIGHT + 6;
 
-            int criteriaTop = panelTop + 20 + DESCRIPTION_HEIGHT + 6;
-            int buttonsTop = top + windowHeight - BOTTOM_CONTROLS_HEIGHT;
-            int criteriaHeight = Math.max(MIN_CRITERIA_HEIGHT, buttonsTop - criteriaTop - 6);
-            criteriaBox = addRenderableWidget(MultiLineEditBox.builder()
-                    .setX(panelLeft)
-                    .setY(criteriaTop)
-                    .setPlaceholder(Component.literal("Criteria (raw JSON)"))
-                    .build(this.font, panelWidth, criteriaHeight, Component.literal("Criteria (raw JSON)")));
+            for (int i = 0; i < MAX_CRITERIA_ROWS; i++) {
+                int rowIndex = i;
+                int rowY = y + i * CRITERIA_ROW_HEIGHT;
+                Button row = addRenderableWidget(Button.builder(Component.empty(), b -> selectCriterionAt(rowIndex))
+                        .bounds(panelLeft, rowY, panelWidth, CRITERIA_ROW_HEIGHT - 2)
+                        .build());
+                row.visible = false;
+                criteriaListButtons.add(row);
+            }
+            y += MAX_CRITERIA_ROWS * CRITERIA_ROW_HEIGHT + 4;
 
-            int buttonWidth = (panelWidth - 10) / 2;
+            addCriterionButton = addRenderableWidget(Button.builder(Component.literal("+ Add Criterion"), b -> addCriterion())
+                    .bounds(panelLeft, y, panelWidth, 16)
+                    .build());
+            y += 20;
+
+            criterionNameBox = addRenderableWidget(new EditBox(this.font, panelLeft, y, panelWidth, 16, Component.literal("Criterion name")));
+            y += 20;
+
+            criterionTypeButton = addRenderableWidget(CycleButton.builder((CriterionType t) -> Component.literal(t.label), CriterionType.IMPOSSIBLE)
+                    .withValues(CriterionType.values())
+                    .create(panelLeft, y, panelWidth, 20, Component.literal("Type"), (button, value) ->
+                            criterionValueBox.setEditable(value.hasValue)));
+            y += 24;
+
+            criterionValueBox = addRenderableWidget(new EditBox(this.font, panelLeft, y, panelWidth, 16, Component.literal("Value")));
+            y += 20;
+
+            int halfWidth = (panelWidth - 10) / 2;
+            applyCriterionButton = addRenderableWidget(Button.builder(Component.literal("Apply Criterion"), b -> applyCriterion())
+                    .bounds(panelLeft, y, halfWidth, 20)
+                    .build());
+            removeCriterionButton = addRenderableWidget(Button.builder(Component.literal("Remove"), b -> removeCriterion())
+                    .bounds(panelLeft + halfWidth + 10, y, halfWidth, 20)
+                    .build());
+            y += 26;
+
             applyEditButton = addRenderableWidget(Button.builder(Component.literal("Apply Edit"), b -> applyEdit())
-                    .bounds(panelLeft, buttonsTop, buttonWidth, 20)
+                    .bounds(panelLeft, y, halfWidth, 20)
                     .build());
             saveEditsButton = addRenderableWidget(Button.builder(Component.literal("Save"), b -> saveEdits())
-                    .bounds(panelLeft + buttonWidth + 10, buttonsTop, buttonWidth, 20)
+                    .bounds(panelLeft + halfWidth + 10, y, halfWidth, 20)
                     .build());
-            statusWidget = addRenderableWidget(new StringWidget(panelLeft, buttonsTop + 24, panelWidth, 10, Component.empty(), this.font));
+            y += 24;
+
+            statusWidget = addRenderableWidget(new StringWidget(panelLeft, y, panelWidth, 10, Component.empty(), this.font));
 
             if (selectedEditWidget != null) {
                 titleBox.setValue(selectedEditWidget.display().getTitle().getString());
                 descriptionBox.setValue(selectedEditWidget.display().getDescription().getString());
-                criteriaBox.setValue(encodeCriteria(criteriaFor(selectedEditWidget)));
+                loadCriteriaEntries(criteriaFor(selectedEditWidget));
+            } else {
+                clearCriterionEditor();
+                refreshCriteriaList();
             }
         }
     }
 
     private HolderLookup.Provider registries() {
         return this.minecraft.level.registryAccess();
-    }
-
-    private String encodeCriteria(Map<String, Criterion<?>> criteria) {
-        JsonElement json = CRITERIA_CODEC.encodeStart(RegistryOps.create(JsonOps.INSTANCE, registries()), criteria).getOrThrow();
-        return GSON.toJson(json);
     }
 
     private void setStatus(String message) {
@@ -442,7 +529,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         selectedEditWidget = widget;
         titleBox.setValue(widget.display().getTitle().getString());
         descriptionBox.setValue(widget.display().getDescription().getString());
-        criteriaBox.setValue(encodeCriteria(criteriaFor(widget)));
+        loadCriteriaEntries(criteriaFor(widget));
         setStatus("");
     }
 
@@ -451,6 +538,214 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         AdvancementHolder dirtyHolder = dirty.get(widget.node().holder().id());
         return dirtyHolder != null ? dirtyHolder.value().criteria() : widget.node().advancement().criteria();
     }
+
+    // ---- Criteria list/editor ----
+
+    private void loadCriteriaEntries(Map<String, Criterion<?>> criteria) {
+        criteriaEntries.clear();
+        if (!criteria.isEmpty()) {
+            JsonElement encoded = CRITERIA_CODEC.encodeStart(RegistryOps.create(JsonOps.INSTANCE, registries()), criteria).getOrThrow();
+            for (Map.Entry<String, JsonElement> e : encoded.getAsJsonObject().entrySet()) {
+                criteriaEntries.put(e.getKey(), e.getValue().getAsJsonObject());
+            }
+        }
+        clearCriterionEditor();
+        refreshCriteriaList();
+    }
+
+    private void refreshCriteriaList() {
+        currentCriteriaNames.clear();
+        currentCriteriaNames.addAll(criteriaEntries.keySet());
+        for (int i = 0; i < criteriaListButtons.size(); i++) {
+            Button button = criteriaListButtons.get(i);
+            if (i < currentCriteriaNames.size()) {
+                String name = currentCriteriaNames.get(i);
+                JsonObject json = criteriaEntries.get(name);
+                String triggerId = json.has("trigger") ? json.get("trigger").getAsString() : "?";
+                button.setMessage(Component.literal(name + " (" + triggerId + ")"));
+                button.visible = true;
+                button.active = true;
+            } else {
+                button.visible = false;
+                button.active = false;
+            }
+        }
+    }
+
+    private void selectCriterionAt(int index) {
+        if (index >= 0 && index < currentCriteriaNames.size()) {
+            selectCriterion(currentCriteriaNames.get(index));
+        }
+    }
+
+    private void selectCriterion(String name) {
+        JsonObject json = criteriaEntries.get(name);
+        if (json == null) {
+            return;
+        }
+        selectedCriterionName = name;
+        criterionNameBox.setValue(name);
+        String triggerId = json.has("trigger") ? json.get("trigger").getAsString() : null;
+        CriterionType type = CriterionType.fromTriggerId(triggerId);
+        criterionTypeButton.setValue(type);
+        criterionValueBox.setEditable(type.hasValue);
+        criterionValueBox.setValue(extractValue(type, json));
+        setStatus("");
+    }
+
+    private void clearCriterionEditor() {
+        selectedCriterionName = null;
+        if (criterionNameBox != null) {
+            criterionNameBox.setValue("");
+            criterionTypeButton.setValue(CriterionType.IMPOSSIBLE);
+            criterionValueBox.setValue("");
+            criterionValueBox.setEditable(false);
+        }
+    }
+
+    private void addCriterion() {
+        String base = "criterion";
+        String name = base;
+        int n = 1;
+        while (criteriaEntries.containsKey(name)) {
+            name = base + "_" + (n++);
+        }
+        criteriaEntries.put(name, buildCriterionJson(CriterionType.IMPOSSIBLE, ""));
+        refreshCriteriaList();
+        selectCriterion(name);
+    }
+
+    private void applyCriterion() {
+        String name = criterionNameBox.getValue().trim();
+        if (name.isEmpty()) {
+            setStatus("Criterion name can't be blank.");
+            return;
+        }
+        CriterionType type = criterionTypeButton.getValue();
+        JsonObject json;
+        try {
+            json = buildCriterionJson(type, criterionValueBox.getValue());
+        } catch (RuntimeException e) {
+            setStatus("Invalid criterion: " + e.getMessage());
+            return;
+        }
+        if (selectedCriterionName != null && !selectedCriterionName.equals(name)) {
+            criteriaEntries.remove(selectedCriterionName);
+        }
+        criteriaEntries.put(name, json);
+        selectedCriterionName = name;
+        refreshCriteriaList();
+        setStatus("Criterion applied to this advancement - hit Apply Edit, then Save.");
+    }
+
+    private void removeCriterion() {
+        if (selectedCriterionName == null) {
+            setStatus("Select a criterion first.");
+            return;
+        }
+        criteriaEntries.remove(selectedCriterionName);
+        clearCriterionEditor();
+        refreshCriteriaList();
+        setStatus("Criterion removed - hit Apply Edit, then Save.");
+    }
+
+    /**
+     * Builds the raw JSON for one criterion from a curated type + simplified value, matching real
+     * vanilla shapes confirmed from actual advancement files rather than guessed.
+     */
+    private JsonObject buildCriterionJson(CriterionType type, String value) {
+        if (type == CriterionType.CUSTOM) {
+            String text = value.isBlank() ? "{}" : value;
+            return JsonParser.parseString(text).getAsJsonObject();
+        }
+        JsonObject obj = new JsonObject();
+        obj.addProperty("trigger", type.triggerId);
+        JsonObject conditions = new JsonObject();
+        String trimmed = value.trim();
+        switch (type) {
+            case ITEM_OBTAINED -> {
+                JsonArray items = new JsonArray();
+                JsonObject item = new JsonObject();
+                item.addProperty("items", trimmed.isEmpty() ? "minecraft:stone" : trimmed);
+                items.add(item);
+                conditions.add("items", items);
+            }
+            case PLAYER_KILLED_ENTITY, ENTITY_KILLED_PLAYER -> {
+                if (!trimmed.isEmpty()) {
+                    JsonObject predicateInner = new JsonObject();
+                    predicateInner.addProperty("type", trimmed);
+                    conditions.add("entity", wrapEntityProperties(predicateInner));
+                }
+            }
+            case LOCATION -> {
+                if (!trimmed.isEmpty()) {
+                    JsonObject location = new JsonObject();
+                    location.addProperty("dimension", trimmed);
+                    JsonObject predicateInner = new JsonObject();
+                    predicateInner.add("location", location);
+                    conditions.add("player", wrapEntityProperties(predicateInner));
+                }
+            }
+            case RECIPE_UNLOCKED -> conditions.addProperty("recipe", trimmed);
+            default -> {
+                // IMPOSSIBLE / TICK take no fields.
+            }
+        }
+        if (!conditions.isEmpty()) {
+            obj.add("conditions", conditions);
+        }
+        return obj;
+    }
+
+    private JsonArray wrapEntityProperties(JsonObject predicateInner) {
+        JsonObject condition = new JsonObject();
+        condition.addProperty("condition", "minecraft:entity_properties");
+        condition.addProperty("entity", "this");
+        condition.add("predicate", predicateInner);
+        JsonArray array = new JsonArray();
+        array.add(condition);
+        return array;
+    }
+
+    /** Best-effort reverse of {@link #buildCriterionJson} for populating the value box on select. */
+    private String extractValue(CriterionType type, JsonObject criterionJson) {
+        if (type == CriterionType.CUSTOM) {
+            return GSON.toJson(criterionJson);
+        }
+        if (!criterionJson.has("conditions") || !criterionJson.get("conditions").isJsonObject()) {
+            return "";
+        }
+        JsonObject conditions = criterionJson.getAsJsonObject("conditions");
+        try {
+            return switch (type) {
+                case ITEM_OBTAINED -> conditions.getAsJsonArray("items").get(0).getAsJsonObject().get("items").getAsString();
+                case PLAYER_KILLED_ENTITY, ENTITY_KILLED_PLAYER -> {
+                    if (!conditions.has("entity")) {
+                        yield "";
+                    }
+                    JsonObject predicate = conditions.getAsJsonArray("entity").get(0).getAsJsonObject().getAsJsonObject("predicate");
+                    yield predicate.has("type") ? predicate.get("type").getAsString() : "";
+                }
+                case LOCATION -> {
+                    if (!conditions.has("player")) {
+                        yield "";
+                    }
+                    JsonObject predicate = conditions.getAsJsonArray("player").get(0).getAsJsonObject().getAsJsonObject("predicate");
+                    JsonObject location = predicate.getAsJsonObject("location");
+                    yield location != null && location.has("dimension") ? location.get("dimension").getAsString() : "";
+                }
+                case RECIPE_UNLOCKED -> conditions.has("recipe") ? conditions.get("recipe").getAsString() : "";
+                default -> "";
+            };
+        } catch (RuntimeException e) {
+            // Shape didn't match what this type expects (e.g. hand-edited or from a mod) - fall
+            // back to blank rather than crash; the raw JSON is still intact under the hood since
+            // we only ever replace an entry wholesale via applyCriterion.
+            return "";
+        }
+    }
+
+    // ---- Apply / Save ----
 
     private void applyEdit() {
         if (selectedEditWidget == null) {
@@ -471,12 +766,14 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
         Advancement oldAdvancement = selectedEditWidget.node().advancement();
         Map<String, Criterion<?>> oldCriteria = oldAdvancement.criteria();
-        Map<String, Criterion<?>> newCriteria;
+        Map<String, Criterion<?>> newCriteria = new LinkedHashMap<>();
         try {
-            JsonElement json = JsonParser.parseString(criteriaBox.getValue());
-            newCriteria = CRITERIA_CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, registries()), json).getOrThrow();
+            RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registries());
+            for (Map.Entry<String, JsonObject> e : criteriaEntries.entrySet()) {
+                newCriteria.put(e.getKey(), Criterion.CODEC.parse(ops, e.getValue()).getOrThrow());
+            }
         } catch (RuntimeException e) {
-            setStatus("Invalid criteria JSON: " + e.getMessage());
+            setStatus("Invalid criteria: " + e.getMessage());
             return;
         }
         // Requirements name the criteria groups that must be met to complete the advancement.
