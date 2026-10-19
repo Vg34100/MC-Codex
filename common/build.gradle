@@ -4,6 +4,13 @@ architectury {
 
 loom {
     splitEnvironmentSourceSets()
+
+    mods {
+        codex {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
 }
 
 dependencies {
@@ -13,4 +20,14 @@ dependencies {
     implementation "net.fabricmc:fabric-loader:$rootProject.fabric_loader_version"
 
     implementation "dev.architectury:architectury:$rootProject.architectury_api_version"
+}
+
+afterEvaluate {
+    // architecturyTransformerClasspath (used by transformProductionFabric/NeoForge, which process
+    // both the main and client sourcesets bundled together) only resolves the main-sourceset's
+    // Minecraft jar by default under splitEnvironmentSourceSets() - it's missing client-only
+    // classes like Screen, which ASM's stack-map frame computation needs to resolve on demand for
+    // any client-sourceset class, causing transform to fail unpredictably depending on exact
+    // bytecode shape. Add the client compile classpath so it can resolve those too.
+    configurations.architecturyTransformerClasspath.extendsFrom(configurations.clientCompileClasspath)
 }

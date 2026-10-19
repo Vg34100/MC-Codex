@@ -4,8 +4,10 @@ import com.mojang.brigadier.CommandDispatcher;
 import dev.architectury.event.events.common.CommandRegistrationEvent;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.server.level.ServerPlayer;
 import net.vg.codex.network.AdvancementEditorNetworking;
+import net.vg.codex.party.CodexPartyService;
 
 public final class AdvancementEditorCommand {
     private AdvancementEditorCommand() {
@@ -26,6 +28,19 @@ public final class AdvancementEditorCommand {
                                 .then(Commands.literal("edit")
                                         .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                                         .executes(AdvancementEditorCommand::openEditor)))
+                        .then(Commands.literal("party")
+                                .then(Commands.literal("invite")
+                                        .then(Commands.argument("player", EntityArgument.player())
+                                                .executes(ctx -> {
+                                                    CodexPartyService.invite(ctx.getSource().getPlayerOrException(), EntityArgument.getPlayer(ctx, "player"));
+                                                    return 1;
+                                                })))
+                                .then(Commands.literal("accept").executes(ctx -> {
+                                    CodexPartyService.accept(ctx.getSource().getPlayerOrException()); return 1;
+                                }))
+                                .then(Commands.literal("leave").executes(ctx -> {
+                                    CodexPartyService.leave(ctx.getSource().getPlayerOrException()); return 1;
+                                })))
         );
     }
 
