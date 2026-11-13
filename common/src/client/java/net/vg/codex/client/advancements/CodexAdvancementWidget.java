@@ -174,7 +174,7 @@ public final class CodexAdvancementWidget {
 
     private float percent() {
         JsonObject state = rewardsOverride == null ? ClientQuests.presentation(node.holder().id()) : new JsonObject();
-        if (!state.isEmpty()) {
+        if ((state.size() != 0)) {
             if (!state.get("unlocked").getAsBoolean()) return 0;
             if (state.get("ready").getAsBoolean()) return 1;
             if (state.get("managed").getAsBoolean() || progress != null && progress.isDone()) return 0;

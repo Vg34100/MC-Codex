@@ -30,7 +30,9 @@ public final class TreasureNetworking {
     private static boolean allowed(ServerPlayer player) { return Commands.hasPermission(Commands.LEVEL_GAMEMASTERS).test(player.createCommandSourceStack()); }
 
     public static Set<Identifier> lootTables(ServerPlayer player) {
-        //? if <26.1 {
+        //? if <1.21 {
+        /*return Set.copyOf(player.level().getServer().getLootData().getKeys(net.minecraft.world.level.storage.loot.LootDataType.TABLE));
+        *///?} else if <26.1 {
         /*return Set.copyOf(player.level().getServer().reloadableRegistries().getKeys(Registries.LOOT_TABLE));
         *///?} else {
         return player.level().getServer().reloadableRegistries().lookup().lookupOrThrow(Registries.LOOT_TABLE).listElementIds().map(key -> key.identifier()).collect(Collectors.toSet());

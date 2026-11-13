@@ -2294,7 +2294,7 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
         if (selectedEditWidget == null || !applyEdit()) return;
         Identifier id = selectedEditWidget.node().holder().id(); JsonObject base = baseJsonFor(id);
         minecraft.setScreen(new JsonDocumentScreen(this, base, updated -> {
-            if (!updated.has("criteria") || updated.getAsJsonObject("criteria").isEmpty()) throw new IllegalArgumentException("At least one criterion is required");
+            if (!updated.has("criteria") || (updated.getAsJsonObject("criteria").size() == 0)) throw new IllegalArgumentException("At least one criterion is required");
             for (var criterion : updated.getAsJsonObject("criteria").entrySet()) {
                 JsonObject value = criterion.getValue().getAsJsonObject();
                 if (!value.has("trigger") || !value.get("trigger").isJsonPrimitive() || !value.get("trigger").getAsJsonPrimitive().isString()) throw new IllegalArgumentException("Every criterion needs a trigger identifier");
@@ -2368,7 +2368,7 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
             setStatus("Invalid reward: " + e.getMessage());
             return false;
         }
-        if (base.has("rewards") || !rewards.isEmpty()) updated.add("rewards", rewards);
+        if (base.has("rewards") || (rewards.size() != 0)) updated.add("rewards", rewards);
         if (base.has("codex_claimable") || claimableRewardsCheckbox.selected()) updated.addProperty("codex_claimable", claimableRewardsCheckbox.selected());
 
         rememberUndo(id, base, updated);
@@ -2415,7 +2415,7 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
         for (Map.Entry<Identifier, JsonObject> e : dirty.entrySet()) {
             JsonObject json = e.getValue();
             boolean hasCriteria = json.has("criteria") && json.get("criteria").isJsonObject()
-                    && !json.getAsJsonObject("criteria").isEmpty();
+                    && (json.getAsJsonObject("criteria").size() != 0);
             if (!hasCriteria) {
                 emptyCriteria.add(e.getKey());
             }

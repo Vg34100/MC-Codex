@@ -12,10 +12,29 @@ public final class LegacyDraw {
  }
  public static Pose pose(GuiGraphics nativeGraphics){return new Pose(nativeGraphics.pose());}
  public static void blit(GuiGraphics nativeGraphics,Object pipeline,ResourceLocation texture,int x,int y,float u,float v,int w,int h,int tw,int th){nativeGraphics.blit(texture,x,y,u,v,w,h,tw,th);}
- public static void blitSprite(GuiGraphics nativeGraphics,Object pipeline,ResourceLocation sprite,int x,int y,int w,int h){nativeGraphics.blitSprite(sprite,x,y,w,h);}
+ public static void blitSprite(GuiGraphics nativeGraphics,Object pipeline,ResourceLocation sprite,int x,int y,int w,int h){
+  //? if <1.21 {
+  /*net.vg.codex.compat.v120.ClassicSprites120.draw(nativeGraphics,sprite,x,y,w,h);
+  *///?} else {
+  nativeGraphics.blitSprite(sprite,x,y,w,h);
+  //?}
+ }
  public static void blitSprite(GuiGraphics nativeGraphics,Object pipeline,ResourceLocation sprite,int x,int y,int w,int h,int color){
   nativeGraphics.setColor((color>>16&255)/255F,(color>>8&255)/255F,(color&255)/255F,(color>>>24)/255F);
-  try{nativeGraphics.blitSprite(sprite,x,y,w,h);}finally{nativeGraphics.setColor(1,1,1,1);}
+  try{
+  //? if <1.21 {
+  /*net.vg.codex.compat.v120.ClassicSprites120.draw(nativeGraphics,sprite,x,y,w,h);
+  *///?} else {
+  nativeGraphics.blitSprite(sprite,x,y,w,h);
+  //?}
+ }finally{nativeGraphics.setColor(1,1,1,1);}
  }
- public static void blitSprite(GuiGraphics nativeGraphics,Object pipeline,ResourceLocation sprite,int sw,int sh,int u,int v,int x,int y,int w,int h){nativeGraphics.blitSprite(sprite,sw,sh,u,v,x,y,w,h);}
+ public static void blitSprite(GuiGraphics nativeGraphics,Object pipeline,ResourceLocation sprite,int sw,int sh,int u,int v,int x,int y,int w,int h){
+  //? if <1.21 {
+  /*net.vg.codex.compat.v120.ClassicSprites120.crop(nativeGraphics,sprite,sw,sh,u,v,x,y,w,h);
+  *///?} else {
+  nativeGraphics.blitSprite(sprite,sw,sh,u,v,x,y,w,h);
+  //?}
+ }
+ public static void background(GuiGraphics g){var mc=net.minecraft.client.Minecraft.getInstance();g.fillGradient(0,0,mc.getWindow().getGuiScaledWidth(),mc.getWindow().getGuiScaledHeight(),0xC0101010,0xD0101010);}
 }

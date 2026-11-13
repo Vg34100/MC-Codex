@@ -204,7 +204,7 @@ public final class QuestRuntime {
         out.addProperty("managed", QuestDefinitions.managedLocal(q)); out.addProperty("accepted", accepted); out.addProperty("repeat", repeat);
         out.addProperty("can_accept", unlocked && eligible && QuestDefinitions.managedLocal(q) && (!accepted || repeat && completed && claimed && cycleClaimed(p,id) && wait == 0));
         out.addProperty("claim_ready", ready && !claimed); out.addProperty("claim_pending", !claimed);
-        out.addProperty("dialogue", q.has("dialogue") && !q.getAsJsonObject("dialogue").isEmpty());
+        out.addProperty("dialogue", q.has("dialogue") && (q.getAsJsonObject("dialogue").size() != 0));
         boolean choicePending = false;
         if (!s.has("choice") && q.has("dialogue") && q.getAsJsonObject("dialogue").has("choices"))
             for (JsonElement choice : q.getAsJsonObject("dialogue").getAsJsonArray("choices")) choicePending |= QuestConditions.available(p, choice.getAsJsonObject()) && QuestDefinitions.choiceAvailable(choice.getAsJsonObject(), ready, dialogueStarted(p, id, q, s));

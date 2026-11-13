@@ -38,7 +38,7 @@ public final class QuestNetworking {
         if (!tabs.equals(TAB_SUMMARIES.put(player.getUUID(), tabs))) {
             JsonObject batch = new JsonObject(); boolean first = true;
             for (var entry : tabs.entrySet()) {
-                if (!batch.isEmpty() && batch.toString().length() + entry.getKey().length() + entry.getValue().toString().length() > 48000) {
+                if ((batch.size() != 0) && batch.toString().length() + entry.getKey().length() + entry.getValue().toString().length() > 48000) {
                     NetworkManager.sendToPlayer(player, new TabSummaryPayload(batch.toString(), first)); first = false; batch = new JsonObject();
                 }
                 batch.add(entry.getKey(), entry.getValue());

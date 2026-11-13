@@ -116,3 +116,100 @@ if (stonecutter.eval(stonecutter.current.version, '<1.21')) {
         replace('.getOrThrow()', '.getOrThrow(false, message -> {})')
     }
 }
+
+if (stonecutter.eval(stonecutter.current.version, '<1.21')) {
+    stonecutter.replacements.string(true) {
+        replace('Identifier.parse(', 'new ResourceLocation(')
+        replace('Identifier.fromNamespaceAndPath(', 'new ResourceLocation(')
+        replace('Identifier.withDefaultNamespace(', 'new ResourceLocation(')
+        replace('ByteBufCodecs.list()', 'ByteBufCodecs.list(65536)')
+        replace('net.minecraft.advancements.AdvancementNode', 'net.minecraft.advancements.Advancement')
+        replace('net.minecraft.advancements.AdvancementHolder', 'net.minecraft.advancements.Advancement')
+        replace('AdvancementNode', 'Advancement')
+        replace('AdvancementHolder', 'Advancement')
+        replace('AdvancementTree', 'AdvancementList')
+        replace('AdvancementType', 'FrameType')
+        replace('net.minecraft.advancements.AdvancementRequirements', 'net.vg.codex.compat.v120.Requirements120')
+        replace('AdvancementRequirements', 'Requirements120')
+        replace('Advancement.CODEC', 'net.vg.codex.compat.v120.LegacyAdvancements.CODEC')
+        replace('DisplayInfo.CODEC', 'net.vg.codex.compat.v120.LegacyAdvancements.DISPLAY_CODEC')
+        replace('new Advancement(parent, display, AdvancementRewards.EMPTY,', 'net.vg.codex.compat.v120.LegacyAdvancements.preview(parent, display, AdvancementRewards.EMPTY,')
+        replace('new AdvancementHolder(e.getKey(), dummy)', 'net.vg.codex.compat.v120.LegacyAdvancements.withId(e.getKey(), dummy)')
+        replace('new AdvancementHolder(id, readOne(file, registries))', 'net.vg.codex.compat.v120.LegacyAdvancements.withId(id, readOne(file, registries))')
+        replace('new Advancement(e.getKey(), dummy)', 'net.vg.codex.compat.v120.LegacyAdvancements.withId(e.getKey(), dummy)')
+        replace('new Advancement(id, readOne(file, registries))', 'net.vg.codex.compat.v120.LegacyAdvancements.withId(id, readOne(file, registries))')
+        replace('tree.addAll(holders)', 'net.vg.codex.compat.v120.LegacyAdvancements.addAll(tree, holders)')
+        replace('tree.roots()', 'tree.getRoots()')
+        replace('node.holder().id()', 'node.getId()')
+        replace('.holder().id()', '.getId()')
+        replace('.holder()', '/* Native 1.20 advancement already holds its definition. */')
+        ['holder','advancement','h','loaded'].each { name ->
+            replace(name+'.value().criteria()', name+'.getCriteria()')
+            replace(name+'.value().requirements()', 'net.vg.codex.compat.v120.LegacyAdvancements.view('+name+').requirements()')
+            replace(name+'.value().display()', 'java.util.Optional.ofNullable('+name+'.getDisplay())')
+            if(name!='h') replace(name+'.value()', name)
+            replace(name+'.id()', name+'.getId()')
+        }
+        ['node','root','rootNode'].each { name -> replace(name+'.advancement()', 'net.vg.codex.compat.v120.LegacyAdvancements.view('+name+')') }
+        ['node','rootNode','parentNode','ancestor','root','parent'].each { name ->
+            replace(name+'.parent()',name+'.getParent()')
+            replace(name+'.children()',name+'.getChildren()')
+        }
+        replace('.getAdvancements().get(', '.getAdvancements().getAdvancement(')
+        replace('.tree().get(', '.getAdvancement(')
+        replace('.getTree()', '.getAdvancements()')
+        replace('entry.progress().update(entry.requirements())', 'entry.requirements().apply(entry.progress())')
+        ['display','old','currentDisplay','sourceDisplay','display()'].each { name -> replace(name+'.getType()', name+'.getFrame()') }
+        replace('display.getBackground().isPresent()', 'display.getBackground()!=null')
+        replace('display.getBackground().get()', 'display.getBackground()')
+    }
+}
+
+if (stonecutter.eval(stonecutter.current.version, '<1.21')) {
+    stonecutter.replacements.string(true) {
+        replace('progress.getProgressText()', 'net.vg.codex.compat.v120.LegacyAdvancements.progressText(progress)')
+        replace('ItemStack.OPTIONAL_CODEC', 'ItemStack.CODEC')
+        replace('ItemPredicate.CODEC', 'net.vg.codex.compat.v120.LegacyItems.PREDICATE_CODEC')
+    }
+}
+
+if (stonecutter.eval(stonecutter.current.version, '<1.21')) {
+    stonecutter.replacements.string(true) {
+        replace('net.minecraft.advancements.AdvancementTree', 'net.minecraft.advancements.AdvancementList')
+        replace('net.minecraft.advancements.AdvancementType', 'net.minecraft.advancements.FrameType')
+        replace('AdvancementRequirements::new', 'Requirements120::new')
+        replace('SaveAdvancementListPayload', 'SaveAdvancementTreePayload')
+        ['player','p','a','b'].each { name -> replace(name+'.registryAccess()', name+'.level().registryAccess()') }
+        replace('recipe.id()', 'recipe.getId()')
+        replace('ItemStack.isSameItemSameComponents(', 'ItemStack.isSameItemSameTags(')
+        replace('.predicate().test(', '.predicate().matches(')
+        replace('test.test(', 'test.matches(')
+        replace('.predicate.test(', '.predicate.matches(')
+    }
+}
+
+if (stonecutter.eval(stonecutter.current.version, '<1.21')) {
+    stonecutter.replacements.string(true) {
+        replace('AdvancementRewards.CODEC', 'net.vg.codex.compat.v120.LegacyAdvancements.REWARDS_CODEC')
+        replace('net.minecraft.network.chat.ComponentSerialization', 'net.vg.codex.compat.v120.LegacyComponents')
+        replace('ComponentSerialization', 'LegacyComponents')
+        replace('net.minecraft.client.gui.screens.advancements.AdvancementWidgetType', 'net.vg.codex.compat.v120.WidgetType120')
+        replace('AdvancementWidgetType', 'WidgetType120')
+        replace('Checkbox.builder(', 'net.vg.codex.client.compat.LegacyWidgets.checkbox(')
+        replace('net.minecraft.client.Minecraft.getInstance().gameRenderer.processBlurEffect(0)', 'net.vg.codex.client.compat.LegacyDraw.background(extractor)')
+        replace('getConnection().getAdvancements().getTree()', 'getConnection().getAdvancements().getAdvancements()')
+        replace('tree.getTree()', 'tree.getAdvancements()')
+        replace('.node().parent()', '.node().getParent()')
+        replace('.getFrame().getSerializedName()', '.getFrame().getName()')
+        replace('NbtIo.readCompressed(file, NbtAccounter.unlimitedHeap())', 'NbtIo.readCompressed(file.toFile())')
+        replace('public Class<? extends net.minecraft.client.gui.screens.Screen> screenClass()', 'public Class<? extends net.minecraft.client.gui.screens.Screen> getScreenClass()')
+        ['guiLeft','guiTop','guiXSize','guiYSize','screenWidth','screenHeight'].each { name -> replace('public int '+name+'()', 'public int get'+name.capitalize()+'()') }
+    }
+}
+
+if (stonecutter.eval(stonecutter.current.version, '<1.21')) {
+    stonecutter.replacements.string(true) {
+        replace('holder.advancement()', 'net.vg.codex.compat.v120.LegacyAdvancements.view(holder)')
+        replace('display().getType().getSerializedName()', 'display().getFrame().getName()')
+    }
+}

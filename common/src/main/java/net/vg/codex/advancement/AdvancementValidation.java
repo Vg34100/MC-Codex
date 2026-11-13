@@ -36,7 +36,7 @@ public final class AdvancementValidation {
     public static void validate(JsonObject definition, HolderLookup.Provider registries) {
         JsonObject vanilla = definition.deepCopy();
         vanilla.remove("codex_migration"); vanilla.remove("codex_quest"); vanilla.remove("codex_layout"); vanilla.remove("codex_claimable");
-        if (!vanilla.has("criteria") || vanilla.getAsJsonObject("criteria").isEmpty() || vanilla.getAsJsonObject("criteria").size() > 4096)
+        if (!vanilla.has("criteria") || (vanilla.getAsJsonObject("criteria").size() == 0) || vanilla.getAsJsonObject("criteria").size() > 4096)
             throw new IllegalArgumentException("An advancement needs 1–4096 criteria");
         for (var entry : vanilla.getAsJsonObject("criteria").entrySet()) {
             if (entry.getKey().isBlank() || entry.getKey().length() > 256) throw new IllegalArgumentException("Invalid criterion name");

@@ -16,3 +16,9 @@ git show <commit>:path/to/file
 ```
 
 Git commits protect against accidental edits and deletions. A copy of the recovery bundle is also stored on C: under the user's local `MC-Codex-backups` directory, separate from the A: workspace. Keep it until a newer independent backup is confirmed. Neither this local checkpoint nor its bundle has been pushed to GitHub.
+
+## Verified recovery results
+
+The source checkpoint is `ffd2acf` (413 files). A full Git integrity check passes. Two damaged historical objects were restored from the existing GitHub repository and verified against their original object hashes. One damaged object was proven unreachable from every branch, reflog and the index; its original bytes were preserved outside the object database. Damaged-object copies remain on C: in `AppData/Local/MC-Codex-backups/damaged-git-objects-20261112/`. Normal dangling objects were left alone.
+
+The verified complete-history bundle is `C:\Users\video\AppData\Local\MC-Codex-backups\MC-Codex-recovery-20261112.bundle`. Its adjacent JSON file records the commit and SHA-256. Nothing was pushed.

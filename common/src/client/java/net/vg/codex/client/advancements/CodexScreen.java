@@ -37,4 +37,8 @@ public abstract class CodexScreen extends Screen {
         super.resize(minecraft.getWindow().getGuiScaledWidth(), minecraft.getWindow().getGuiScaledHeight());
     }
     //?}
+    //? if <1.21 {
+    /*@Override public boolean mouseScrolled(double x,double y,double amount) { return mouseScrolled(x,y,0,amount); }
+    public boolean mouseScrolled(double x,double y,double horizontal,double vertical) { return super.mouseScrolled(x,y,vertical); }
+    *///?}
 }

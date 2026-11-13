@@ -6,6 +6,9 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.*;
+//? if <1.21 {
+/*import net.vg.codex.compat.v120.LegacyComponents;
+*///?}
 import net.minecraft.resources.*;
 import net.vg.codex.advancement.*;
 import java.util.*;
@@ -117,7 +120,7 @@ public final class PackToolsScreen extends CodexScreen {
     private void migrate() {
         JsonObject source=definitions.get(selected), meta=source.has("codex_migration")?source.getAsJsonObject("codex_migration"):new JsonObject();
         List<String> criteria=new ArrayList<>(source.getAsJsonObject("criteria").keySet());
-        if(migrationCriterion.isEmpty()||!criteria.contains(migrationCriterion))migrationCriterion=criteria.getFirst();
+        if(migrationCriterion.isEmpty()||!criteria.contains(migrationCriterion))migrationCriterion=criteria.get(0);
         if(migrationTarget.isEmpty())migrationTarget=migrationKind.equals("Criterion key")?migrationCriterion+"_renamed":selected.getNamespace()+":"+selected.getPath()+"_renamed";
         addRenderableWidget(CycleButton.builder((String v)->Component.literal(v),migrationKind).withValues("Quest identifier","Criterion key").create(left,height<280?88:90,size,20,Component.literal("Rename"),(b,v)->{migrationKind=v;migrationTarget=v.equals("Criterion key")?migrationCriterion+"_renamed":selected.getNamespace()+":"+selected.getPath()+"_renamed";rebuildWidgets();}));
         if(migrationKind.equals("Criterion key"))addRenderableWidget(CycleButton.builder((String v)->Component.literal(v),migrationCriterion).withValues(criteria).create(left,height<280?112:116,size,20,Component.literal("Current key"),(b,v)->{migrationCriterion=v;migrationTarget=v+"_renamed";rebuildWidgets();}));

@@ -88,7 +88,7 @@ public final class QuestFeedback {
             Set<String> changed = new HashSet<>(); items.forEach(item -> changed.add(item.toString()));
             pulse(id, progress.isDone() ? "complete" : "obtain", changed);
             String detail = progress.isDone() ? "Obtain objective complete" : "Obtain progress · " + count + " / " + node.advancement().requirements().names().size() + " requirements";
-            notice(new Notice(display.getTitle().getString(), List.of(detail), BuiltInRegistries.ITEM.getValue(items.getFirst()).getDefaultInstance(), 0xFF9CE4BB, System.nanoTime(), false));
+            notice(new Notice(display.getTitle().getString(), List.of(detail), BuiltInRegistries.ITEM.getValue(items.get(0)).getDefaultInstance(), 0xFF9CE4BB, System.nanoTime(), false));
         }
     }
     private static void notice(Notice notice) {
@@ -117,7 +117,8 @@ public final class QuestFeedback {
         long now = System.nanoTime(); NOTICES.removeIf(n -> now - n.at > 4_500_000_000L);
         int width = Math.min(230, mc.getWindow().getGuiScaledWidth() - 20), bottom = mc.getWindow().getGuiScaledHeight() - 12;
         int x = mc.getWindow().getGuiScaledWidth() - width - 10;
-        for (Notice notice : NOTICES.reversed()) {
+        for (var notices = NOTICES.descendingIterator(); notices.hasNext();) {
+            Notice notice=notices.next();
             float age = (now - notice.at) / 1_000_000_000F;
             float opacity = Math.min(1, age / 0.12F) * Math.min(1, (4.5F - age) / 0.6F);
             List<net.minecraft.util.FormattedCharSequence> lines = new ArrayList<>();

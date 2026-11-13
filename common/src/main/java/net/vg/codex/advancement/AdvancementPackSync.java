@@ -63,6 +63,9 @@ public final class AdvancementPackSync {
     }
 
     public static void onServerStarting(MinecraftServer server) {
+        //? if <1.21 {
+        /*net.vg.codex.compat.v120.LegacyAdvancements.start(server);
+        *///?}
         QuestState.initialize(server);
         reload(server, () -> { });
     }

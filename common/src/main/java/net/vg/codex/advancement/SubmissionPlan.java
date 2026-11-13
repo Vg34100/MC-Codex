@@ -41,7 +41,7 @@ public final class SubmissionPlan {
         if (row.has("components") && (!row.get("components").isJsonObject() || row.get("components").toString().length() > 8192)) throw new IllegalArgumentException("Invalid delivery components");
     }
     public static Identifier key(JsonObject row) {
-        if (row.has("id") && (!row.has("components") || row.getAsJsonObject("components").isEmpty())) return Identifier.parse(row.get("id").getAsString());
+        if (row.has("id") && (!row.has("components") || (row.getAsJsonObject("components").size() == 0))) return Identifier.parse(row.get("id").getAsString());
         JsonObject identity = row.deepCopy(); identity.remove("count");
         try { return Identifier.fromNamespaceAndPath("codex_internal", "delivery/" + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(canonical(identity).getBytes(StandardCharsets.UTF_8)))); }
         catch (java.security.NoSuchAlgorithmException impossible) { throw new IllegalStateException(impossible); }
@@ -61,7 +61,7 @@ public final class SubmissionPlan {
             ItemPredicate test = ItemPredicate.CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, registries), predicate).getOrThrow();
             Identifier icon = row.has("id") ? id : BuiltInRegistries.ITEM.get(TagKey.create(Registries.ITEM, id)).flatMap(set -> set.stream().findFirst()).map(h -> BuiltInRegistries.ITEM.getKey(h.value())).orElse(BuiltInRegistries.ITEM.getKey(Items.PAPER));
             String label = row.has("tag") ? "Any " + id.getPath().replace('_', ' ') : new ItemStack(BuiltInRegistries.ITEM.getValue(icon)).getHoverName().getString();
-            if (row.has("components") && !row.getAsJsonObject("components").isEmpty()) label += " (matching properties)";
+            if (row.has("components") && (row.getAsJsonObject("components").size() != 0)) label += " (matching properties)";
             rows.put(key, new Requirement(key, icon, label, counts.get(key), test));
         }
         return List.copyOf(rows.values());

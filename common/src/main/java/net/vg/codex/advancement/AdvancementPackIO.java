@@ -37,8 +37,8 @@ import java.util.stream.Stream;
  * id like minecraft:story/root.
  */
 public final class AdvancementPackIO {
-    private static final String ADVANCEMENT_DIR = "advancement";
-    private static final String LOOT_TABLE_DIR = "loot_table";
+    private static final String ADVANCEMENT_DIR = ResourceFormats.directory("advancement");
+    private static final String LOOT_TABLE_DIR = ResourceFormats.directory("loot_table");
     // Namespaced under this prefix (within the advancement's own namespace) so a generated table
     // can never collide with a hand-authored one, and is trivially recognizable/cleanable.
     private static final String GENERATED_LOOT_PREFIX = "codex_generated/";
@@ -128,7 +128,7 @@ public final class AdvancementPackIO {
 
     public static void write(Path packDir, AdvancementHolder holder, HolderLookup.Provider registries) {
         JsonElement json = Advancement.CODEC.encodeStart(RegistryOps.create(JsonOps.INSTANCE, registries), holder.value()).getOrThrow();
-        writeJson(fileFor(packDir, holder.id()), json.getAsJsonObject());
+        writeJson(fileFor(packDir, holder.id()), ResourceFormats.advancement(json.getAsJsonObject()));
     }
 
     /**
@@ -152,7 +152,7 @@ public final class AdvancementPackIO {
     public static void patchRawFields(Path packDir, ResourceProvider resources, Identifier id, JsonObject edited) {
         JsonObject json = readBaseJson(packDir, resources, id);
         json = AdvancementDocument.patch(json, edited);
-        writeJson(fileFor(packDir, id), json);
+        writeJson(fileFor(packDir, id), ResourceFormats.advancement(json));
     }
 
     /**
@@ -163,7 +163,7 @@ public final class AdvancementPackIO {
      */
     public static void writeRaw(Path packDir, Identifier id, JsonObject json, HolderLookup.Provider registries) {
         Advancement.CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, registries), json).getOrThrow();
-        writeJson(fileFor(packDir, id), json);
+        writeJson(fileFor(packDir, id), ResourceFormats.advancement(json));
     }
 
     public static JsonObject readBaseJson(Path packDir, ResourceProvider resources, Identifier id) {
@@ -259,6 +259,7 @@ public final class AdvancementPackIO {
     }
 
     public static Path safeResourceFile(Path packDir, Identifier id, String kind) {
+        kind=ResourceFormats.directory(kind);
         if (id.getNamespace().equals(".") || id.getNamespace().equals("..")) throw new IllegalArgumentException("Unsafe resource namespace");
         for (String segment : id.getPath().split("/", -1)) {
             if (segment.isEmpty() || segment.equals(".") || segment.equals("..")) throw new IllegalArgumentException("Unsafe resource path");

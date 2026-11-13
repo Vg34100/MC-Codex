@@ -17,13 +17,13 @@ final class StoryChoicesScreen extends CodexScreen {
     private boolean recovering;
     StoryChoicesScreen(QuestDetailsScreen parent, Identifier id) { super(Component.literal("Story Choices")); this.parent = parent; this.id = id; }
     private String layoutKey(JsonObject info) {
-        if (info.isEmpty()) return "";
+        if ((info.size() == 0)) return "";
         JsonObject state = info.getAsJsonObject("state");
         return "" + state.get("choice") + state.get("accepted") + info.get("dialogue_started") + info.get("ready") + info.get("unlocked") + info.get("outcomes");
     }
     void refresh(boolean acknowledged) {
         JsonObject info = ClientQuests.info(id); String key = layoutKey(info);
-        boolean chosen = !info.isEmpty() && info.getAsJsonObject("state").has("choice");
+        boolean chosen = (info.size() != 0) && info.getAsJsonObject("state").has("choice");
         boolean changed = !key.equals(shown), redraw = changed;
         JsonObject result = ClientQuests.result(id);
         if (chosen) {
@@ -40,7 +40,7 @@ final class StoryChoicesScreen extends CodexScreen {
         if (changed) page = 0;
         if (redraw) rebuildWidgets();
     }
-    private boolean needsRetry(JsonObject info) { return info.isEmpty() || recovering; }
+    private boolean needsRetry(JsonObject info) { return (info.size() == 0) || recovering; }
     @Override public void tick() {
         if (!pending.isEmpty() && System.nanoTime() - pendingAt >= 4_000_000_000L && !recovering) {
             recovering = true; status = "No confirmation yet. Reload quest status to check.";
@@ -51,7 +51,7 @@ final class StoryChoicesScreen extends CodexScreen {
         ClientQuests.watch(id); size = Math.min(500, width - 24); left = (width - size) / 2;
         JsonObject info = ClientQuests.info(id); shown = layoutKey(info);
         int reserved = needsRetry(info) ? 26 : 0;
-        if (!info.isEmpty()) {
+        if ((info.size() != 0)) {
             JsonObject state = info.getAsJsonObject("state"), d = info.getAsJsonObject("definition").getAsJsonObject("dialogue");
             boolean chosen = state.has("choice");
             int y = 62;
@@ -94,7 +94,7 @@ final class StoryChoicesScreen extends CodexScreen {
     }
     @Override public void extractRenderState(GuiGraphicsExtractor g, int x, int y, float delta) {
         g.fill(0, 0, width, height, 0xED202020); g.text(font, title, left, 14, 0xFFFFFFFF, false);
-        String message = !status.isEmpty() ? status : !pending.isEmpty() ? "Saving your choice…" : ClientQuests.info(id).isEmpty() ? "Loading story choices…" : "Choose a chapter once. The outcome stays in your journal.";
+        String message = !status.isEmpty() ? status : !pending.isEmpty() ? "Saving your choice…" : (ClientQuests.info(id).size()==0) ? "Loading story choices…" : "Choose a chapter once. The outcome stays in your journal.";
         g.text(font, font.plainSubstrByWidth(message, size), left, 38, 0xFFCCCCAA, false);
         super.extractRenderState(g, x, y, delta);
         QuestFeedback.render(g);

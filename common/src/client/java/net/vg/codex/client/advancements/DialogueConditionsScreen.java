@@ -6,6 +6,9 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.*;
+//? if <1.21 {
+/*import net.vg.codex.compat.v120.LegacyComponents;
+*///?}
 import net.minecraft.resources.*;
 import net.vg.codex.advancement.*;
 import java.util.*;
@@ -49,7 +52,7 @@ public final class DialogueConditionsScreen extends CodexScreen {
             if(condition.get("state").getAsString().equals("choice")){
                 JsonObject source=definitions.get(Identifier.parse(condition.get("quest").getAsString()));JsonArray choices=source==null?new JsonArray():PackAuthoring.choices(source);List<String> keys=new ArrayList<>();for(JsonElement c:choices)keys.add(c.getAsJsonObject().get("id").getAsString());
                 if(!keys.isEmpty()){
-                    if(!condition.has("choice")||!keys.contains(condition.get("choice").getAsString()))condition.addProperty("choice",keys.getFirst());
+                    if(!condition.has("choice")||!keys.contains(condition.get("choice").getAsString()))condition.addProperty("choice",keys.get(0));
                     addRenderableWidget(CycleButton.builder((String key)->{for(JsonElement c:choices)if(c.getAsJsonObject().get("id").getAsString().equals(key))return Component.literal(c.getAsJsonObject().get("label").getAsString());return Component.literal(key);},condition.get("choice").getAsString()).withValues(keys).create(left,134,size,20,Component.literal("Choice"),(b,key)->condition.addProperty("choice",key)));
                 }else error="Select a quest with story choices";
             }

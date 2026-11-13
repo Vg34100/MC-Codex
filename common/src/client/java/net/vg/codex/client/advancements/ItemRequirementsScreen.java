@@ -93,7 +93,7 @@ public final class ItemRequirementsScreen extends CodexScreen {
     }
 
     private net.vg.codex.advancement.SubmissionPlan.Requirement row(JsonObject row) {
-        try { JsonObject task = new JsonObject(); JsonArray rows = new JsonArray(); rows.add(row); task.add("items", rows); return net.vg.codex.advancement.SubmissionPlan.resolve(task, minecraft.level.registryAccess()).getFirst(); }
+        try { JsonObject task = new JsonObject(); JsonArray rows = new JsonArray(); rows.add(row); task.add("items", rows); return net.vg.codex.advancement.SubmissionPlan.resolve(task, minecraft.level.registryAccess()).get(0); }
         catch (RuntimeException invalid) { return new net.vg.codex.advancement.SubmissionPlan.Requirement(net.vg.codex.advancement.SubmissionPlan.key(row), BuiltInRegistries.ITEM.getKey(net.minecraft.world.item.Items.PAPER), "Invalid requirement (edit properties)", 1, null); }
     }
     @Override public void onClose() { minecraft.setScreen(parent); }

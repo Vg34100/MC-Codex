@@ -54,7 +54,7 @@ public final class BundledExamples {
                         example.getAsJsonObject("display").entrySet().forEach(e->display.add(e.getKey(),e.getValue().deepCopy()));
                         nativeDefinition.add("display",display);
                     }
-                    return nativeDefinition;
+                    return ResourceFormats.advancement(nativeDefinition);
                 }
             }
             if(example.has("criteria"))for(var entry:example.getAsJsonObject("criteria").entrySet())entry.setValue(CriterionFormats.generated(entry.getValue().getAsJsonObject()));
@@ -68,7 +68,7 @@ public final class BundledExamples {
                 }
             }
             *///?}
-            return example;
+            return ResourceFormats.advancement(example);
         }
     }
     private static JsonObject read(Path file) throws IOException {
@@ -95,7 +95,7 @@ public final class BundledExamples {
             }
             for (JsonElement name : manifest.getAsJsonArray(group)) {
                 String relative = name.getAsString();
-                Path file = pack.resolve(relative).toAbsolutePath().normalize();
+                Path file = pack.resolve(ResourceFormats.relative(relative)).toAbsolutePath().normalize();
                 if (!file.startsWith(pack.toAbsolutePath().normalize())) throw new IOException("Invalid example path");
                 if (!documents.containsKey(file)) { JsonObject current = read(file); documents.put(file, current); before.put(file, current.deepCopy()); }
                 JsonObject current = documents.get(file), incoming = resource(group + "/" + relative);
@@ -103,7 +103,7 @@ public final class BundledExamples {
                 for (String key : entries ? incoming.keySet() : Set.of("$file")) {
                     String unit = relative + "#" + key;
                     JsonElement value = entries ? incoming.get(key) : incoming;
-                    JsonElement actual = entries ? current.get(key) : current.isEmpty() ? null : current;
+                    JsonElement actual = entries ? current.get(key) : (current.size() == 0) ? null : current;
                     JsonObject record = records.has(unit) ? records.getAsJsonObject(unit) : null;
                     if (enabled.contains(group)) {
                         if (record == null) {
@@ -130,7 +130,7 @@ public final class BundledExamples {
         for (var entry : documents.entrySet()) {
             Path file = entry.getKey(); JsonObject document = entry.getValue();
             if (document.equals(before.get(file))) continue;
-            if (document.isEmpty()) {
+            if ((document.size() == 0)) {
                 if (Files.exists(file)) { Files.copy(file, file.resolveSibling(file.getFileName() + ".bak"), StandardCopyOption.REPLACE_EXISTING); Files.delete(file); }
             } else {
                 if(Files.exists(file))Files.copy(file,file.resolveSibling(file.getFileName()+".bak"),StandardCopyOption.REPLACE_EXISTING);
@@ -145,9 +145,9 @@ public final class BundledExamples {
             if (!record.get("owned").getAsBoolean() || !record.get("active").getAsBoolean()) continue;
             int separator = entry.getKey().indexOf('#');
             String relative = entry.getKey().substring(0, separator), key = entry.getKey().substring(separator + 1);
-            JsonObject document = documents.get(pack.resolve(relative).toAbsolutePath().normalize());
+            JsonObject document = documents.get(pack.resolve(ResourceFormats.relative(relative)).toAbsolutePath().normalize());
             if (document == null) continue;
-            JsonElement value = relative.startsWith("codex/") ? document.get(key) : document.isEmpty() ? null : document;
+            JsonElement value = relative.startsWith("codex/") ? document.get(key) : (document.size() == 0) ? null : document;
             if (value != null && !value.equals(record.get("baseline"))) return true;
         }
         return false;

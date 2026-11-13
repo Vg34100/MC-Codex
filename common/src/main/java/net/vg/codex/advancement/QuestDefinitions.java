@@ -34,7 +34,7 @@ public final class QuestDefinitions {
     public static void save(Identifier id, JsonObject value) {
         validate(value);
         JsonObject all = all();
-        if (value.isEmpty()) all.remove(id.toString()); else all.add(id.toString(), value.deepCopy());
+        if ((value.size() == 0)) all.remove(id.toString()); else all.add(id.toString(), value.deepCopy());
         AtomicJson.write(AdvancementPackSync.externalPackDir().resolve("codex/quests.json"), all);
         cachedFile = null; checkedAt = 0;
     }

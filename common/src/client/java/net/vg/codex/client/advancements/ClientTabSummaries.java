@@ -69,7 +69,7 @@ public final class ClientTabSummaries {
         JsonObject t=get(root);List<Component> lines=new ArrayList<>();
         var heading=title.copy().withStyle(ChatFormatting.BOLD);
         if(finished(t))heading.withStyle(ChatFormatting.GOLD);
-        lines.add(heading);if(t.isEmpty())return lines;
+        lines.add(heading);if((t.size() == 0))return lines;
         lines.add(Component.literal(t.get("completed").getAsInt()+" / "+t.get("total").getAsInt()+" quests finished").withStyle(ChatFormatting.GRAY));
         if(finished(t))lines.add(Component.literal("Chapter finished").withStyle(ChatFormatting.GOLD,ChatFormatting.ITALIC));
         else {

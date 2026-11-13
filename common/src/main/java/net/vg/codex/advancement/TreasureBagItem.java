@@ -1,7 +1,9 @@
 package net.vg.codex.advancement;
 
 import com.google.gson.JsonObject;
+//? if >=1.21 {
 import net.minecraft.core.component.DataComponents;
+//?}
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -10,7 +12,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.*;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.*;
+//? if >=1.21 {
 import net.minecraft.world.item.component.CustomData;
+//?}
 import net.minecraft.world.level.Level;
 import java.util.Map;
 
@@ -23,6 +27,11 @@ public final class TreasureBagItem extends Item {
         if (ITEM == null) throw new IllegalStateException("Treasure bag item has not been registered");
         ItemStack stack = new ItemStack(ITEM, count);
         CompoundTag tag = new CompoundTag(); tag.putString("codex_pool", pool.toString());
+        //? if <1.21 {
+        /*if (appearance != null) tag.putString("codex_appearance",appearance.toString());
+        stack.setTag(tag);
+        if (name != null && !name.isBlank()) stack.setHoverName(Component.literal(name));
+        *///?} else {
         stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
         if (name != null && !name.isBlank()) stack.set(DataComponents.CUSTOM_NAME, Component.literal(name));
         //? if <26.1 {
@@ -30,13 +39,18 @@ public final class TreasureBagItem extends Item {
         *///?} else {
         if (appearance != null) stack.set(DataComponents.ITEM_MODEL, appearance);
         //?}
+        //?}
         return stack;
     }
     public static boolean open(ServerPlayer player, InteractionHand hand) {
         ItemStack held = player.getItemInHand(hand);
         if (ITEM == null || !held.is(ITEM)) return false;
+        //? if <1.21 {
+        /*Identifier pool = held.hasTag() ? Identifier.tryParse(held.getTag().getString("codex_pool")) : null;
+        *///?} else {
         CustomData data = held.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
         Identifier pool = Identifier.tryParse(data.copyTag().getStringOr("codex_pool", ""));
+        //?}
         if (pool == null || !net.vg.codex.network.TreasureNetworking.lootTables(player).contains(pool)) return false;
         int slot = hand == InteractionHand.OFF_HAND ? 40 : player.getInventory().getSelectedSlot();
         QuestJournal.Plan transaction = new QuestJournal.Plan(player); transaction.remove(Map.of(slot, 1));

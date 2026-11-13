@@ -126,8 +126,12 @@ public final class QuestTransactions {
                     .withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.THIS_ENTITY, player)
                     .withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN, player.position())
                     .create(net.minecraft.world.level.storage.loot.parameters.LootContextParamSets.ADVANCEMENT_REWARD);
+                //? if <1.21 {
+                /*player.level().getServer().getLootData().getLootTable(Identifier.parse(entry.get("id").getAsString())).getRandomItems(params).forEach(transaction::add);
+                *///?} else {
                 var key = net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.LOOT_TABLE, Identifier.parse(entry.get("id").getAsString()));
                 player.level().getServer().reloadableRegistries().getLootTable(key).getRandomItems(params).forEach(transaction::add);
+                //?}
             }
             case RECIPE, FUNCTION -> RewardEffects.plan(player, transaction, entry);
         }
@@ -168,8 +172,12 @@ public final class QuestTransactions {
         MinecraftServer server = player.level().getServer();
         QuestJournal.recover(server);
         boolean exists = switch (key) {
+            //? if <1.21 {
+            /*case "loot" -> server.getLootData().getKeys(net.minecraft.world.level.storage.loot.LootDataType.TABLE).contains(reference);
+            *///?} else {
             case "loot" -> server.reloadableRegistries().lookup().lookupOrThrow(net.minecraft.core.registries.Registries.LOOT_TABLE)
                     .get(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.LOOT_TABLE, reference)).isPresent();
+            //?}
             case "recipes" -> server.getRecipeManager().getRecipes().stream().anyMatch(recipe -> recipe.id().identifier().equals(reference));
             case "function" -> server.getFunctions().get(reference).isPresent();
             default -> false;

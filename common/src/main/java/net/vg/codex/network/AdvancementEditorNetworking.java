@@ -104,7 +104,7 @@ public final class AdvancementEditorNetworking {
                         : Advancement.CODEC.encodeStart(ops, holder.value()).getOrThrow();
                 JsonObject obj = json.getAsJsonObject();
                 JsonObject quest = net.vg.codex.advancement.QuestDefinitions.get(holder.id());
-                if (!quest.isEmpty()) obj.add("codex_quest", quest);
+                if ((quest.size() != 0)) obj.add("codex_quest", quest);
                 // Advancement.CODEC only round-trips real vanilla fields, so item rewards (not a
                 // vanilla concept) can't survive this encode - reattached here, wire-only, from the
                 // generated loot table the editor itself wrote last time (see AdvancementPackIO).

@@ -35,7 +35,12 @@ public final class TreasureLists {
             Identifier id = Identifier.parse(entry.get("id").getAsString());
             if (entry.has("table") && entry.get("table").getAsBoolean()) {
                 if (!knownTables.contains(id)) throw new IllegalArgumentException("Unknown loot table: " + id);
-                loot.addProperty("type", "minecraft:loot_table"); loot.addProperty("value", id.toString());
+                loot.addProperty("type", "minecraft:loot_table");
+                //? if <1.21 {
+                /*loot.addProperty("name", id.toString());
+                *///?} else {
+                loot.addProperty("value", id.toString());
+                //?}
             } else {
                 if (!BuiltInRegistries.ITEM.containsKey(id) || id.equals(Identifier.withDefaultNamespace("air"))) throw new IllegalArgumentException("Unknown item: " + id);
                 int min = integer(entry, "min", 1, 4096); int max = integer(entry, "max", min, 4096);

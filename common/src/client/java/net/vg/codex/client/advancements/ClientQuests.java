@@ -58,7 +58,7 @@ public final class ClientQuests {
     public static JsonObject result(Identifier id) { return RESULTS.getOrDefault(id, new JsonObject()); }
     public static String itemName(String id) { return net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(Identifier.parse(id)).getDefaultInstance().getHoverName().getString(); }
     public static String resultText(JsonObject result) {
-        if (result.isEmpty()) return "";
+        if ((result.size() == 0)) return "";
         StringBuilder text = new StringBuilder(result.get("message").getAsString());
         if (result.has("items")) for (var item : result.getAsJsonObject("items").entrySet()) text.append("\n− ").append(item.getValue().getAsInt()).append(" × ").append(itemName(item.getKey()));
         return text.toString();
@@ -106,12 +106,12 @@ public final class ClientQuests {
         if (Minecraft.getInstance().getConnection() != null) NetworkManager.sendToServer(new QuestActionPayload(id, action, value));
     }
     public static boolean canAccept(JsonObject info) {
-        if (info.isEmpty() || !info.get("unlocked").getAsBoolean() || info.has("eligible") && !info.get("eligible").getAsBoolean()) return false;
+        if ((info.size() == 0) || !info.get("unlocked").getAsBoolean() || info.has("eligible") && !info.get("eligible").getAsBoolean()) return false;
         JsonObject q = info.getAsJsonObject("definition"), s = info.getAsJsonObject("state");
         return net.vg.codex.advancement.QuestDefinitions.managedLocal(q) && (!net.vg.codex.advancement.QuestDefinitions.flag(s, "accepted") || net.vg.codex.advancement.QuestDefinitions.repeat(q) && net.vg.codex.advancement.QuestDefinitions.flag(s, "completed") && info.get("all_claimed").getAsBoolean() && info.get("available_in").getAsLong() == 0);
     }
     public static List<String> hoverHints(Identifier id) {
-        JsonObject p = presentation(id); if (p.isEmpty()) return List.of();
+        JsonObject p = presentation(id); if ((p.size() == 0)) return List.of();
         List<String> hints = new ArrayList<>();
         if (p.has("reason")) { hints.add(p.get("reason").getAsString()); return hints; }
         if (p.get("can_accept").getAsBoolean()) hints.add(CodexClientSettings.holdAccept ? "● Hold icon to accept" : "● Open to accept this quest");
@@ -126,11 +126,11 @@ public final class ClientQuests {
         return seconds + "s";
     }
     public static String summary(JsonObject info) {
-        if (info.isEmpty()) return "Loading…";
+        if ((info.size() == 0)) return "Loading…";
         if (!info.get("unlocked").getAsBoolean()) return "Choose the required story branch first";
         JsonObject q = info.getAsJsonObject("definition"), s = info.getAsJsonObject("state");
         if (net.vg.codex.advancement.QuestDefinitions.managedLocal(q) && !net.vg.codex.advancement.QuestDefinitions.flag(s, "accepted")) return "Accept this quest to begin";
-        if (info.get("ready").getAsBoolean()) return !info.has("rewards") || info.getAsJsonObject("rewards").isEmpty() ? "Completed" : info.get("all_claimed").getAsBoolean() ? "Completed · rewards claimed" : "Completed · rewards ready";
+        if (info.get("ready").getAsBoolean()) return !info.has("rewards") || (info.getAsJsonObject("rewards").size() == 0) ? "Completed" : info.get("all_claimed").getAsBoolean() ? "Completed · rewards claimed" : "Completed · rewards ready";
         int done = 0, count = 0;
         for (JsonElement e : info.getAsJsonArray("tasks")) {
             JsonObject task = e.getAsJsonObject();

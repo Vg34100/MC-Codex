@@ -207,7 +207,7 @@ public final class QuestCriteria {
                 // IMPOSSIBLE / TICK take no fields.
             }
         }
-        if (!conditions.isEmpty()) {
+        if ((conditions.size() != 0)) {
             obj.add("conditions", conditions);
         }
         return CriterionFormats.generated(obj);

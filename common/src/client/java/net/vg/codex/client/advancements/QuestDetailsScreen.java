@@ -27,7 +27,7 @@ public final class QuestDetailsScreen extends CodexScreen {
     @Override protected void init() {
         ClientQuests.watch(id);
         panelWidth = Math.min(500, width - 24); left = (width - panelWidth) / 2; submissions.clear(); choices.clear();
-        JsonObject info = ClientQuests.info(id); loaded = !info.isEmpty();
+        JsonObject info = ClientQuests.info(id); loaded = (info.size() != 0);
         int rightWidth = 150, right = left + panelWidth - rightWidth;
         body = addRenderableWidget(new FittingMultiLineTextWidget(left, 38, panelWidth - rightWidth - 10, height - 106, Component.literal(text(info)), font));
         retry = addRenderableWidget(Button.builder(Component.literal("Retry Loading"), b -> { loadingTicks = 0; ClientQuests.retry(id); update(); }).bounds(left, height - 58, panelWidth - rightWidth - 10, 20).build()); retry.visible = false;
@@ -41,7 +41,7 @@ public final class QuestDetailsScreen extends CodexScreen {
             List<JsonObject> deliveries=new ArrayList<>();for(JsonElement value:info.getAsJsonArray("tasks")){JsonObject task=value.getAsJsonObject();if(task.has("items"))deliveries.add(task);}
             if(!deliveries.isEmpty()){
                 Button submit=addRenderableWidget(Button.builder(Component.literal(deliveries.size()==1?"Submit Items":"Choose Delivery…"),b->{
-                    if(deliveries.size()==1)ClientQuests.action(id,"submit",deliveries.getFirst().get("criterion").getAsString());
+                    if(deliveries.size()==1)ClientQuests.action(id,"submit",deliveries.get(0).get("criterion").getAsString());
                     else{
                         Map<Identifier,JsonObject> options=new LinkedHashMap<>();for(int i=0;i<deliveries.size();i++)options.put(Identifier.fromNamespaceAndPath("codex","delivery/"+i),deliveries.get(i));
                         minecraft.setScreen(new IdentifierSelectionScreen(this,"Choose Delivery",options.keySet(),key->{JsonObject task=options.get(key);return Component.literal(task.get("criterion").getAsString().replace('_',' ')+" • "+task.getAsJsonArray("items").size()+" requirements");},key->ClientQuests.action(id,"submit",options.get(key).get("criterion").getAsString())));
@@ -61,7 +61,7 @@ public final class QuestDetailsScreen extends CodexScreen {
     }
     public void update() {
         JsonObject info = ClientQuests.info(id); if (body == null) return;
-        if (info.isEmpty()) {
+        if ((info.size() == 0)) {
             accept.active = false; claim.active = false; stored.visible = false; rewardPreview.visible = false;
             for (Button b : submissions) b.active = false;
             retry.visible = loadingTicks >= 60; body.setMessage(Component.literal(text(info))); return;
@@ -80,7 +80,7 @@ public final class QuestDetailsScreen extends CodexScreen {
         for (Button b : submissions) b.active = info.get("unlocked").getAsBoolean() && info.get("eligible").getAsBoolean() && (!QuestDefinitions.managedLocal(q) || accepted && !done);
     }
     private String text(JsonObject info) {
-        if (info.isEmpty()) {
+        if ((info.size() == 0)) {
             JsonObject cached = ClientQuests.presentation(id), result = ClientQuests.result(id);
             String lock = cached.has("reason") ? cached.get("reason").getAsString() + "\n\n" : "";
             String feedback = result.has("success") && !result.get("success").getAsBoolean() ? ClientQuests.resultText(result) + "\n\n" : "";
@@ -93,7 +93,7 @@ public final class QuestDetailsScreen extends CodexScreen {
             text.append(cached.has("reason") ? cached.get("reason").getAsString() : "This quest requires a different story choice.").append("\n\n");
         }
         JsonObject result = ClientQuests.result(id);
-        if (!result.isEmpty()) text.append(ClientQuests.resultText(result)).append("\n\n");
+        if ((result.size() != 0)) text.append(ClientQuests.resultText(result)).append("\n\n");
         String page = info.get("ready").getAsBoolean() ? "complete" : QuestDefinitions.flag(s, "accepted") ? "progress" : "intro";
         if (q.has("dialogue")) {
             JsonObject d = q.getAsJsonObject("dialogue");
@@ -122,14 +122,14 @@ public final class QuestDetailsScreen extends CodexScreen {
             else text.append("\n").append(t.get("done").getAsBoolean() ? "✓ " : "• ").append(t.get("criterion").getAsString().replace('_', ' '));
         }
         JsonObject rewards = info.has("rewards") ? info.getAsJsonObject("rewards") : ClientAdvancementRewards.forAdvancement(id);
-        if (rewards != null && !rewards.isEmpty()) {
+        if (rewards != null && (rewards.size() != 0)) {
             text.append("\n\nRewards\n");
             for (JsonObject reward : net.vg.codex.advancement.QuestRewards.entries(rewards, id)) text.append(ClientRewardPresentation.label(reward)).append("\n");
         }
         return text.toString();
     }
     @Override public void tick() {
-        if (ClientQuests.info(id).isEmpty()) { loadingTicks++; if (body != null) body.setMessage(Component.literal(text(ClientQuests.info(id)))); }
+        if ((ClientQuests.info(id).size()==0)) { loadingTicks++; if (body != null) body.setMessage(Component.literal(text(ClientQuests.info(id)))); }
         update();
     }
     @Override public void extractRenderState(GuiGraphicsExtractor g, int x, int y, float delta) {

@@ -23,8 +23,8 @@ public final class DeliveryPropertiesScreen extends CodexScreen {
     @Override protected void init() {
         size=Math.min(460,width-24); left=(width-size)/2; JsonObject p=properties();
         EditBox name=addRenderableWidget(new EditBox(font,left,56,size,20,Component.literal("Exact custom name (optional)"))); name.setMaxLength(80);
-        if(p.has("minecraft:custom_name")&&p.get("minecraft:custom_name").isJsonPrimitive()) name.setValue(p.get("minecraft:custom_name").getAsString());
-        name.setHint(Component.literal("Any name")); name.setResponder(value->{if(value.isEmpty())p.remove("minecraft:custom_name");else p.addProperty("minecraft:custom_name",value);});
+        if(p.has("minecraft:custom_name")) name.setValue(net.vg.codex.advancement.ItemFormats.displayName(p.get("minecraft:custom_name")));
+        name.setHint(Component.literal("Any name")); name.setResponder(value->{if(value.isEmpty())p.remove("minecraft:custom_name");else {JsonObject text=new JsonObject();text.addProperty("text",value);p.add("minecraft:custom_name",text);}});
         addRenderableWidget(Button.builder(Component.literal(p.has("minecraft:potion_contents") ? "Potion: " + (p.getAsJsonObject("minecraft:potion_contents").has("potion") ? ClientRewardPresentation.pretty(Identifier.parse(p.getAsJsonObject("minecraft:potion_contents").get("potion").getAsString())) : "Custom properties") : "Match potion type…"),b->minecraft.setScreen(new IdentifierSelectionScreen(this,"Potion Type",BuiltInRegistries.POTION.keySet(),id->Component.literal(ClientRewardPresentation.pretty(id)),id->{JsonObject potion=new JsonObject();potion.addProperty("potion",id.toString());p.add("minecraft:potion_contents",potion);}))).bounds(left,84,size-64,20).build());
         addRenderableWidget(Button.builder(Component.literal("Clear"),b->{p.remove("minecraft:potion_contents");rebuildWidgets();}).bounds(left+size-60,84,60,20).build());
         EditBox damage=addRenderableWidget(new EditBox(font,left,126,size,20,Component.literal("Exact damage (optional)"))); damage.setMaxLength(8); damage.setHint(Component.literal("Any durability"));
@@ -32,8 +32,13 @@ public final class DeliveryPropertiesScreen extends CodexScreen {
         damage.setResponder(value->{try{if(value.isBlank())p.remove("minecraft:damage");else{int amount=Integer.parseInt(value);if(amount<0)throw new NumberFormatException();p.addProperty("minecraft:damage",amount);}error="";}catch(NumberFormatException invalid){error="Damage must be a nonnegative integer";}});
         addRenderableWidget(Button.builder(Component.literal("Copy Properties from Held Item"),b->{
             try { ItemStack stack=minecraft.player.getMainHandItem();if(stack.isEmpty())throw new IllegalArgumentException("Hold an example item first");
+                //? if <1.21 {
+                /*row.add("components",net.vg.codex.compat.v120.LegacyItems.heldProperties(stack));
+                *///?} else {
                 JsonObject encoded=ItemStack.CODEC.encodeStart(RegistryOps.create(JsonOps.INSTANCE,minecraft.level.registryAccess()),stack).getOrThrow().getAsJsonObject();
-                row.add("components",encoded.has("components")?encoded.get("components").deepCopy():new JsonObject()); error="";rebuildWidgets();
+                row.add("components",encoded.has("components")?encoded.get("components").deepCopy():new JsonObject());
+                //?}
+                error="";rebuildWidgets();
             } catch(RuntimeException invalid){error=invalid.getMessage();}
         }).bounds(left,154,size,20).build()).setTooltip(Tooltip.create(Component.literal("Copies explicit component values, including enchantments and custom data. Does not consume the example item.")));
         addRenderableWidget(Button.builder(Component.literal("Advanced Properties…"),b->minecraft.setScreen(new JsonDocumentScreen(this,properties(),value->{row.add("components",value);})) ).bounds(left,180,size/2-3,20).build());

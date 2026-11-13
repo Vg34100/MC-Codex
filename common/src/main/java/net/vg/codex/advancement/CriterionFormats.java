@@ -14,14 +14,18 @@ public final class CriterionFormats {
         //?}
 
     public static JsonObject generated(JsonObject criterion) {
-        //? if >=26.2 {
+        //? if <1.21 {
+        /*return ResourceFormats.legacyCriterion(criterion,true);
+        *///?} else if >=26.2 {
         /*return convert(criterion,true);
         *///?} else {
         return criterion;
         //?}
     }
     public static JsonObject authoringView(JsonObject criterion) {
-        //? if >=26.2 {
+        //? if <1.21 {
+        /*return ResourceFormats.legacyCriterion(criterion,false);
+        *///?} else if >=26.2 {
         /*return convert(criterion,false);
         *///?} else {
         return criterion;
