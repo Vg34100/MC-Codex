@@ -11,3 +11,6 @@ type = "required"
 versionRange = "[0,)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[mixins]]
+config = "codex-tests.mixins.json"

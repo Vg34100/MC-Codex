@@ -17,14 +17,44 @@ public final class GuiAuthoringScenario {
     private static int stage,wait;private static long started;
     private GuiAuthoringScenario(){}
     public static void start(){stage=0;wait=0;started=System.nanoTime();}
+    public static int completedSteps(){return stage+1;}
     private static void click(Minecraft mc,String text){
         AbstractButton button=mc.screen.children().stream().filter(c->c instanceof AbstractButton b&&b.getMessage().getString().equals(text)).map(c->(AbstractButton)c).findFirst().orElseThrow(()->new IllegalStateException("Missing button '"+text+"' in "+mc.screen.getTitle().getString()));
-        if(!button.active)throw new IllegalStateException("Inactive button "+text);button.onPress(new KeyEvent(257,0,0));
+        if(!button.active)throw new IllegalStateException("Inactive button "+text);press(button);
     }
-    private static void prefix(Minecraft mc,String text){AbstractButton b=mc.screen.children().stream().filter(c->c instanceof AbstractButton a&&a.getMessage().getString().startsWith(text)).map(c->(AbstractButton)c).findFirst().orElseThrow(()->new IllegalStateException("Missing button prefix "+text));b.onPress(new KeyEvent(257,0,0));}
+    private static void press(AbstractButton button){
+        //? if <26.1 {
+        /*button.onPress();
+        *///?} else {
+        button.onPress(new KeyEvent(257,0,0));
+        //?}
+    }
+    private static void prefix(Minecraft mc,String text){AbstractButton b=mc.screen.children().stream().filter(c->c instanceof AbstractButton a&&a.getMessage().getString().startsWith(text)).map(c->(AbstractButton)c).findFirst().orElseThrow(()->new IllegalStateException("Missing button prefix "+text));press(b);}
     private static void edit(Minecraft mc,String value){mc.screen.children().stream().filter(c->c instanceof EditBox).map(c->(EditBox)c).findFirst().orElseThrow().setValue(value);}
     private static void storyText(Minecraft mc,String value){mc.screen.children().stream().filter(c->c instanceof MultiLineEditBox).map(c->(MultiLineEditBox)c).findFirst().orElseThrow().setValue(value);}
-    private static void shot(Minecraft mc,String name){Screenshot.grab(mc.gameDirectory,"creator-"+name+".png",mc.getMainRenderTarget(),1,message->{});}
+    private static void shot(Minecraft mc,String name){
+        var target=
+        //? if >=26.3 {
+        /*mc.gameRenderer.mainRenderTarget();
+        *///?} else {
+        mc.getMainRenderTarget();
+        //?}
+        //? if <26.1 {
+        /*Screenshot.grab(mc.gameDirectory,"creator-"+name+".png",target,message->{});
+        *///?} else {
+        Screenshot.grab(mc.gameDirectory,"creator-"+name+".png",target,1,message->{});
+        //?}
+    }
+    private static void rewardModels(Minecraft mc){
+        JsonObject reward=JsonParser.parseString("{\"type\":\"ITEM\",\"id\":\"minecraft:diamond\",\"count\":4,\"components\":{\"minecraft:custom_name\":\"Camp Supplies\"}}").getAsJsonObject();
+        var icon=ClientRewardPresentation.icon(reward);
+        if(!icon.is(net.minecraft.world.item.Items.DIAMOND)||!icon.getHoverName().getString().equals("Camp Supplies"))throw new IllegalStateException("Reward preview lost its native item or custom name");
+        //? if <1.21.4 {
+        /*var bag=net.vg.codex.advancement.TreasureBagItem.create(Identifier.parse("codex_test:trial"),1,"Sample Bag",Identifier.parse("minecraft:emerald"));
+        var renderer=mc.getItemRenderer();
+        if(renderer.getModel(bag,mc.level,mc.player,0)!=renderer.getModel(net.minecraft.world.item.Items.EMERALD.getDefaultInstance(),mc.level,mc.player,0))throw new IllegalStateException("Legacy treasure bag did not use the selected native item model");
+        *///?}
+    }
     private static void select(Minecraft mc,Identifier id)throws Exception {
         var method=CodexAdvancementsScreen.class.getDeclaredMethod("selectEditNodeById",Identifier.class);method.setAccessible(true);method.invoke(editor,id);
         for(String name:List.of("formAdvancementId","criteriaEntriesSelection")){var field=CodexAdvancementsScreen.class.getDeclaredField(name);field.setAccessible(true);field.set(editor,null);}
@@ -37,12 +67,13 @@ public final class GuiAuthoringScenario {
             case 0 -> mc.getConnection().sendCommand("codex advancements edit");
             case 1 -> {
                 if(!(mc.screen instanceof CodexAdvancementsScreen)){wait=2;return false;}
+                rewardModels(mc);
                 editor=(CodexAdvancementsScreen)mc.screen;
                 var mode=CodexAdvancementsScreen.class.getDeclaredField("editMode");mode.setAccessible(true);if(!mode.getBoolean(mc.screen))return false;
                 var raw=CodexAdvancementsScreen.class.getDeclaredField("rawFullJson");raw.setAccessible(true);if(!((java.util.Map<?,?>)raw.get(mc.screen)).containsKey(STORY))return false;
                 var selected=CodexAdvancementsScreen.class.getDeclaredMethod("selectEditNodeById",Identifier.class);selected.setAccessible(true);selected.invoke(mc.screen,STORY);
                 for(String name:List.of("formAdvancementId","criteriaEntriesSelection")){var field=CodexAdvancementsScreen.class.getDeclaredField(name);field.setAccessible(true);field.set(mc.screen,null);}
-                mc.screen.init(mc.getWindow().getGuiScaledWidth(),mc.getWindow().getGuiScaledHeight());
+                editor.init(mc.getWindow().getGuiScaledWidth(),mc.getWindow().getGuiScaledHeight());
                 var widget=CodexAdvancementsScreen.class.getDeclaredField("selectedEditWidget");widget.setAccessible(true);var selectedWidget=(CodexAdvancementWidget)widget.get(mc.screen);if(selectedWidget==null||!selectedWidget.node().holder().id().equals(STORY))throw new IllegalStateException("GUI setup did not select the requested fixture");
             }
             case 2 -> click(mc,"Quest Story & Rules");
@@ -95,7 +126,7 @@ public final class GuiAuthoringScenario {
                 JsonArray rows=JsonParser.parseString("[{\"tag\":\"minecraft:logs\",\"count\":4},{\"id\":\"minecraft:oak_log\",\"count\":1,\"components\":{\"minecraft:custom_name\":\"Camp Timber\"}}]").getAsJsonArray();mc.setScreen(new ItemRequirementsScreen(mc.screen,rows,ignored->{}));
             }
             case 45 -> shot(mc,"delivery-tags");
-            case 46 -> {List<Button> props=mc.screen.children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().equals("Props")).map(c->(Button)c).toList();props.get(1).onPress(new KeyEvent(257,0,0));}
+            case 46 -> {List<Button> props=mc.screen.children().stream().filter(c->c instanceof Button b&&b.getMessage().getString().equals("Props")).map(c->(Button)c).toList();press(props.get(1));}
             case 47 -> shot(mc,"delivery-properties");
             case 48 -> {
                 mc.setScreen(editor);select(mc,Identifier.parse("codex_test:scale/root"));wait=12;
@@ -111,9 +142,9 @@ public final class GuiAuthoringScenario {
             case 57 -> shot(mc,"copied-native-objective");
             case 58 -> click(mc,"Add Criterion");
             case 59 -> {click(mc,"Save");wait=16;}
-            case 60 -> select(mc,Identifier.parse("codex_test:each_delivery"));
+            case 60 -> {select(mc,Identifier.parse("codex_test:delivery"));prefix(mc,"Claim rewards manually");}
             case 61 -> click(mc,"Quest Story & Rules");
-            case 62 -> click(mc,"Rules");
+            case 62 -> {click(mc,"Rules");prefix(mc,"Repeatable:");}
             case 63 -> edit(mc,"invalid");
             case 64 -> click(mc,"Apply to Draft");
             case 65 -> {if(!mc.screen.getTitle().getString().equals("Quest Story & Rules"))throw new IllegalStateException("Invalid duration was accepted");edit(mc,"0");}

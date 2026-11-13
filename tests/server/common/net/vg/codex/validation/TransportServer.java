@@ -14,6 +14,7 @@ import java.util.function.*;
 
 /** Opt-in dedicated server with actual socket clients. No embedded/simulated player creation. */
 public final class TransportServer {
+    private static final boolean GUI_ONLY=Boolean.getBoolean("codex.test.gui_only");
     private static final Path CONTROL=Path.of(System.getProperty("codex.test.control"));
     private record Step(String label,String actor,JsonObject command,Consumer<MinecraftServer> prepare,Predicate<MinecraftServer> verify) { }
     private static final List<Step> steps=new ArrayList<>(); private static final List<String> passed=new ArrayList<>(),failed=new ArrayList<>();
@@ -72,14 +73,25 @@ public final class TransportServer {
         add("Actual client disconnects and reconnects with the same identity","bob",command("reconnect",null,null,null),v->{oldBob=player(v,"bob");},v->player(v,"bob")!=null&&player(v,"bob")!=oldBob&&done(v,"bob",delivery)&&CodexPartyService.members(v,player(v,"bob").getUUID()).size()==2);
         add("Reconnected client refreshes quest data","bob",command("watch",delivery,null,null),v->{},v->true);
         add("Reconnected client sees its persisted completion","bob",command("observe",delivery,null,null),v->{},v->observed("bob",info->info.has("ready")&&info.get("ready").getAsBoolean()));
-        add("Story, conditions, branch gate and milestone are authored through real GUI widgets","alice",command("gui",null,null,null),v->{v.getPlayerList().op(player(v,"alice").nameAndId());},v->{
+        addGuiStep();
+    }
+    private static void guiPlan(){
+        add("A rendered client connects over real TCP","alice",command("observe","codex_test:reward",null,null),v->{},v->ack("alice").has("tcp")&&ack("alice").get("tcp").getAsBoolean());
+        add("Reward preview data loads over the real connection","alice",command("watch","codex_test:reward",null,null),v->{},v->true);
+        addGuiStep();
+    }
+    private static void addGuiStep(){
+        add("Story, conditions, branch gate and milestone are authored through real GUI widgets","alice",command("gui",null,null,null),v->{
+            player(v,"alice").setGameMode(net.minecraft.world.level.GameType.CREATIVE);
+            v.getPlayerList().op(player(v,"alice").nameAndId());
+        },v->{
             JsonObject story=QuestDefinitions.get(id("codex_test:gui_story")),chapter=QuestDefinitions.get(id("codex_test:gui_chapter"));
             return AdvancementPackIO.readBaseJson(AdvancementPackSync.externalPackDir(),v.getResourceManager(),id("codex_test:gui_story")).getAsJsonObject("criteria").size()==2 && ack("alice").has("gui_authored")&&story.has("dialogue")&&story.getAsJsonObject("dialogue").get("intro").getAsString().contains("in-game GUI")&&story.getAsJsonObject("dialogue").getAsJsonArray("choices").get(0).getAsJsonObject().has("when")&&story.has("celebration")&&QuestDefinitions.flag(story.getAsJsonObject("celebration"),"enabled")&&chapter.has("requires_choice")&&chapter.getAsJsonObject("requires_choice").get("quest").getAsString().equals("codex_test:gui_story");
         });
     }
     private static void tick(MinecraftServer s){
         if(finished)return;if(++tick>12000){finish(s,"Timed out waiting for actual clients");return;}
-        if(!initialized){if(player(s,"alice")==null||player(s,"bob")==null)return;initialized=true;plan(s);}
+        if(!initialized){if(player(s,"alice")==null||(!GUI_ONLY&&player(s,"bob")==null))return;initialized=true;if(GUI_ONLY)guiPlan();else plan(s);}
         if(stage>=steps.size()){finish(s,null);return;}Step step=steps.get(stage);
         try{if(age++==0){step.prepare.accept(s);issue(step.actor,step.command);}
             JsonObject a=ack(step.actor);if(age<12||!a.has("nonce")||a.get("nonce").getAsLong()!=nonce)return;
@@ -89,8 +101,8 @@ public final class TransportServer {
     }
     private static void finish(MinecraftServer s,String failure){
         if(finished)return;finished=true;if(failure!=null)failed.add(failure);
-        JsonObject report=new JsonObject();JsonArray ok=new JsonArray(),bad=new JsonArray();passed.forEach(ok::add);failed.forEach(bad::add);report.add("passed",ok);report.add("failures",bad);report.addProperty("players","two actual rendered Minecraft clients over loopback TCP");report.add("alice",ack("alice"));report.add("bob",ack("bob"));AtomicJson.write(Path.of("results.json"),report);
-        issue("alice",command("quit",null,null,null));issue("bob",command("quit",null,null,null));
+        JsonObject report=new JsonObject();JsonArray ok=new JsonArray(),bad=new JsonArray();passed.forEach(ok::add);failed.forEach(bad::add);report.add("passed",ok);report.add("failures",bad);report.addProperty("players",GUI_ONLY?"one actual rendered Minecraft client; GUI authoring only":"two actual rendered Minecraft clients over loopback TCP");report.add("alice",ack("alice"));if(!GUI_ONLY)report.add("bob",ack("bob"));AtomicJson.write(Path.of("results.json"),report);
+        issue("alice",command("quit",null,null,null));if(!GUI_ONLY)issue("bob",command("quit",null,null,null));
         Thread shutdown=new Thread(()->{try{Thread.sleep(1500);}catch(InterruptedException ignored){}s.halt(true);System.exit(failed.isEmpty()?0:1);},"codex-transport-shutdown");shutdown.setDaemon(true);shutdown.start();
     }
 }

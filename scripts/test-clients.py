@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Two actual rendered Minecraft clients over loopback TCP; no OS input automation.
+"""Actual rendered Minecraft clients over loopback TCP; no OS input automation.
 
 Windows/Java25: python scripts/test-clients.py fabric --reset --build-init runs/frame-mask-build.gradle
-Uses only runs/transport/<loader>, port25577, owned child JVMs and test-only source sets.
-It opens two game windows. Warn the desktop user before invoking this command.
+Uses runs/transport/<target>, or runs/gui-authoring/<target> for --gui-only,
+port25577, owned child JVMs and test-only source sets. Opens two game windows,
+or one with --gui-only. Warn the desktop user before invoking this command.
 """
 import argparse
 import json
@@ -26,8 +27,9 @@ def terminate(process):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('loader', choices=['fabric', 'neoforge'])
+    parser.add_argument('loader', choices=['fabric', 'neoforge', 'forge'])
     parser.add_argument('--reset', action='store_true')
+    parser.add_argument('--gui-only', action='store_true', help='One actual client exercising editor widgets; not a multiplayer test')
     parser.add_argument('--minecraft-version', default='26.1.2')
     parser.add_argument('--build-init', type=Path)
     parser.add_argument('--compat-dir', type=Path)
@@ -35,12 +37,16 @@ def main():
     parser.add_argument('--phase', choices=['all', 'initial', 'restart'], default='all')
     args = parser.parse_args()
     target = f'{args.minecraft_version}-{args.loader}'
-    folder = ROOT / 'runs' / 'transport' / target
+    folder = ROOT / 'runs' / ('gui-authoring' if args.gui_only else 'transport') / target
     if args.reset and folder.exists():
         shutil.rmtree(folder)
     folder.mkdir(parents=True, exist_ok=True)
     (folder / 'owned-test-profile.json').write_text('{"purpose":"Codex real-client transport validation"}\n')
     flags = ['-Pcodex_tests', '-Pcodex_transport']
+    if args.gui_only:
+        if args.phase == 'restart':
+            parser.error('--gui-only uses a fresh initial authoring scenario')
+        flags += ['-Pcodex_gui_only']
     if args.offline:
         flags += ['--offline']
     if args.build_init:
@@ -53,7 +59,7 @@ def main():
     if preflight.returncode:
         print(preflight.stdout[-2500:])
         return 1
-    for phase in (['initial', 'restart'] if args.phase == 'all' else [args.phase]):
+    for phase in (['initial'] if args.gui_only else ['initial', 'restart'] if args.phase == 'all' else [args.phase]):
         control = folder / 'control'
         if control.exists():
             shutil.rmtree(control)
@@ -68,7 +74,7 @@ def main():
         server_log.unlink(missing_ok=True)
         processes, streams = [], []
         try:
-            for actor in ('server', 'alice', 'bob'):
+            for actor in (('server', 'alice') if args.gui_only else ('server', 'alice', 'bob')):
                 if actor != 'server':
                     deadline = time.monotonic() + 150
                     while not server_log.exists() or 'Done (' not in server_log.read_text(errors='replace'):
@@ -92,7 +98,8 @@ def main():
                 time.sleep(1)
             data = json.loads(report.read_text())
             (folder / f'results-{phase}.json').write_text(json.dumps(data, indent=2) + '\n')
-            print(f'{args.loader}/{phase}: {len(data["passed"])} passed, {len(data["failures"])} failed (TWO ACTUAL CLIENTS)', flush=True)
+            label = 'ONE ACTUAL CLIENT; GUI ONLY' if args.gui_only else 'TWO ACTUAL CLIENTS'
+            print(f'{args.loader}/{phase}: {len(data["passed"])} passed, {len(data["failures"])} failed ({label})', flush=True)
             if data['failures']:
                 print('\n'.join(data['failures']))
                 return 1

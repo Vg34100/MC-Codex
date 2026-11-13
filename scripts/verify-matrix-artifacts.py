@@ -50,6 +50,7 @@ def inspect(matrix):
     with ZipFile(artifact) as jar:
         names = jar.namelist(); files = set(names)
         assert len(names) == len(files), 'Duplicate archive entries'
+        assert 'codex-tests.mixins.json' not in files, 'Test-only window/input hooks in release'
         for name in ['ModMain', 'advancement/QuestTransactions', 'advancement/AdvancementDocument',
                      'network/QuestNetworking', 'client/AdvancementEditorClient',
                      'client/advancements/CodexAdvancementsScreen']:

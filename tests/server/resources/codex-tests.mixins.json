@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.vg.codex.validation.mixin",
+  "client": ["TestMouseCaptureMixin", "TestWindowFocusMixin"],
+  "injectors": {"defaultRequire": 1}
+}

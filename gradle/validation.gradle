@@ -2,7 +2,7 @@ def codexPlatform = project.findProperty("codexLoader") ?: project.name
 // Opt-in server scenarios. These sources and the test mod never enter release jars.
 def scenarios = sourceSets.create('codexTest') {
     java.srcDirs = [rootProject.file('tests/server/common'), rootProject.file("tests/server/${codexPlatform}")]
-    resources.srcDirs = [rootProject.file("tests/server/${codexPlatform}-resources")]
+    resources.srcDirs = [rootProject.file("tests/server/resources"), rootProject.file("tests/server/${codexPlatform}-resources")]
     compileClasspath += sourceSets.main.output
     runtimeClasspath += sourceSets.main.output
 }
@@ -33,12 +33,14 @@ tasks.named('compileCodexTestJava') {
     setSource(files(testTrees.collect { tree -> generateTest.map { new File(it.destinationDir, tree) } }).asFileTree)
 }
 def transport = providers.gradleProperty('codex_transport').isPresent()
+def guiOnly = providers.gradleProperty('codex_gui_only').isPresent()
+def transportRoot = guiOnly ? 'runs/gui-authoring' : 'runs/transport'
 def bundledProbe = providers.gradleProperty('codex_bundled_probe').isPresent()
 def recipeProbe = providers.gradleProperty('codex_recipe_probe').isPresent()
 def migrationProbe = providers.gradleProperty('codex_migration_probe').isPresent()
 def codexTestNode = project.name
-def testDirectory = rootProject.file(bundledProbe ? "runs/bundled-validation/${project.name}" : recipeProbe ? "runs/recipe-validation/${project.name}" : migrationProbe ? "runs/migration-validation/${project.name}/server" : transport ? "runs/transport/${project.name}/server" : "runs/validation/${project.name}")
-def controlDirectory = rootProject.file("runs/transport/${project.name}/control")
+def testDirectory = rootProject.file(bundledProbe ? "runs/bundled-validation/${project.name}" : recipeProbe ? "runs/recipe-validation/${project.name}" : migrationProbe ? "runs/migration-validation/${project.name}/server" : transport ? "${transportRoot}/${project.name}/server" : "runs/validation/${project.name}")
+def controlDirectory = rootProject.file("${transportRoot}/${project.name}/control")
 if (providers.gradleProperty('codex_compat_dir').isPresent()) {
     dependencies {
         implementation fileTree(dir: new File(providers.gradleProperty('codex_compat_dir').get(), codexPlatform), include: '*.jar')
@@ -65,6 +67,7 @@ loom {
                 vmArg "-Dcodex.test.world=${providers.gradleProperty('codex_test_world').getOrElse('world-a')}"
             }
             if (transport) {
+                if (guiOnly) vmArg '-Dcodex.test.gui_only=true'
                 vmArg '-Dcodex.test.transport=true'
                 vmArg "-Dcodex.test.control=${controlDirectory.absolutePath}"
             }
@@ -79,7 +82,7 @@ tasks.named('runCodexTest') {
         new File(testDirectory, 'eula.txt').text = 'eula=true\n'
         def world = providers.gradleProperty('codex_test_world').getOrElse('world-a')
         if (!(world ==~ /world-[ab]/)) throw new GradleException('Use isolated world-a or world-b')
-        new File(testDirectory, 'server.properties').text = "online-mode=false\nserver-port=${transport ? 25577 : 0}\nserver-ip=${transport ? '127.0.0.1' : ''}\nlevel-name=${world}\nspawn-protection=0\nview-distance=2\nsimulation-distance=2\nmax-tick-time=120000\n"
+        new File(testDirectory, 'server.properties').text = "online-mode=false\nwhite-list=false\nserver-port=${transport ? 25577 : 0}\nserver-ip=${transport ? '127.0.0.1' : ''}\nlevel-name=${world}\nspawn-protection=0\nlevel-type=minecraft:flat\ngenerator-settings=${codexFlatTestSettings}\ngenerate-structures=false\nview-distance=2\nsimulation-distance=2\nmax-tick-time=120000\n"
         new File(testDirectory, 'results.json').delete()
     }
 }
@@ -93,9 +96,32 @@ if (transport) {
     }
     configurations.codexClientTestCompileClasspath.extendsFrom(configurations.codexTestCompileClasspath)
     configurations.codexClientTestRuntimeClasspath.extendsFrom(configurations.codexTestRuntimeClasspath)
+    def clientTrees = ['tests/client/common', "tests/client/${codexPlatform}"]
+    def clientChanges = layout.buildDirectory.dir('stonecutter/codexClientTest/changes')
+    def prepareClient = stonecutter.tasks.prepare.get('codexClientTest')
+    prepareClient.configure {
+        root.set(rootProject.projectDir)
+        source.setFrom(clientTrees.collect { tree -> rootProject.fileTree(tree) { include '**/*.java' } })
+        destination.set(clientChanges)
+    }
+    def generateClient = tasks.register('prepareCodexClientTestSources', Sync) {
+        dependsOn prepareClient
+        into layout.buildDirectory.dir('stonecutter/codexClientTest/sources')
+        from(clientChanges)
+        clientTrees.each { tree ->
+            from(rootProject.file(tree)) {
+                into tree
+                exclude { entry -> new File(clientChanges.get().asFile, "${tree}/${entry.path}").isFile() }
+            }
+        }
+    }
+    tasks.named('compileCodexClientTestJava') {
+        dependsOn generateClient
+        setSource(files(clientTrees.collect { tree -> generateClient.map { new File(it.destinationDir, tree) } }).asFileTree)
+    }
     def actor = providers.gradleProperty('codex_test_actor').getOrElse('alice')
     if (!(actor in ['alice', 'bob'])) throw new GradleException('Unknown isolated test actor')
-    def clientDirectory = rootProject.file("runs/transport/${project.name}/${actor}")
+    def clientDirectory = rootProject.file("${transportRoot}/${project.name}/${actor}")
     loom.mods.codex_tests.sourceSet clients
     loom.runs {
         codexTransportClient {

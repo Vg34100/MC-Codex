@@ -14,5 +14,8 @@
   },
   "depends": {
     "codex": "*"
-  }
+  },
+  "mixins": [
+    "codex-tests.mixins.json"
+  ]
 }
