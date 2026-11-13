@@ -75,8 +75,8 @@ public final class RecipeEditorScreen extends CodexScreen {
    })));
    if(document.has("result")&&document.get("result").isJsonObject()){
     JsonObject out=document.getAsJsonObject("result");EditBox count=addRenderableWidget(new EditBox(font,left+176,148,80,20,Component.literal("Output quantity")));count.setValue(out.has("count")?out.get("count").getAsString():"1");count.setMaxLength(3);count.setResponder(v->{try{out.addProperty("count",Integer.parseInt(v));}catch(NumberFormatException e){out.addProperty("count",v);}});count.setTooltip(Tooltip.create(Component.literal("Number of items produced by one craft")));
-    //? if <1.21 {
-    /*if(!crafting){count.setValue("1");count.setEditable(false);count.setTooltip(Tooltip.create(Component.literal("Minecraft 1.20.1 cooking recipes produce one item per operation.")));}
+    //? if <26.1 {
+    /*if(!crafting){count.setValue("1");count.setEditable(false);count.setTooltip(Tooltip.create(Component.literal("This Minecraft version produces one item per cooking operation.")));}
     *///?}
 
    }

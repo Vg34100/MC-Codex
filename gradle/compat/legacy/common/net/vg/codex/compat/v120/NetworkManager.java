@@ -7,6 +7,10 @@ import java.util.*;
 import java.util.function.BiConsumer;
 public final class NetworkManager {
  private NetworkManager(){}
+ private static final LegacyPacketFrames.Assembler FRAMES=new LegacyPacketFrames.Assembler();
+ static { dev.architectury.event.events.common.PlayerEvent.PLAYER_QUIT.register(player -> FRAMES.clear(player.getUUID()));dev.architectury.event.events.common.LifecycleEvent.SERVER_STOPPED.register(server -> FRAMES.clear()); }
+ public static void clearClient(){FRAMES.clear(new UUID(0,0));}
+ public static CustomPacketPayload receive(dev.architectury.networking.NetworkManager.Side side,UUID peer,ResourceLocation id,FriendlyByteBuf frame){FriendlyByteBuf body=FRAMES.accept(side,peer,id,frame);if(body==null)return null;try{return decode(id,body);}finally{body.release();}}
  private static final Map<ResourceLocation,StreamCodec<FriendlyByteBuf,?>> CODECS=new HashMap<>();
  public static dev.architectury.networking.NetworkManager.Side s2c(){return dev.architectury.networking.NetworkManager.s2c();}
  public static dev.architectury.networking.NetworkManager.Side c2s(){return dev.architectury.networking.NetworkManager.c2s();}
@@ -20,18 +24,18 @@ public final class NetworkManager {
  public static <T extends CustomPacketPayload> void registerReceiver(dev.architectury.networking.NetworkManager.Side side,CustomPacketPayload.Type<T> type,StreamCodec<FriendlyByteBuf,T> codec,BiConsumer<T,PacketContext> receiver){
   CODECS.put(type.id(),codec);
   dev.architectury.networking.NetworkManager.registerReceiver(side,type.id(),(buffer,context)->{
-   T packet=codec.decode(buffer);
-   if(buffer.isReadable())throw new io.netty.handler.codec.DecoderException("Unexpected trailing Codex packet bytes");
-   receiver.accept(packet,new PacketContext(context));
+   @SuppressWarnings("unchecked") T packet=(T)receive(side,side==c2s()?context.getPlayer().getUUID():new UUID(0,0),type.id(),buffer);
+   if(packet!=null)receiver.accept(packet,new PacketContext(context));
   });
  }
  @SuppressWarnings("unchecked") private static FriendlyByteBuf encode(CustomPacketPayload packet){
   var codec=(StreamCodec<FriendlyByteBuf,CustomPacketPayload>)CODECS.get(packet.type().id());if(codec==null)throw new IllegalStateException("Unregistered Codex packet "+packet.type().id());
   FriendlyByteBuf buffer=new FriendlyByteBuf(io.netty.buffer.Unpooled.buffer());try{codec.encode(buffer,packet);return buffer;}catch(RuntimeException error){buffer.release();throw error;}
  }
- public static void sendToPlayer(ServerPlayer player,CustomPacketPayload packet){var buffer=encode(packet);try{dev.architectury.networking.NetworkManager.sendToPlayer(player,packet.type().id(),buffer);}finally{buffer.release();}}
+ private static FriendlyByteBuf nativeBuffer(FriendlyByteBuf frame){byte[] bytes=new byte[frame.readableBytes()];frame.getBytes(frame.readerIndex(),bytes);return new FriendlyByteBuf(io.netty.buffer.Unpooled.unreleasableBuffer(io.netty.buffer.Unpooled.wrappedBuffer(bytes)));}
+ public static void sendToPlayer(ServerPlayer player,CustomPacketPayload packet){var buffer=encode(packet);try{LegacyPacketFrames.encode(s2c(),packet.type().id(),buffer,frame -> dev.architectury.networking.NetworkManager.sendToPlayer(player,packet.type().id(),nativeBuffer(frame)));}finally{buffer.release();}}
  public static void sendToPlayers(Iterable<ServerPlayer> players,CustomPacketPayload packet){for(var player:players)sendToPlayer(player,packet);}
- public static void sendToServer(CustomPacketPayload packet){var buffer=encode(packet);try{dev.architectury.networking.NetworkManager.sendToServer(packet.type().id(),buffer);}finally{buffer.release();}}
+ public static void sendToServer(CustomPacketPayload packet){var buffer=encode(packet);try{LegacyPacketFrames.encode(c2s(),packet.type().id(),buffer,frame -> dev.architectury.networking.NetworkManager.sendToServer(packet.type().id(),nativeBuffer(frame)));}finally{buffer.release();}}
 }
 
 *///?}

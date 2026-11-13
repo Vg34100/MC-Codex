@@ -36,6 +36,9 @@ public final class AdvancementEditorClient {
     }
 
     public static void init() {
+        //? if <1.21 {
+        /*dev.architectury.event.events.client.ClientPlayerEvent.CLIENT_PLAYER_QUIT.register(player -> net.vg.codex.compat.v120.NetworkManager.clearClient());
+        *///?}
         NetworkManager.registerReceiver(NetworkManager.s2c(), net.vg.codex.network.TabSummaryPayload.TYPE, net.vg.codex.network.TabSummaryPayload.STREAM_CODEC,
                 (payload, context) -> context.queue(() -> net.vg.codex.client.advancements.ClientTabSummaries.receive(payload)));
         NetworkManager.registerReceiver(NetworkManager.s2c(), net.vg.codex.network.RecipeEditorResponse.TYPE, net.vg.codex.network.RecipeEditorResponse.STREAM_CODEC, (payload, context) -> context.queue(() -> {

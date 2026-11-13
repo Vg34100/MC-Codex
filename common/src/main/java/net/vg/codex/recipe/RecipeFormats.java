@@ -38,6 +38,10 @@ public final class RecipeFormats {
         JsonObject result=source.deepCopy();
         //? if <26.1 {
         /*if(!known(result))return result;
+        if(!RecipeDocuments.type(result).startsWith("minecraft:crafting_") && result.has("result") && result.get("result").isJsonObject()) {
+            JsonObject output=result.getAsJsonObject("result");
+            if(output.has("count") && output.get("count").getAsInt()!=1)throw new IllegalArgumentException("This Minecraft version produces one item per cooking operation.");
+        }
         if(result.has("key") && result.get("key").isJsonObject()) {
             for(var entry:result.getAsJsonObject("key").entrySet())entry.setValue(nativeIngredient(entry.getValue()));
         }

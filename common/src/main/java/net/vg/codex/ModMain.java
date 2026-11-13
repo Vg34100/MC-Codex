@@ -20,6 +20,9 @@ public final class ModMain {
         net.vg.codex.advancement.DevelopmentExamples.install();
         LifecycleEvent.SERVER_STARTING.register(server -> { CodexPartyService.resetSession(); net.vg.codex.network.QuestNetworking.reset(); AdvancementPackSync.clearQueuedRewards(); });
         LifecycleEvent.SERVER_STARTING.register(AdvancementPackSync::onServerStarting);
+        //? if <1.21 {
+        /*LifecycleEvent.SERVER_STOPPED.register(server -> net.vg.codex.compat.v120.LegacyAdvancements.stop());
+        *///?}
         // A join happens independent of any reload - without this, a player who joins between
         // reloads would see generic rewards until the next edit/save, instead of the current state.
         PlayerEvent.PLAYER_JOIN.register(player -> { net.vg.codex.advancement.QuestJournal.recover(player.level().getServer()); net.vg.codex.advancement.RewardEffects.deliver(player); });

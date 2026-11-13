@@ -24,7 +24,7 @@ final class RecipeScenarios {
   JsonObject shapeless=RecipeDocuments.blank("crafting_shapeless");JsonElement[] unordered=new JsonElement[9];unordered[0]=new JsonPrimitive("minecraft:diamond");unordered[1]=new JsonPrimitive("minecraft:stick");RecipeDocuments.writeSlots(shapeless,unordered);RecipeEditorNetworking.validate(server,shapeless);
   Recipe<CraftingInput> free=(Recipe<CraftingInput>)(Recipe<?>)Recipe.CODEC.parse(ops,net.vg.codex.recipe.RecipeFormats.nativeDefinition(shapeless)).getOrThrow();check.accept("Shapeless ingredients match in either order",free.matches(CraftingInput.of(2,1,List.of(new ItemStack(Items.STICK),new ItemStack(Items.DIAMOND))),server.overworld()));
   int cookingCount=
-  //? if <1.21 {
+  //? if <26.1 {
   /*1;
   *///?} else {
   2;
@@ -33,7 +33,7 @@ final class RecipeScenarios {
    JsonObject cooking=RecipeDocuments.blank(type);cooking.addProperty("ingredient","minecraft:cobblestone");cooking.getAsJsonObject("result").addProperty("id","minecraft:diamond");cooking.getAsJsonObject("result").addProperty("count",cookingCount);RecipeEditorNetworking.validate(server,cooking);
    Recipe<SingleRecipeInput> r=(Recipe<SingleRecipeInput>)(Recipe<?>)Recipe.CODEC.parse(ops,net.vg.codex.recipe.RecipeFormats.nativeDefinition(cooking)).getOrThrow();var in=new SingleRecipeInput(new ItemStack(Items.COBBLESTONE));check.accept(type+" matches input and produces configured output",r.matches(in,server.overworld())&&r.assemble(in).is(Items.DIAMOND)&&r.assemble(in).getCount()==cookingCount);
   }
-  //? if <1.21 {
+  //? if <26.1 {
   /*JsonObject tooMany=RecipeDocuments.blank("smelting");tooMany.getAsJsonObject("result").addProperty("count",2);boolean quantityRejected=false;try{RecipeEditorNetworking.validate(server,tooMany);}catch(RuntimeException expected){quantityRejected=true;}check.accept("Legacy cooking rejects unsupported output counts before write",quantityRejected);
   *///?}
   JsonObject invalid=shaped.deepCopy();invalid.getAsJsonObject("result").addProperty("id","missing:invalid_item");boolean rejected=false;try{RecipeEditorNetworking.validate(server,invalid);}catch(RuntimeException e){rejected=true;}check.accept("Unknown output item rejected before write",rejected);

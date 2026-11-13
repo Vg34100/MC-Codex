@@ -185,6 +185,9 @@ public final class ServerScenarios {
             check("Party membership survives restart", CodexPartyService.progressOwner(server, ALICE).equals(CodexPartyService.progressOwner(server, BOB)));
             return;
         }
+        //? if <1.21 {
+        /*PacketFragmentScenarios.run(ServerScenarios::check);
+        *///?}
         check("Incomplete advancement cannot claim", QuestTransactions.claim(a, REWARD, -1) == 0);
         check("Separate story-demo tree loads as ordinary advancements", server.getAdvancements().get(Identifier.parse("codex_demo:field_journal/root")) != null && server.getAdvancements().get(Identifier.parse("codex_demo:field_journal/workshop")) != null);
         Identifier enhancedVanillaId=Identifier.parse("minecraft:story/mine_stone");
@@ -762,9 +765,15 @@ public final class ServerScenarios {
                 //? if <1.21 {
                 /*if(message instanceof net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket packet) {
                     var type=packet.getIdentifier();
-                    if(type.equals(net.vg.codex.network.QuestInfoPayload.TYPE.id())||type.equals(net.vg.codex.network.QuestPresentationPayload.TYPE.id())||type.equals(net.vg.codex.network.TabSummaryPayload.TYPE.id())||type.equals(net.vg.codex.network.ClaimableRewardsPayload.TYPE.id())) {
-                        var data=packet.getData();try{QUEST_PACKETS.computeIfAbsent(id,ignored->new ArrayList<>()).add(net.vg.codex.compat.v120.NetworkManager.decode(type,data));}finally{data.release();}
-                    }
+                    var data=packet.getData();
+                    try {
+                        // Architectury Forge wraps its logical channel inside a shared native channel.
+                        if(type.toString().equals("architectury:network"))type=data.readResourceLocation();
+                        if(type.equals(net.vg.codex.network.QuestInfoPayload.TYPE.id())||type.equals(net.vg.codex.network.QuestPresentationPayload.TYPE.id())||type.equals(net.vg.codex.network.TabSummaryPayload.TYPE.id())||type.equals(net.vg.codex.network.ClaimableRewardsPayload.TYPE.id())) {
+                            var decoded=net.vg.codex.compat.v120.NetworkManager.receive(net.vg.codex.compat.v120.NetworkManager.s2c(),id,type,data);
+                            if(decoded!=null)QUEST_PACKETS.computeIfAbsent(id,ignored->new ArrayList<>()).add(decoded);
+                        }
+                    } finally {data.release();}
                 }
                 *///?} else {
                 if (message instanceof net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket packet
