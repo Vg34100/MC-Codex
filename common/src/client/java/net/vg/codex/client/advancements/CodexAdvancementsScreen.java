@@ -817,13 +817,25 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
         return Component.literal(editMode ? "Edit Mode: On" : "Edit Mode: Off");
     }
 
+    private boolean editorSessionClosed;
+    public boolean isEditorSessionClosed() {
+        return editorSessionClosed;
+    }
+
+    private void closeEditorSession() {
+        editorSessionClosed = true;
+        saveQueued = false;
+        ClientEditorRequests.cancelSnapshots(this);
+    }
+
     private void toggleEditMode() {
         if (editMode) {
+            ClientEditorRequests.cancelSnapshots(this);
             editMode = false;
             selectedEditWidget = null;
             this.init(this.width, this.height);
         } else {
-            NetworkManager.sendToServer(new RequestAdvancementSnapshotPayload());
+            ClientEditorRequests.requestSnapshot(this);
             // editMode flips true once the response arrives - see enterEditMode.
         }
     }
@@ -1288,6 +1300,7 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
         if (!dirty.isEmpty()) {
             this.minecraft.setScreen(new ConfirmScreen(confirmed -> {
                         if (confirmed) {
+                            closeEditorSession();
                             this.minecraft.setScreen(lastScreen);
                         } else {
                             this.minecraft.setScreen(this);
@@ -1297,6 +1310,7 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
                     Component.literal("You have " + dirty.size() + " unsaved change(s). Leave without saving?")));
             return;
         }
+        closeEditorSession();
         this.minecraft.setScreen(lastScreen);
     }
 
@@ -2429,6 +2443,7 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
         for (Map.Entry<Identifier, JsonObject> e : dirty.entrySet()) {
             toSave.add(new RawAdvancement(e.getKey(), GSON.toJson(e.getValue())));
         }
+        ClientEditorRequests.expectSave(this);
         NetworkManager.sendToServer(new SaveAdvancementTreePayload(toSave));
         savePending = true;
         pendingSaveEntries.clear();
@@ -2449,7 +2464,7 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
             }
             pendingSaveEntries.clear();
             setStatus("Saved " + saved + " advancement(s).");
-            if (editMode) NetworkManager.sendToServer(new RequestAdvancementSnapshotPayload());
+            if (editMode) ClientEditorRequests.requestSnapshot(this);
         } else {
             setStatus("Saved " + saved + ", failed " + failed + ".");
         }

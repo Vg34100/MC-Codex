@@ -55,9 +55,7 @@ public final class AdvancementEditorClient {
                 }));
         NetworkManager.registerReceiver(NetworkManager.s2c(), SaveAdvancementResultPayload.TYPE, SaveAdvancementResultPayload.STREAM_CODEC,
                 (payload, context) -> context.queue(() -> {
-                    if (Minecraft.getInstance().screen instanceof CodexAdvancementsScreen screen) {
-                        screen.onSaveConfirmed(payload.saved(), payload.failed());
-                    }
+                    net.vg.codex.client.advancements.ClientEditorRequests.saved(payload);
                 }));
         NetworkManager.registerReceiver(NetworkManager.s2c(), StatisticProgressPayload.TYPE, StatisticProgressPayload.STREAM_CODEC,
                 (payload, context) -> context.queue(() -> ClientStatisticProgress.set(payload.entries())));
@@ -145,6 +143,7 @@ public final class AdvancementEditorClient {
         NetworkManager.registerReceiver(NetworkManager.s2c(), OpenAdvancementEditorPayload.TYPE, OpenAdvancementEditorPayload.STREAM_CODEC,
                 (payload, context) -> context.queue(() -> {
                     Minecraft minecraft = Minecraft.getInstance();
+                    if (net.vg.codex.client.advancements.ClientEditorRequests.snapshot(payload)) return;
                     if (minecraft.screen instanceof CodexAdvancementsScreen screen) {
                         screen.enterEditMode(payload.advancements(), payload.progress());
                     } else {
