@@ -88,3 +88,9 @@ November 13: the one-client 1.20.1 Fabric walkthrough passes all 85 stages and t
 The same 85-stage journey and three TCP/server checks also pass on 26.1.1 NeoForge using the native binding. The author is placed in Creative mode only for the editor portion so incidental mobs cannot close the screen. GLFW focus hooks account for the separate native createGlfwWindow helper on 26.1–26.2.
 
 The 26.3 NeoForge one-client journey also passes all 85 stages and three TCP/server checks. Its disposable server explicitly sets white-list=false because native defaults now reject unlisted offline test actors. The test binding remains loopback-only; player servers are unaffected.
+
+## RPG dialogue milestone — November 13
+
+The authoring journey now has 113 stages. It also reads the shipped Camp Chronicle through the RPG panel, skips/reveals and advances passages, selects a branch, verifies the saved outcome, opens/accepts its chapter, checks a compact window, returns through Quest Details, and creates speaker name/icon/reveal settings using ordinary GUI controls. The server verifies those fields, acceptance and the alternate-branch lock. Both 26.1.2 Fabric and NeoForge pass, each with one actual TCP client and three top-level verification checks. The first Fabric capture precedes the final content-sized layout polish; NeoForge verifies that final layout. Reports and actual captures are under runs/rpg-dialogue-20261113/gui/.
+
+No desktop input commands are used. This is not a new two-client multiplayer result. Previous sixteen-target progression evidence remains recorded separately.

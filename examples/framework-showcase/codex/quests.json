@@ -1,8 +1,8 @@
 {
   "codex_demo:camp_chronicle/root": {
     "dialogue": {
-      "intro": "There is no quest board here, and nobody has assigned you a destiny. There is only this journal.\n\nSome people build somewhere worth returning to. Others keep the horizon for company. Which sounds like your first chapter?",
-      "complete": "The first page is yours. Choose a direction using Story Choices. You can still explore every part of this world; the choice only shapes this little story.",
+      "intro": "A little daylight is left. You could spend it putting down a workbench and lighting a camp, or take enough supplies to keep walking.\n\nA place to return to makes the next trip easier. A chest for the things you cannot carry. A table for repairs. A light you can spot on the way home.\n\nThen again, there is a river beyond the trees, and you have not seen what lies on the other side.\n\nPick a first chapter. The camp and trail chapters are alternatives in this journal; the rest of the world is still yours to explore.",
+      "complete": "A little daylight is left. You could spend it putting down a workbench and lighting a camp, or take enough supplies to keep walking.\n\nA place to return to makes the next trip easier. A chest for the things you cannot carry. A table for repairs. A light you can spot on the way home.\n\nThen again, there is a river beyond the trees, and you have not seen what lies on the other side.\n\nPick a first chapter. The camp and trail chapters are alternatives in this journal; the rest of the world is still yours to explore.",
       "choices": [
         {
           "id": "campkeeper",
@@ -16,7 +16,10 @@
           "text": "You leave the page uncreased. There will be time to settle later. For now, a forest path is enough.",
           "next_quest": "codex_demo:camp_chronicle/wanderer"
         }
-      ]
+      ],
+      "speaker": "Field Notes",
+      "speaker_icon": "minecraft:book",
+      "animate": true
     }
   },
   "codex_demo:camp_chronicle/supply": {
@@ -28,7 +31,10 @@
     "dialogue": {
       "intro": "A small camp runs on ordinary things. A few logs. A little stone. Accept this contract when you are ready to contribute.",
       "progress": "The supply box is open. Send what you have; you can finish the delivery later.",
-      "complete": "Enough for another day. Your provisions and satchel are ready. After the cooldown, begin another cycle without erasing your advancement."
+      "complete": "The supply box is stocked. Take your provisions and satchel; there will be another delivery when you are ready.",
+      "speaker": "Field Notes",
+      "speaker_icon": "minecraft:chest",
+      "animate": true
     }
   },
   "codex_demo:camp_chronicle/trail": {
@@ -50,8 +56,12 @@
       "choice": "campkeeper"
     },
     "dialogue": {
-      "intro": "Your choice opens the campkeeper chapter. Accept, then make or find a crafting table.",
-      "complete": "A workbench is a modest beginning. It is still a beginning."
+      "intro": "Find a place you would like to return to. A workbench is enough to begin. Accept this chapter, then make or find a crafting table.",
+      "complete": "A workbench is a modest beginning. It is still a beginning.",
+      "speaker": "Field Notes",
+      "speaker_icon": "minecraft:crafting_table",
+      "animate": true,
+      "progress": "The workbench can go wherever you decide to settle. Make or find a crafting table, then return for your supplies."
     },
     "celebration": {
       "enabled": true,
@@ -67,7 +77,10 @@
     },
     "dialogue": {
       "intro": "Your choice opens the wanderer chapter. Accept and find any forest.",
-      "complete": "Leaves overhead. Room to keep walking. The world has plenty of chapters left."
+      "complete": "Leaves overhead. Room to keep walking. The world has plenty of chapters left.",
+      "speaker": "Field Notes",
+      "speaker_icon": "minecraft:compass",
+      "animate": true
     },
     "celebration": {
       "enabled": true,
@@ -101,9 +114,9 @@
       "scope": "personal"
     },
     "dialogue": {
-      "intro": "Small habits keep a camp going. Two sticks are enough to start today\u2019s page.",
+      "intro": "Small habits keep a camp going. Two sticks are enough to start today’s page.",
       "progress": "Use Submit Items. Its receipt shows exactly what left your inventory.",
-      "complete": "Today\u2019s page is complete. Claim your ration; tomorrow\u2019s can wait."
+      "complete": "Today’s page is complete. Claim your ration; tomorrow’s can wait."
     }
   },
   "codex_demo:camp_chronicle/communal": {
@@ -117,7 +130,7 @@
     "dialogue": {
       "intro": "A camp is easier to keep when everyone lends a hand. This contract keeps one shared tally and one shared reward chest.",
       "progress": "Use Submit Items. Its receipt shows exactly what left your inventory.",
-      "complete": "The camp has its stone. One participant can collect the group\u2019s provisions. Decide how to share them in the world."
+      "complete": "The camp has its stone. One participant can collect the group’s provisions. Decide how to share them in the world."
     }
   },
   "sagittary:arsenal": {

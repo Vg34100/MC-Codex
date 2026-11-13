@@ -111,11 +111,15 @@ public final class QuestFeedback {
         Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(event, action.equals("submit") ? 1.15F : 1F, 0.18F));
     }
     public static void render(GuiGraphicsExtractor g) {
+        render(g, Minecraft.getInstance().getWindow().getGuiScaledHeight() - 12);
+    }
+    /** Keep notifications above a modal panel rather than over its controls. */
+    public static void render(GuiGraphicsExtractor g, int bottomLimit) {
         var mc = Minecraft.getInstance();
         if (!CodexClientSettings.notices || mc.player == null || mc.options.hideGui) return;
         ChapterFeedback.render(g);
         long now = System.nanoTime(); NOTICES.removeIf(n -> now - n.at > 4_500_000_000L);
-        int width = Math.min(230, mc.getWindow().getGuiScaledWidth() - 20), bottom = mc.getWindow().getGuiScaledHeight() - 12;
+        int width = Math.min(230, mc.getWindow().getGuiScaledWidth() - 20), bottom = Math.min(bottomLimit, mc.getWindow().getGuiScaledHeight() - 12);
         int x = mc.getWindow().getGuiScaledWidth() - width - 10;
         for (var notices = NOTICES.descendingIterator(); notices.hasNext();) {
             Notice notice=notices.next();
@@ -129,6 +133,7 @@ public final class QuestFeedback {
                 }
             }
             int height = 20 + lines.size() * 10, y = bottom - height;
+            if (y < 8) break;
             g.fill(x, y, x + width, bottom, alpha(0xC51C2526, opacity));
             g.fill(x, y, x + 2, bottom, alpha(notice.color, opacity));
             g.fakeItem(notice.icon, x + 8, y + 9);

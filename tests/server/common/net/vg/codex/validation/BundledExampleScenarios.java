@@ -29,6 +29,22 @@ final class BundledExampleScenarios {
         check.accept("Bundled vanilla and story metadata merge without loss",read(quests).has("minecraft:story/root")&&read(quests).has("codex_demo:camp_chronicle/root"));
         check.accept("Companion sidecars are included only when requested",read(quests).has("sagittary:arsenal"));
         check.accept("Examples do not change recipes",!Files.exists(pack.resolve(ResourceFormats.relative("data/minecraft/recipe"))));
+        String rootKey="codex_demo:camp_chronicle/root";
+        JsonObject installed=read(quests).getAsJsonObject(rootKey).deepCopy();
+        QuestDefinitions.validate(installed);
+        check.accept("Bundled RPG dialogue has editable speaker/icon and paged text",installed.getAsJsonObject("dialogue").get("speaker_icon").getAsString().equals("minecraft:book")&&installed.getAsJsonObject("dialogue").get("intro").getAsString().contains("\n\n"));
+        JsonObject old=installed.deepCopy();old.getAsJsonObject("dialogue").remove("speaker");old.getAsJsonObject("dialogue").remove("speaker_icon");
+        JsonObject oldDocument=read(quests);oldDocument.add(rootKey,old);AtomicJson.write(quests,oldDocument);
+        JsonObject oldLedger=read(history);oldLedger.getAsJsonObject("showcase").getAsJsonObject("codex/quests.json#"+rootKey).add("baseline",old.deepCopy());AtomicJson.write(history,oldLedger);
+        BundledExamples.apply(pack,history,all);
+        check.accept("Untouched existing story gains RPG presentation on upgrade",read(quests).getAsJsonObject(rootKey).equals(installed));
+        JsonObject authored=read(quests);authored.getAsJsonObject(rootKey).getAsJsonObject("dialogue").addProperty("speaker","My storyteller");AtomicJson.write(quests,authored);
+        BundledExamples.apply(pack,history,all);
+        check.accept("Example upgrade preserves an author's speaker edits",read(quests).getAsJsonObject(rootKey).getAsJsonObject("dialogue").get("speaker").getAsString().equals("My storyteller"));
+        authored.add(rootKey,installed);AtomicJson.write(quests,authored);
+        boolean speakerRejected=false;JsonObject invalidSpeaker=installed.deepCopy();invalidSpeaker.getAsJsonObject("dialogue").addProperty("speaker_icon","codex:not_an_item");
+        try{QuestDefinitions.validate(invalidSpeaker);}catch(IllegalArgumentException expected){speakerRejected=true;}
+        check.accept("Dialogue rejects unknown speaker item icons",speakerRejected);
         String snapshot=Files.readString(quests);BundledExamples.apply(pack,history,all);
         check.accept("Restart does not change installed metadata",Files.readString(quests).equals(snapshot));
         Path removed=pack.resolve(ResourceFormats.relative("data/codex_demo/advancement/camp_chronicle/heading.json"));Files.delete(removed);BundledExamples.apply(pack,history,all);

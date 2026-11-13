@@ -24,6 +24,16 @@ public final class QuestDetailsScreen extends CodexScreen {
     public QuestDetailsScreen(Screen parent, Identifier id, Component title, Component description) {
         super(title); this.parent = parent; this.id = id; this.description = description;
     }
+    public static Screen open(Screen parent, Identifier id, Component title, Component description) {
+        JsonObject info = ClientQuests.info(id), presentation = ClientQuests.presentation(id);
+        boolean story = info.has("definition")
+                ? info.getAsJsonObject("definition").has("dialogue") && info.getAsJsonObject("definition").getAsJsonObject("dialogue").size() != 0
+                : presentation.has("dialogue") && presentation.get("dialogue").getAsBoolean();
+        return story ? new StoryChoicesScreen(parent, id, title, description) : new QuestDetailsScreen(parent, id, title, description);
+    }
+    CodexAdvancementsScreen storyBackdrop() {
+        return parent instanceof CodexAdvancementsScreen tree ? tree : parent instanceof StoryChoicesScreen story ? story.backdropTree() : null;
+    }
     @Override protected void init() {
         ClientQuests.watch(id);
         panelWidth = Math.min(500, width - 24); left = (width - panelWidth) / 2; submissions.clear(); choices.clear();
@@ -49,8 +59,8 @@ public final class QuestDetailsScreen extends CodexScreen {
                 }).bounds(right,y,rightWidth,20).build());submit.setTooltip(Tooltip.create(Component.literal("Consumes matching inventory items. Partial deliveries are saved.")));submissions.add(submit);y+=24;
             }
             JsonObject q = info.getAsJsonObject("definition");
-            if (q.has("dialogue") && q.getAsJsonObject("dialogue").has("choices")) {
-                addRenderableWidget(Button.builder(Component.literal("Story Choices…"), b -> minecraft.setScreen(new StoryChoicesScreen(this, id))).bounds(right, y, rightWidth, 20).build()); y += 24;
+            if (q.has("dialogue")) {
+                addRenderableWidget(Button.builder(Component.literal("Read Story…"), b -> minecraft.setScreen(parent instanceof StoryChoicesScreen story && story.id.equals(id) ? parent : new StoryChoicesScreen(this, id))).bounds(right, y, rightWidth, 20).build()); y += 24;
             }
         }
         rewardsTop = y + 8;

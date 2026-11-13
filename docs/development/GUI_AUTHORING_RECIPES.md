@@ -23,6 +23,10 @@ Open **Treasure Lists**, add Field Provisions and set 2 rolls. Add item rows thr
 
 ## Dialogue controls
 
+Story nodes open a compact RPG dialogue panel over their advancement tree. Continue moves through wrapped pages; Show Text reveals the current page immediately. The global Animations setting also disables text reveal. Choices appear at the end of the passage, and a confirmed choice shows its outcome and linked chapters. Accept Quest and Claim Rewards use the existing server actions; Quest Details keeps delivery, tracking and reward previews accessible.
+
+To reproduce the included presentation: select a quest in Edit Mode → Quest Story & Rules → Story. Write Introduction, In Progress and Completion text. Open **Speaker & Presentation…**, enter an optional speaker name, select an item icon using the searchable picker, and set Text reveal. Apply returns to the story draft; Apply to Draft and Save publish it. Cancel discards the presentation subdraft. Speaker and icon are optional; the quest title is the fallback. All existing dialogue/branch definitions remain readable without new fields.
+
 A choice has a label, outcome text, optional offering stage and optional next-chapter link. Stages are Any time, Before acceptance, While in progress, and After completion. A link offers navigation; the destination's Branch rule explicitly gates its native criterion awards and Codex acceptance/submission/claims. The alternate branch dims and explains why it is unavailable. Advancements without a Branch rule keep ordinary vanilla behavior. Choosing a chapter never prevents the player from crafting, exploring or otherwise playing Minecraft. Choices are saved once per quest/cycle. Ordinary and personal quests keep personal choices; a shared cycle keeps its choice with the party cycle. The result screen shows the saved outcome and links to matching unlocked chapters. Reopening it shows the saved choice rather than unexplained disabled buttons.
 
 ## Schedules and party rules

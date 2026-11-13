@@ -70,6 +70,9 @@ public final class QuestDefinitions {
         }
         if (object.has("dialogue")) {
             JsonObject dialogue = object.getAsJsonObject("dialogue");
+            if (dialogue.has("speaker") && dialogue.get("speaker").getAsString().length() > 80) throw new IllegalArgumentException("Speaker name exceeds 80 characters");
+            if (dialogue.has("speaker_icon") && !net.minecraft.core.registries.BuiltInRegistries.ITEM.containsKey(Identifier.parse(dialogue.get("speaker_icon").getAsString()))) throw new IllegalArgumentException("Unknown speaker icon");
+            if (dialogue.has("animate")) flag(dialogue, "animate");
             for (String page : java.util.List.of("intro", "progress", "complete")) if (dialogue.has(page) && dialogue.get(page).getAsString().length() > 6000) throw new IllegalArgumentException("Dialogue page exceeds 6000 characters");
             if (dialogue.has("choices")) {
                 JsonArray choices = dialogue.getAsJsonArray("choices");

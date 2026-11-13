@@ -7,6 +7,7 @@ import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.resources.Identifier;
+import net.minecraft.network.chat.Component;
 import net.vg.codex.client.advancements.*;
 import java.util.*;
 
@@ -14,14 +15,16 @@ import java.util.*;
 public final class GuiAuthoringScenario {
     private static final Identifier STORY=Identifier.parse("codex_test:gui_story");
     private static CodexAdvancementsScreen editor;
+    private static boolean introShot;
     private static int stage,wait;private static long started;
     private GuiAuthoringScenario(){}
-    public static void start(){stage=0;wait=0;started=System.nanoTime();}
+    public static void start(){stage=0;wait=0;introShot=false;started=System.nanoTime();}
     public static int completedSteps(){return stage+1;}
     private static void click(Minecraft mc,String text){
         AbstractButton button=mc.screen.children().stream().filter(c->c instanceof AbstractButton b&&b.getMessage().getString().equals(text)).map(c->(AbstractButton)c).findFirst().orElseThrow(()->new IllegalStateException("Missing button '"+text+"' in "+mc.screen.getTitle().getString()));
         if(!button.active)throw new IllegalStateException("Inactive button "+text);press(button);
     }
+    private static boolean hasButton(Minecraft mc,String text){return mc.screen.children().stream().anyMatch(child->child instanceof AbstractButton b&&b.getMessage().getString().equals(text));}
     private static void press(AbstractButton button){
         //? if <26.1 {
         /*button.onPress();
@@ -61,7 +64,7 @@ public final class GuiAuthoringScenario {
         editor.init(mc.getWindow().getGuiScaledWidth(),mc.getWindow().getGuiScaledHeight());
     }
     public static boolean tick(Minecraft mc)throws Exception{
-        if(System.nanoTime()-started>180_000_000_000L)throw new IllegalStateException("GUI authoring timed out at step "+stage);
+        if(System.nanoTime()-started>240_000_000_000L)throw new IllegalStateException("GUI authoring timed out at step "+stage);
         if(wait-->0)return false;wait=2;
         switch(stage){
             case 0 -> mc.getConnection().sendCommand("codex advancements edit");
@@ -166,7 +169,77 @@ public final class GuiAuthoringScenario {
             case 81 -> click(mc,"Migrate");
             case 82 -> shot(mc,"migration");
             case 83 -> click(mc,"Export Migration Plan");
-            case 84 -> {shot(mc,"migration-exported");mc.setScreen(null);return true;}
+            case 84 -> {shot(mc,"migration-exported");mc.setScreen(null);}
+            case 85 -> {
+                var tree = new CodexAdvancementsScreen(mc.getConnection().getAdvancements(), null);
+                mc.setScreen(tree);
+                Identifier root = Identifier.parse("codex_demo:camp_chronicle/root");
+                mc.getConnection().getAdvancements().setSelectedTab(mc.getConnection().getAdvancements().getTree().get(root).holder(),true);
+                ClientQuests.view(root); ClientQuests.watch(root); wait=8;
+            }
+            case 86 -> {
+                Identifier root=Identifier.parse("codex_demo:camp_chronicle/root");
+                if(ClientQuests.info(root).size()==0)return false;
+                mc.setScreen(QuestDetailsScreen.open(mc.screen,root,Component.literal("The Camp Chronicle"),Component.literal("Choose your first chapter.")));
+            }
+            case 87 -> {
+                if(!mc.screen.getClass().getSimpleName().equals("StoryChoicesScreen"))throw new IllegalStateException("Story node did not open RPG dialogue");
+                if(hasButton(mc,"Show Text"))click(mc,"Show Text");
+            }
+            case 88 -> {
+                if(!introShot){shot(mc,"rpg-introduction");introShot=true;}
+                if(hasButton(mc,"Show Text")){click(mc,"Show Text");return false;}
+                if(hasButton(mc,"Continue")){click(mc,"Continue");return false;}
+                Identifier root=Identifier.parse("codex_demo:camp_chronicle/root");
+                if(!ClientQuests.info(root).getAsJsonObject("state").has("choice")) {
+                    var field=mc.screen.getClass().getDeclaredField("page");field.setAccessible(true);
+                    if(field.getInt(mc.screen)<1)throw new IllegalStateException("Bundled RPG opening did not demonstrate paging");
+                }
+                shot(mc,"rpg-choices");
+            }
+            case 89 -> {if(!ClientQuests.info(Identifier.parse("codex_demo:camp_chronicle/root")).getAsJsonObject("state").has("choice"))prefix(mc,"› Build a place");}
+            case 90 -> {
+                JsonObject state=ClientQuests.info(Identifier.parse("codex_demo:camp_chronicle/root")).getAsJsonObject("state");
+                if(!state.has("choice"))return false;
+                if(!state.get("choice").getAsString().equals("campkeeper"))throw new IllegalStateException("Unexpected saved RPG branch");
+                if(hasButton(mc,"Show Text")){click(mc,"Show Text");return false;}
+                shot(mc,"rpg-confirmed-outcome");
+            }
+            case 91 -> prefix(mc,"Open chapter:");
+            case 92 -> {
+                JsonObject info=ClientQuests.info(Identifier.parse("codex_demo:camp_chronicle/builder"));
+                if(info.size()==0)return false;
+                if(!mc.screen.getClass().getSimpleName().equals("StoryChoicesScreen"))throw new IllegalStateException("Linked chapter did not open dialogue");
+                if(hasButton(mc,"Show Text"))click(mc,"Show Text");
+            }
+            case 93 -> {shot(mc,"rpg-linked-chapter");if(ClientQuests.canAccept(ClientQuests.info(Identifier.parse("codex_demo:camp_chronicle/builder"))))click(mc,"Accept Quest");}
+            case 94 -> {
+                JsonObject info=ClientQuests.info(Identifier.parse("codex_demo:camp_chronicle/builder"));
+                if(!info.getAsJsonObject("state").has("accepted")||!info.getAsJsonObject("state").get("accepted").getAsBoolean())return false;
+                if(hasButton(mc,"Show Text")){click(mc,"Show Text");return false;}
+                shot(mc,"rpg-accepted");
+            }
+            case 95 -> {mc.getWindow().setWindowed(520,240);wait=8;}
+            case 96 -> {
+                for(var child:mc.screen.children())if(child instanceof AbstractWidget widget && (widget.getY()<0||widget.getY()+widget.getHeight()>mc.screen.height))throw new IllegalStateException("RPG control overflows compact screen");
+                shot(mc,"rpg-compact");click(mc,"Quest Details");
+            }
+            case 97 -> click(mc,"Read Story…");
+            case 98 -> {if(!mc.screen.getClass().getSimpleName().equals("StoryChoicesScreen"))throw new IllegalStateException("Read Story did not return to dialogue");shot(mc,"rpg-from-details");}
+            case 99 -> {mc.getWindow().setWindowed(640,360);wait=8;}
+            case 100 -> {mc.setScreen(editor);select(mc,STORY);}
+            case 101 -> click(mc,"Quest Story & Rules");
+            case 102 -> click(mc,"Speaker & Presentation…");
+            case 103 -> edit(mc,"GUI Narrator");
+            case 104 -> click(mc,"Choose Speaker Icon…");
+            case 105 -> edit(mc,"minecraft:book");
+            case 106 -> click(mc,"    Book");
+            case 107 -> prefix(mc,"Text reveal:");
+            case 108 -> shot(mc,"rpg-speaker-editor");
+            case 109 -> click(mc,"Apply");
+            case 110 -> click(mc,"Apply to Draft");
+            case 111 -> {click(mc,"Save");wait=16;}
+            case 112 -> {shot(mc,"rpg-authoring-saved");mc.setScreen(null);return true;}
             default -> throw new IllegalStateException("Unknown GUI authoring stage");
         }
         stage++;return false;

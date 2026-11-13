@@ -40,6 +40,7 @@ public final class QuestPropertiesScreen extends CodexScreen {
                 addRenderableWidget(CycleButton.builder((String v) -> Component.literal(switch (v) { case "intro" -> "Introduction"; case "progress" -> "In Progress"; default -> "Completion"; }), page).withValues("intro", "progress", "complete").create(left, 64, size, 20, Component.literal("Text"), (b, value) -> { page = value; rebuildWidgets(); }));
                 MultiLineEditBox editor = addRenderableWidget(MultiLineEditBox.builder().setX(left).setY(90).build(font, size, height - 160, Component.literal("Dialogue text")));
                 editor.setCharacterLimit(6000); editor.setValue(dialogue().has(page) ? dialogue().get(page).getAsString() : ""); editor.setValueListener(value -> dialogue().addProperty(page, value));
+                addRenderableWidget(Button.builder(Component.literal("Speaker & Presentation…"), b -> minecraft.setScreen(new DialoguePresentationScreen(this, dialogue(), value -> draft.add("dialogue", value)))).bounds(left, height - 62, size, 20).build());
             }
             case "Rules" -> {
                 addRenderableWidget(CycleButton.onOffBuilder(QuestDefinitions.flag(draft, "acceptance")).create(left, rulesY(0), size, 20, Component.literal("Require Acceptance"), (b, value) -> draft.addProperty("acceptance", value)));

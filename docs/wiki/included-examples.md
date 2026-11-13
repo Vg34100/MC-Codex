@@ -23,7 +23,7 @@ This independent tab opens automatically in a fresh world. Its twelve quests dem
 
 | Quest | What to try |
 | --- | --- |
-| The Camp Chronicle | Read the introduction; choose campkeeper or wanderer |
+| The Camp Chronicle | Page through Field Notes in the RPG dialogue panel; choose campkeeper or wanderer, read the confirmed outcome and open the linked chapter |
 | A Small Head Start | Optional one-time starter gift: 4 logs, 8 cobblestone and a treasure satchel |
 | A Place to Return To | Campkeeper branch: obtain a crafting table |
 | Let the Trees Be Your Roof | Wanderer branch: find a forest |
@@ -35,6 +35,8 @@ This independent tab opens automatically in a fresh world. Its twelve quests dem
 | Timber with a Story | Deliver any logs plus an oak log named Camp Timber |
 | Letters from the Road | Dialogue replies that depend on your story progress |
 | A Heading of Your Own | Obtain a compass; see an optional completion celebration |
+
+The opening journal demonstrates a book icon, speaker label, skippable text reveal, multiple pages and saved branch outcomes. The camp/trail chapters and supply contract use their own item icons. To recreate these settings, use Edit Mode → Quest Story & Rules → Story → Speaker & Presentation. Untouched installer-owned examples update automatically; author-edited entries are preserved.
 
 Solo players can try party contracts alone. The tab includes a compact authored layout. All examples are editable with Codex's existing GUI; advanced JSON remains available. Dots/hover text explain acceptance, dialogue, delivery and repeatability. A branch choice shapes the sample story without limiting ordinary Minecraft exploration.
 

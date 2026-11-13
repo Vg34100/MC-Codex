@@ -4,7 +4,7 @@ The shared suite build is adopted from the existing local suite implementation. 
 
 | Minecraft | Loaders | Compile / JAR inspection | Dedicated evidence | Actual GUI evidence |
 | --- | --- | --- | --- | --- |
-| 26.1.2 | Fabric, NeoForge | Pass | 169 initial + 11 restart + 7 independent-world checks each | Existing two-client profiles; latest styled production-pack probe on Fabric |
+| 26.1.2 | Fabric, NeoForge | Pass | 169 initial + 11 restart + 7 independent-world checks each | Existing two-client profiles; new 113-stage one-client RPG/editor journey passes on both loaders |
 | 26.1, 26.1.1 | Fabric, NeoForge | Pass | 169 initial + 11 restart + 7 independent-world checks on each of the four targets | 26.1.1 NeoForge: one actual client passes 85-stage editor journey and saved-data verification |
 | 26.2 | Fabric, NeoForge | Pass | 169 initial + 11 restart + 7 independent-world checks each; bundled/native definitions 29 each | Not yet checked |
 | 26.3 | Fabric, NeoForge | Pass | 35 bundled checks and 169 initial + 11 restart + 7 independent-world progression checks each | One actual NeoForge client: 85-stage editor journey and saved definitions pass |
@@ -14,6 +14,10 @@ The shared suite build is adopted from the existing local suite implementation. 
 All sixteen targets pass full dedicated progression, restart and independent-world scenarios: 3,018 checks across the preserved reports. These use simulated players with embedded connections. The three new GUI journeys each use one actual TCP client and are not multiplayer results. Historical 26.1.2 two-client evidence remains separate. Further GUI, JEI/HUD and real-pack review is still needed on untested combinations.
 
 Successful reports are preserved under `runs/ports-20261113/dedicated/` and `runs/ports-20261113/gui/` (57 actual-game screenshots). The artifact manifest records SHA-256 checksums for the final copied JARs. These runtime/build artifacts are intentionally excluded from Git.
+
+## RPG dialogue update
+
+The new RPG presentation is tested through a 113-stage actual-client journey on both 26.1.2 loaders (one client each). Both dedicated bundled-example suites pass39 checks, including speaker metadata, untouched-example upgrades, authored-edit preservation and invalid-icon rejection. The other GUI results in the table are evidence from the preceding port milestone, before the new dialogue presentation. This update does not introduce a new two-client result or alter packet formats, vanilla criteria, branch rules or persistence formats. New captures/reports are in `runs/rpg-dialogue-20261113/gui/`.
 
 ## Repeatable commands
 

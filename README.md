@@ -11,6 +11,8 @@ Primary playtest target: **Minecraft 26.1.2, Fabric and NeoForge**. Stonecutter 
 - [Implemented scope and remaining work](docs/development/FEATURE_COMPLETION.md)
 - [Continuing-session checkpoint](docs/development/SESSION_PROGRESS.md)
 
+Story quests open a compact RPG dialogue panel over the advancement tree, with optional speaker/item icons, skippable text reveal, paged passages and saved choice outcomes. Camp Chronicle demonstrates it; author speaker settings through **Quest Story & Rules → Story → Speaker & Presentation…**.
+
 Open Advancements and enable Edit Mode with operator permissions, or use `/codex advancements edit`.
 
 The downloaded mod and normal IDE clients include **six enhanced vanilla advancements** and the separate twelve-quest **Camp Chronicle** tab. [See exactly what is included and how to disable it](docs/wiki/included-examples.md). Existing authored content is preserved, so older development installations may retain their previous larger examples. Optional local Sagittary/Sleep Cycle JARs remain development dependencies; no companion mods are bundled. Their original advancement trees work when the mods are installed separately.

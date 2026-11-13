@@ -464,9 +464,11 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
         CreationDraft creationDraft = creationMode != CreationMode.NONE && creationMode == formCreationMode && newIdBox != null
                 ? new CreationDraft(newIdBox.getValue(), newIconBox.getValue(), backgroundOptionButton == null ? BackgroundOption.STONE : backgroundOptionButton.getValue(), newBackgroundBox == null ? "" : newBackgroundBox.getValue(), questTemplateButton == null ? net.vg.codex.advancement.QuestTemplates.Type.OBTAIN : questTemplateButton.getValue()) : null;
         formCreationMode = creationMode;
+        Map<Identifier, CodexAdvancementTab> priorViews = new LinkedHashMap<>(viewTabs);
         viewTabs.clear();
         selectedViewTab = null;
         advancements.setListener(this);
+        viewTabs.forEach((id, tab) -> { if (priorViews.containsKey(id)) tab.copyViewportFrom(priorViews.get(id)); });
         if (selectedViewTab == null && !viewTabs.isEmpty()) {
             CodexAdvancementTab first = viewTabs.values().iterator().next();
             advancements.setSelectedTab(first.getRootNode().holder(), true);
@@ -1314,6 +1316,17 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
         this.minecraft.setScreen(lastScreen);
     }
 
+    void attachDialogueBackdrop() {
+        Map<Identifier, CodexAdvancementTab> previous = new LinkedHashMap<>(viewTabs);
+        Identifier selected = selectedViewTab == null ? null : selectedViewTab.getRootNode().holder().id();
+        viewTabs.clear();
+        advancements.setListener(this);
+        viewTabs.forEach((id, tab) -> { if (previous.containsKey(id)) tab.copyViewportFrom(previous.get(id)); });
+        if (selected != null) selectedViewTab = viewTabs.get(selected);
+    }
+
+    void detachDialogueBackdrop() { advancements.setListener(null); }
+
     @Override
     public void removed() {
         super.removed();
@@ -1458,7 +1471,7 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
             tryBlur(extractor);
             hovered.extractHover(extractor, this.font, hoverX, hoverY, this.width, hoverBottom, mouseX, mouseY);
         }
-        QuestFeedback.render(extractor);
+        if (minecraft.screen == this) QuestFeedback.render(extractor);
 
         if (partyPanelOpen) {
             extractPartyPanel(extractor, mouseX, mouseY, partialTick);
@@ -2555,7 +2568,7 @@ public final class CodexAdvancementsScreen extends CodexScreen implements Client
     public boolean mouseReleased(MouseButtonEvent event) {
         if (event.button() == 0 && pressedWidget != null) {
             var hit = pressedWidget; pressedWidget = null;
-            if (!holdSent && (!CodexClientSettings.holdAccept || System.nanoTime() - pressedAt < 250_000_000L || !ClientQuests.canAccept(ClientQuests.info(hit.node().holder().id()))) && Math.hypot(event.x() - pressX, event.y() - pressY) < 5) minecraft.setScreen(new QuestDetailsScreen(this, hit.node().holder().id(), hit.display().getTitle(), hit.display().getDescription()));
+            if (!holdSent && (!CodexClientSettings.holdAccept || System.nanoTime() - pressedAt < 250_000_000L || !ClientQuests.canAccept(ClientQuests.info(hit.node().holder().id()))) && Math.hypot(event.x() - pressX, event.y() - pressY) < 5) minecraft.setScreen(QuestDetailsScreen.open(this, hit.node().holder().id(), hit.display().getTitle(), hit.display().getDescription()));
             return true;
         }
         isScrolling = false;
