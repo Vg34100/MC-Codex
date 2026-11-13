@@ -2,32 +2,38 @@ modLoader = "javafml"
 loaderVersion = "[2,)"
 license = "MIT"
 
+[features.codex]
+javaVersion = "[${java_version},)"
+
 [[mods]]
 modId = "codex"
 version = "${version}"
 displayName = "Codex"
-authors = "Replace Me"
+authors = "Vg34100"
 description = '''
-Starter Architectury mod template for Minecraft 26.1.2.
+Minecraft-native advancement and quest authoring, party progression, and claimable rewards.
 '''
 
 [[dependencies.codex]]
 modId = "neoforge"
 type = "required"
-versionRange = "[26,)"
+versionRange = "[${neoforge_version},)"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.codex]]
 modId = "minecraft"
 type = "required"
-versionRange = "[26.1.2,)"
+versionRange = "[${minecraft_version}]"
 ordering = "NONE"
 side = "BOTH"
 
 [[dependencies.codex]]
 modId = "architectury"
 type = "required"
-versionRange = "[20.0.0,)"
+versionRange = "[${architectury_api_version},)"
 ordering = "AFTER"
 side = "BOTH"
+
+[[mixins]]
+config = "codex.mixins.json"

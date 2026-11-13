@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "III",
+    "TPT",
+    "III"
+  ],
+  "key": {
+    "I": "minecraft:packed_ice",
+    "T": "spelunkery:tin_ingot",
+    "P": "minecraft:ender_pearl"
+  },
+  "result": {
+    "id": "endrem:cold_eye",
+    "count": 1
+  }
+}

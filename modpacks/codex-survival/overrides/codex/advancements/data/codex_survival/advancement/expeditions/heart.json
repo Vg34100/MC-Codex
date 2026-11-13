@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:heart_of_the_sea"
+    },
+    "title": "Buried Treasure",
+    "description": "Obtain a heart of the sea. Keep it for a conduit or your final star.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:heart_of_the_sea",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:expeditions/shipwreck"
+}

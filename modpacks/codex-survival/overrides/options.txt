@@ -1,0 +1,5 @@
+guiScale:3
+renderDistance:10
+simulationDistance:6
+maxFps:120
+tutorialStep:none

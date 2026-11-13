@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:diamond_chestplate"
+    },
+    "title": "Diamond Protection",
+    "description": "Obtain a diamond chestplate before choosing your hardest expedition.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:diamond_chestplate",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:equipment/root"
+}

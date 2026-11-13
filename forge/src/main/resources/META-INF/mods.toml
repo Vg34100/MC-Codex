@@ -1,0 +1,36 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+license = "MIT"
+
+[features.codex]
+javaVersion = "[${java_version},)"
+
+[[mods]]
+modId = "codex"
+version = "${version}"
+displayName = "Codex"
+authors = "Vg34100"
+description = '''
+Minecraft-native advancement and quest authoring, party progression, and claimable rewards.
+'''
+
+[[dependencies.codex]]
+modId = "forge"
+mandatory = true
+versionRange = "[${forge_version},)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.codex]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[${minecraft_version}]"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.codex]]
+modId = "architectury"
+mandatory = true
+versionRange = "[${architectury_api_version},)"
+ordering = "AFTER"
+side = "BOTH"

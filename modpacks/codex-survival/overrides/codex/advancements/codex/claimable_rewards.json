@@ -1,0 +1,501 @@
+{
+  "codex_survival:start/wood": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:torch",
+        "count": 4
+      }
+    ]
+  },
+  "codex_survival:start/iron": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:coal",
+        "count": 4
+      }
+    ]
+  },
+  "codex_survival:start/shield": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:cooked_beef",
+        "count": 4
+      }
+    ]
+  },
+  "codex_survival:start/backpack": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:lead",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:start/supplies": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:coal",
+        "count": 8
+      }
+    ]
+  },
+  "codex_survival:workshop/tin": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:coal",
+        "count": 4
+      }
+    ]
+  },
+  "codex_survival:workshop/foundry": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:bucket",
+        "count": 1
+      }
+    ]
+  },
+  "codex_survival:workshop/bronze": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:torch",
+        "count": 12
+      }
+    ]
+  },
+  "codex_survival:workshop/helmet": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:cooked_beef",
+        "count": 4
+      }
+    ]
+  },
+  "codex_survival:workshop/invar": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 3
+      }
+    ]
+  },
+  "codex_survival:workshop/lens": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:golden_carrot",
+        "count": 4
+      }
+    ]
+  },
+  "codex_survival:fishing/rod": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:string",
+        "count": 3
+      }
+    ]
+  },
+  "codex_survival:fishing/catch": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:fishing/deluxe_rod": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "fishingfrenzy:worm_bait",
+        "count": 8
+      }
+    ]
+  },
+  "codex_survival:fishing/shell": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:glass_bottle",
+        "count": 6
+      }
+    ]
+  },
+  "codex_survival:fishing/fish_exchange": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:iron_ingot",
+        "count": 4
+      }
+    ]
+  },
+  "codex_survival:provisions/knife": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:flint",
+        "count": 3
+      }
+    ]
+  },
+  "codex_survival:provisions/crops": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:bone_meal",
+        "count": 12
+      }
+    ]
+  },
+  "codex_survival:provisions/pot": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:bowl",
+        "count": 8
+      }
+    ]
+  },
+  "codex_survival:provisions/meal": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:glass_bottle",
+        "count": 6
+      }
+    ]
+  },
+  "codex_survival:provisions/meal_exchange": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:arrow",
+        "count": 8
+      },
+      {
+        "id": "minecraft:coal",
+        "count": 4
+      }
+    ]
+  },
+  "codex_survival:equipment/hostiles": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:arrow",
+        "count": 12
+      }
+    ]
+  },
+  "codex_survival:equipment/quiver": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:arrow",
+        "count": 16
+      }
+    ]
+  },
+  "codex_survival:equipment/compound": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:flint",
+        "count": 8
+      }
+    ]
+  },
+  "codex_survival:equipment/enchant": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:lapis_lazuli",
+        "count": 12
+      }
+    ]
+  },
+  "codex_survival:equipment/diamond": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:golden_carrot",
+        "count": 6
+      }
+    ]
+  },
+  "codex_survival:equipment/anvil": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 4
+      }
+    ]
+  },
+  "codex_survival:expeditions/map": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:paper",
+        "count": 8
+      }
+    ]
+  },
+  "codex_survival:expeditions/pyramid": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:torch",
+        "count": 12
+      }
+    ]
+  },
+  "codex_survival:expeditions/shipwreck": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:cooked_cod",
+        "count": 6
+      }
+    ]
+  },
+  "codex_survival:expeditions/monument": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:golden_carrot",
+        "count": 6
+      }
+    ]
+  },
+  "codex_survival:expeditions/guardian": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 6
+      }
+    ]
+  },
+  "codex_survival:expeditions/evoker": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:golden_carrot",
+        "count": 6
+      }
+    ]
+  },
+  "codex_survival:nether/enter": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:gold_ingot",
+        "count": 4
+      }
+    ]
+  },
+  "codex_survival:nether/fortress": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:golden_carrot",
+        "count": 6
+      }
+    ]
+  },
+  "codex_survival:nether/brewing": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:glass_bottle",
+        "count": 12
+      }
+    ]
+  },
+  "codex_survival:nether/bastion": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 6
+      }
+    ]
+  },
+  "codex_survival:nether/wither": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 8
+      }
+    ]
+  },
+  "codex_survival:end/old": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/nether": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/cold": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/rogue": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/black": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/magical": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/lost": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/corrupted": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/wither": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/guardian": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/witch": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/cursed": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/exotic": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/evil": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/undead": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/cryptic": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:experience_bottle",
+        "count": 2
+      }
+    ]
+  },
+  "codex_survival:end/survival_star": {
+    "experience": 100,
+    "codex_items": [
+      {
+        "id": "minecraft:firework_rocket",
+        "count": 16
+      }
+    ]
+  }
+}

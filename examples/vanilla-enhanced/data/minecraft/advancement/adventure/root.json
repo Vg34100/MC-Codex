@@ -1,0 +1,27 @@
+{
+  "criteria": {
+    "killed_by_something": {
+      "trigger": "minecraft:entity_killed_player"
+    },
+    "killed_something": {
+      "trigger": "minecraft:player_killed_entity"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "background": "minecraft:gui/advancements/backgrounds/adventure",
+    "description": "There is no prescribed destination. Follow a river, cross a ridge, or walk toward the horizon. Let each discovery become another page.",
+    "icon": {
+      "id": "minecraft:map"
+    },
+    "show_toast": false,
+    "title": "Adventure: Beyond the Campfire"
+  },
+  "requirements": [
+    [
+      "killed_something",
+      "killed_by_something"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

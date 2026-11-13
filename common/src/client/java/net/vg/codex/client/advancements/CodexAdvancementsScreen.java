@@ -1,5 +1,12 @@
 package net.vg.codex.client.advancements;
 
+import net.vg.codex.advancement.AdvancementDocument;
+import net.vg.codex.advancement.AdvancementDocument.Requirements;
+import net.vg.codex.advancement.QuestCriteria.CriterionType;
+import net.vg.codex.advancement.QuestRewards.RewardType;
+import net.vg.codex.advancement.QuestRewards;
+import net.vg.codex.advancement.QuestCriteria.StatisticCategory;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -27,6 +34,7 @@ import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.components.MultiLineEditBox;
 import net.minecraft.client.gui.components.MultiLineTextWidget;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.components.StringWidget;
 import net.minecraft.client.gui.screens.ConfirmScreen;
 import net.minecraft.client.gui.screens.Screen;
@@ -86,7 +94,7 @@ import java.util.function.Supplier;
  * (the same rebuild Screen already does on window resize) so the whole layout, including the
  * panel's width, is recomputed fresh against the current screen size every time.
  */
-public final class CodexAdvancementsScreen extends Screen implements ClientAdvancements.Listener {
+public final class CodexAdvancementsScreen extends CodexScreen implements ClientAdvancements.Listener {
     private static final Identifier WINDOW_LOCATION = Identifier.fromNamespaceAndPath("minecraft", "textures/gui/advancements/window.png");
 
     // Measured directly from the extracted window.png (256x256 atlas, art occupies 0,0-252,140).
@@ -115,7 +123,6 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private static final int PANEL_MIN_WIDTH = 150;
     private static final int PANEL_GAP = 10;
     private static final int DESCRIPTION_HEIGHT = 60;
-    private static final int VALUE_HEIGHT = 36;
     // Was capped at 4 - now that the whole panel scrolls, there's no reason a real advancement
     // with dozens of criteria (e.g. "A Balanced Diet") can't have all of them listed and selectable.
     private static final int MAX_CRITERIA_ROWS = 48;
@@ -134,10 +141,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     private static final int ICON_PICKER_WIDTH = 216;
     private static final int ICON_PICKER_HEIGHT = 240;
-    private static final int ICON_CELL = 18;
     private static final int ICON_TITLE_Y = 10;
-    private static final int ICON_SEARCH_Y = 24;
-    private static final int ICON_GRID_TOP_Y = 48;
 
     private static final float ZOOM_STEP = 0.25F;
     private static final float MIN_ZOOM = 0.5F;
@@ -156,81 +160,6 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
      * recipe_unlocked/inventory_changed. CUSTOM remains as a raw-JSON escape hatch for anything not
      * in this curated list.
      */
-    private enum CriterionType {
-        IMPOSSIBLE("minecraft:impossible", "Impossible", false, null),
-        TICK("minecraft:tick", "Always (tick)", false, null),
-        ITEM_OBTAINED("minecraft:inventory_changed", "Item Obtained", true, "minecraft:item_id"),
-        PLAYER_KILLED_ENTITY("minecraft:player_killed_entity", "Player Killed Entity", true, "minecraft:entity_type"),
-        ENTITY_KILLED_PLAYER("minecraft:entity_killed_player", "Entity Killed Player", true, "minecraft:entity_type"),
-        CHANGED_DIMENSION("minecraft:changed_dimension", "Changed Dimension", true, "minecraft:the_end"),
-        // "minecraft:location" covers both - disambiguated by shape, not trigger id, in fromJson().
-        LOCATION_STRUCTURE("minecraft:location", "Reached Location (Structure)", true, "minecraft:stronghold"),
-        LOCATION_BIOME("minecraft:location", "Reached Location (Biome)", true, "minecraft:jungle"),
-        ITEM_USED_ON_BLOCK("minecraft:item_used_on_block", "Item Used On Block (block;item)", true, "minecraft:lodestone;minecraft:compass"),
-        RECIPE_UNLOCKED("minecraft:recipe_unlocked", "Recipe Unlocked", true, "minecraft:diamond_pickaxe"),
-        SUBMIT_ITEMS("minecraft:impossible", "Submit Items", true, "minecraft:iron_ingot x16; minecraft:gold_ingot x8"),
-        STATISTIC("minecraft:impossible", "Statistic Threshold", true, "custom|minecraft:animals_bred >= 100"),
-        CUSTOM(null, "Custom (raw JSON)", true, "{}");
-
-        final String triggerId;
-        final String label;
-        final boolean hasValue;
-        final String exampleValue;
-
-        CriterionType(String triggerId, String label, boolean hasValue, String exampleValue) {
-            this.triggerId = triggerId;
-            this.label = label;
-            this.hasValue = hasValue;
-            this.exampleValue = exampleValue;
-        }
-
-        /** Reads the shape of {@code json}, not just its trigger id, since location's two curated
-         * sub-types ({@link #LOCATION_STRUCTURE}, {@link #LOCATION_BIOME}) share one trigger. */
-        static CriterionType fromJson(JsonObject json) {
-            if (json.has("codex_submission")) {
-                return SUBMIT_ITEMS;
-            }
-            if (json.has("codex_statistic")) {
-                return STATISTIC;
-            }
-            if (!json.has("trigger")) {
-                return CUSTOM;
-            }
-            String triggerId = json.get("trigger").getAsString();
-            if (LOCATION_STRUCTURE.triggerId.equals(triggerId)) {
-                JsonObject location = locationPredicate(json, "player");
-                return location != null && location.has("biomes") ? LOCATION_BIOME : LOCATION_STRUCTURE;
-            }
-            for (CriterionType type : values()) {
-                if (triggerId.equals(type.triggerId)) {
-                    return type;
-                }
-            }
-            return CUSTOM;
-        }
-    }
-
-    /**
-     * Digs out the {@code conditions.<key>[0].predicate.location} object vanilla's
-     * {@code minecraft:entity_properties} condition wrapper nests location checks in (see
-     * {@link #wrapEntityProperties}), or {@code null} if the shape doesn't match.
-     */
-    private static JsonObject locationPredicate(JsonObject criterionJson, String key) {
-        if (!criterionJson.has("conditions")) {
-            return null;
-        }
-        JsonObject conditions = criterionJson.getAsJsonObject("conditions");
-        if (!conditions.has(key) || !conditions.get(key).isJsonArray() || conditions.getAsJsonArray(key).isEmpty()) {
-            return null;
-        }
-        JsonElement first = conditions.getAsJsonArray(key).get(0);
-        if (!first.isJsonObject() || !first.getAsJsonObject().has("predicate")) {
-            return null;
-        }
-        JsonObject predicate = first.getAsJsonObject().getAsJsonObject("predicate");
-        return predicate.has("location") ? predicate.getAsJsonObject("location") : null;
-    }
-
     /** What the details panel currently shows instead of the normal edit form. */
     private enum CreationMode {
         NONE, NEW_TAB, NEW_NODE
@@ -258,48 +187,14 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
      * Vanilla's {@code AdvancementRequirements} supports arbitrary AND-of-OR groupings, but this
      * editor only exposes the two common shapes: every criterion mandatory (one singleton group
      * each - {@link AdvancementRequirements#allOf}), or any single one sufficient (all names in one
-     * group - {@link AdvancementRequirements#anyOf}). Anything more exotic falls back to ALL.
+     * group - {@link AdvancementRequirements#anyOf}). Mixed groups remain intact and can be edited in the group editor.
      */
-    private enum RequirementMode {
-        ALL("Require ALL criteria (AND)"),
-        ANY("Require ANY criterion (OR)");
-
-        final String label;
-
-        RequirementMode(String label) {
-            this.label = label;
-        }
-
-        static RequirementMode fromJson(JsonArray requirements, int criteriaCount) {
-            if (requirements == null || requirements.isEmpty() || criteriaCount <= 1) {
-                return ALL;
-            }
-            return requirements.size() == 1 && requirements.get(0).isJsonArray()
-                    && requirements.get(0).getAsJsonArray().size() == criteriaCount
-                    ? ANY : ALL;
-        }
-    }
-
     /**
      * A single reward-list entry's kind. EXPERIENCE and FUNCTION are singletons in vanilla (a bare
      * int / a single id, not an array) - {@code addReward}/{@code applyReward} refuse to create a
      * second entry of either. ITEM isn't a real vanilla reward field at all; it's carried through
      * an auto-generated loot table (see {@code AdvancementPackIO}) that "loot" ends up pointing at.
      */
-    private enum RewardType {
-        EXPERIENCE("Experience"),
-        ITEM("Item"),
-        RECIPE("Recipe"),
-        LOOT_TABLE("Loot Table"),
-        FUNCTION("Function");
-
-        final String label;
-
-        RewardType(String label) {
-            this.label = label;
-        }
-    }
-
     private final Screen lastScreen;
     private final ClientAdvancements advancements;
 
@@ -329,8 +224,29 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     // Tracks the hover box across frames so it can persist while the mouse moves off the icon and
     // into the box itself (e.g. to read a reward tooltip) - see extractRenderState's hover block.
+    private CodexAdvancementWidget pressedWidget;
+    private double pressX, pressY;
+    private long pressedAt;
+    private boolean holdSent;
+    public Identifier questGesture() { return pressedWidget == null ? null : pressedWidget.node().holder().id(); }
+    @Override public void tick() {
+        if (pressedWidget != null && !holdSent && CodexClientSettings.holdAccept && System.nanoTime() - pressedAt >= 700_000_000L) {
+            var info = ClientQuests.info(pressedWidget.node().holder().id());
+            if (ClientQuests.canAccept(info)) { ClientQuests.action(pressedWidget.node().holder().id(), "accept", ""); holdSent = true; }
+        }
+    }
+
     private CodexAdvancementWidget lastHoveredWidget;
     private CodexAdvancementTab lastHoveredTab;
+
+    /** Optional recipe viewers must use the retained foreground card, never background nodes. */
+    public CodexAdvancementWidget.HoverItem hoverIngredientAt(double mouseX, double mouseY) {
+        CodexAdvancementTab tab = activeSelectedTab();
+        if (editMode || partyPanelOpen || tab == null || tab != lastHoveredTab || lastHoveredWidget == null) return null;
+        int contentX = windowLeft() + BORDER_LEFT, contentY = windowTop() + BORDER_TOP;
+        return lastHoveredWidget.hoverIngredientAt(font, tab.widgetScreenX(lastHoveredWidget, contentX, zoom),
+                tab.widgetScreenY(lastHoveredWidget, contentY, zoom), width, contentY + contentHeight(), (int)mouseX, (int)mouseY);
+    }
 
     private CodexAdvancementWidget selectedEditWidget;
     // Keep a cursor-space position while dragging. Re-snapping the widget after every tiny event
@@ -343,18 +259,22 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     // end to end rather than a typed Advancement, since some registry-dependent fields (e.g.
     // HolderSet-based structure predicates) can't be decoded client-side (see RawAdvancement).
     private final Map<Identifier, JsonObject> rawFullJson = new LinkedHashMap<>();
+    private final Map<Identifier, java.util.Deque<JsonObject>> undoHistory = new LinkedHashMap<>();
+    private record DraftBatch(Map<Identifier, JsonObject> before, Map<Identifier, JsonObject> after) { }
+    private final java.util.Deque<DraftBatch> batchUndo = new java.util.ArrayDeque<>();
     private final Map<Identifier, JsonObject> dirty = new LinkedHashMap<>();
     // Real, server-authoritative progress for every advancement (see enterEditMode) - unlike
     // cross-referencing view mode's own live data, this covers advancements the player has never
     // actually discovered in survival, which view mode simply has no data for at all.
     private final Map<Identifier, AdvancementProgress> editProgressSnapshot = new LinkedHashMap<>();
+    private Identifier formAdvancementId;
     private EditBox titleBox;
     private MultiLineEditBox descriptionBox;
     private Checkbox showToastCheckbox;
     private Checkbox announceChatCheckbox;
     private Checkbox hiddenCheckbox;
     private Checkbox claimableRewardsCheckbox;
-    private CycleButton<RequirementMode> requirementModeButton;
+    private CycleButton<Requirements> requirementModeButton;
     private MultiLineTextWidget statusWidget;
     private Button applyEditButton;
     private Button saveEditsButton;
@@ -377,27 +297,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private double panelScrollOffset;
     private int panelContentBottom;
 
-    // ---- Item picker (icon selection) ----
-    private static List<Item> allItemsCache;
-    private boolean iconPickerOpen;
-    private Consumer<Identifier> iconPickerCallback;
-    private EditBox iconSearchBox;
-    private Button iconPickerCancelButton;
-    private final List<Item> iconSearchResults = new ArrayList<>();
-    private int iconGridScroll;
-    private Item iconGridHovered;
-    private String iconSearchText = "";
-
-    // Generic identifier picker for registries that do not have a useful ItemStack grid (entities,
-    // dimensions, structures, recipes, ...). It deliberately reuses the same modal geometry.
-    private boolean identifierPickerOpen;
-    private String identifierPickerTitle;
-    private Consumer<Identifier> identifierPickerCallback;
-    private EditBox identifierSearchBox;
-    private Button identifierPickerCancelButton;
-    private final List<Button> identifierPickerButtons = new ArrayList<>();
-    private final List<Identifier> identifierPickerEntries = new ArrayList<>();
-    private final List<Identifier> identifierPickerResults = new ArrayList<>();
+    private Button claimsButton;
+    private Button claimAllButton;
 
     // ---- Party actions ----
     private boolean partyPanelOpen;
@@ -406,76 +307,23 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     private Button partyCloseButton;
     private final List<Button> partyInviteButtons = new ArrayList<>();
 
-    // Criteria editor: `criteriaEntries` is the working copy for whichever advancement is
-    // currently selected (raw per-criterion JSON, name -> object), edited via the list + form
-    // below rather than one big hand-written JSON blob.
+    // The sidebar lists quest content. Dedicated dialogs own all entry editing and drafts.
     private final Map<String, JsonObject> criteriaEntries = new LinkedHashMap<>();
     private final List<String> currentCriteriaNames = new ArrayList<>();
-    private String selectedCriterionName;
     private final List<Button> criteriaListButtons = new ArrayList<>();
-    // Which widget `criteriaEntries` currently holds a working copy for - re-init (e.g. after
-    // adding/removing a criterion, so the row list can grow/shrink) must NOT reload from disk as
-    // long as it's still the same widget, or every in-progress, not-yet-applied criteria edit
-    // would be silently discarded the moment the row count changes.
     private CodexAdvancementWidget criteriaEntriesSelection;
-    private Button addCriterionButton;
-    private EditBox criterionNameBox;
-    private CycleButton<CriterionType> criterionTypeButton;
-    private CycleButton<StatisticCategory> statisticCategoryButton;
-    private Button pickCriterionItemButton;
-    private MultiLineEditBox criterionValueBox;
-    private Button applyCriterionButton;
-    private Button removeCriterionButton;
-
-    private boolean criterionDialogOpen;
-    private String criterionDialogOriginalName;
-    private EditBox criterionDialogName;
-    private CycleButton<CriterionType> criterionDialogType;
-    private CycleButton<StatisticCategory> criterionDialogStatisticCategory;
-    private MultiLineEditBox criterionDialogValue;
-    private Button criterionDialogSave;
-    private Button criterionDialogCancel;
-    private Button criterionDialogPick;
-    private String criterionDialogDraftName;
-    private String criterionDialogDraftValue;
-    private CriterionType criterionDialogDraftType;
-
-    // Reward editor: same list-plus-inline-editor pattern as criteria above, but entries aren't
-    // named - selection is by index into `rewardEntries`, which is safe here because every mutation
-    // (add/apply/remove) triggers a full re-init that rebuilds rows 1:1 with the list, and removal
-    // always clears the selection rather than trying to track a shifted index.
     private final List<JsonObject> rewardEntries = new ArrayList<>();
     private final List<Button> rewardListButtons = new ArrayList<>();
-    private Integer selectedRewardIndex;
-    private Button addRewardButton;
-    private CycleButton<RewardType> rewardTypeButton;
-    private EditBox rewardValueBox;
-    private EditBox rewardCountBox;
-    private Button pickRewardItemButton;
-    private Button applyRewardButton;
-    private Button removeRewardButton;
-
-    // Reward add/edit uses a single modal rather than leaving a permanently-expanded form in the
-    // details panel. The old inline controls remain as a compatibility fallback while this dialog
-    // owns the normal Add/row-click path.
-    private boolean rewardDialogOpen;
-    private Integer rewardDialogIndex;
-    private CycleButton<RewardType> rewardDialogType;
-    private EditBox rewardDialogValue;
-    private EditBox rewardDialogCount;
-    private Button rewardDialogSave;
-    private Button rewardDialogCancel;
-    private Button rewardDialogPick;
-    private RewardType rewardDialogDraftType;
-    private String rewardDialogDraftValue;
-    private String rewardDialogDraftCount;
 
     // ---- Tab/node creation and reparenting (stage 7) ----
+    private CreationMode formCreationMode = CreationMode.NONE;
+    private record CreationDraft(String id, String icon, BackgroundOption background, String customBackground, net.vg.codex.advancement.QuestTemplates.Type template) { }
     private CreationMode creationMode = CreationMode.NONE;
     // Node the "New Advancement" form will parent the created node under.
     private CodexAdvancementWidget pendingNodeParent;
     // Set by shift+right-click; a following shift+left-click on another node reparents it here.
     private CodexAdvancementWidget linkSource;
+    private CycleButton<net.vg.codex.advancement.QuestTemplates.Type> questTemplateButton;
     private EditBox newIdBox;
     private EditBox newIconBox;
     private CycleButton<BackgroundOption> backgroundOptionButton;
@@ -521,7 +369,10 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     }
 
     private int windowHeight() {
-        return Math.round(ART_HEIGHT * windowScale());
+        // The frame uses fixed corners/tiled edges. Editing can use the full height even when
+        // the sidebar leaves a narrow canvas; do not shrink the form to the canvas aspect ratio.
+        return showEditPanel() ? Math.max(MIN_WINDOW_HEIGHT, height - HEADER_HEIGHT - FOOTER_HEIGHT - SCREEN_MARGIN)
+                : Math.round(ART_HEIGHT * windowScale());
     }
 
     private int windowLeft() {
@@ -606,6 +457,13 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     @Override
     protected void init() {
+        pressedWidget = null; holdSent = false;
+        EditorFormState previousForm = editMode && selectedEditWidget != null && selectedEditWidget.node().holder().id().equals(formAdvancementId)
+                && titleBox != null && descriptionBox != null && requirementModeButton != null
+                ? new EditorFormState(titleBox.getValue(), descriptionBox.getValue(), showToastCheckbox.selected(), announceChatCheckbox.selected(), hiddenCheckbox.selected(), claimableRewardsCheckbox.selected(), requirementModeButton.getValue()) : null;
+        CreationDraft creationDraft = creationMode != CreationMode.NONE && creationMode == formCreationMode && newIdBox != null
+                ? new CreationDraft(newIdBox.getValue(), newIconBox.getValue(), backgroundOptionButton == null ? BackgroundOption.STONE : backgroundOptionButton.getValue(), newBackgroundBox == null ? "" : newBackgroundBox.getValue(), questTemplateButton == null ? net.vg.codex.advancement.QuestTemplates.Type.OBTAIN : questTemplateButton.getValue()) : null;
+        formCreationMode = creationMode;
         viewTabs.clear();
         selectedViewTab = null;
         advancements.setListener(this);
@@ -626,16 +484,20 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         int claimsWidth = compactHeaderActions ? 47 : 76;
         int partyWidth = compactHeaderActions ? 20 : 42;
         int claimsX = left + windowWidth - claimAllWidth - claimsWidth - partyWidth - 10;
-        addRenderableWidget(Button.builder(Component.literal(compactHeaderActions ? "P" : "Party"), b -> openPartyPanel())
+        addRenderableWidget(Button.builder(Component.literal("UI"), b -> minecraft.setScreen(new CodexSettingsScreen(this)))
+                .bounds(claimsX - 26, top + 2, 24, 14).build()).setTooltip(Tooltip.create(Component.literal("Codex scale and quest tracker settings")));
+        addRenderableWidget(Button.builder(Component.literal(editMode ? (compactHeaderActions ? "T" : "Tools") : compactHeaderActions ? "P" : "Party"), b -> { if (editMode) openPackTools(); else openPartyPanel(); })
                 .bounds(claimsX, top + 2, partyWidth, 14)
-                .build());
-        addRenderableWidget(Button.builder(Component.literal(compactHeaderActions ? "R(" + availableClaims + ")" : "Rewards (" + availableClaims + ")"), b -> openClaimRewards())
+                .build()).setTooltip(Tooltip.create(Component.literal(editMode ? "Pack Creator Tools: check links, preview, duplicate and bulk edit" : "Party: invite players, accept an invitation, or leave")));
+        claimsButton = addRenderableWidget(Button.builder(Component.literal(compactHeaderActions ? "R(" + availableClaims + ")" : "Rewards (" + availableClaims + ")"), b -> openClaimRewards())
                 .bounds(claimsX + partyWidth + 2, top + 2, claimsWidth, 14)
                 .build());
-        addRenderableWidget(Button.builder(Component.literal(compactHeaderActions ? "All" : "Claim All"), b ->
+        claimAllButton = addRenderableWidget(Button.builder(Component.literal(compactHeaderActions ? "All" : "Claim All"), b ->
                         NetworkManager.sendToServer(new ClaimAllAdvancementRewardsPayload()))
                 .bounds(left + windowWidth - claimAllWidth - 4, top + 2, claimAllWidth, 14)
                 .build());
+        claimsButton.setTooltip(Tooltip.create(Component.literal("Choose an earned quest reward to claim")));
+        claimAllButton.setTooltip(Tooltip.create(Component.literal("Claim all earned quest rewards")));
         // The vanilla-width window is only 252px: a 120px Edit button plus the old fixed
         // zoom/Done group totalled more than that and overlapped by a few pixels. Keep the roomy
         // labels on ordinary windows, but use a compact, explicitly calculated footer below 300px.
@@ -669,7 +531,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         panelWidgets.clear();
         panelWidgetBaseY.clear();
         if (showEditPanel() && creationMode != CreationMode.NONE) {
-            initCreationPanel(left, windowWidth, top);
+            initCreationPanel(left, windowWidth, top, creationDraft);
         } else if (showEditPanel()) {
             int panelWidth = panelWidth() - PANEL_SCROLLBAR_GUTTER;
             int panelLeft = left + windowWidth + PANEL_GAP;
@@ -685,8 +547,6 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                 criteriaEntriesSelection = selectedEditWidget;
                 // A stale selection (by name/index) must not carry over to a different
                 // advancement's criteria/reward lists just because it happens to still resolve.
-                selectedCriterionName = null;
-                selectedRewardIndex = null;
                 criteriaEntries.clear();
                 if (selectedEditWidget != null) {
                     for (Map.Entry<String, JsonElement> e : criteriaFor(selectedEditWidget).entrySet()) {
@@ -698,6 +558,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             }
 
             titleBox = panel(new EditBox(this.font, panelLeft, y, panelWidth, 16, Component.literal("Title")));
+            titleBox.setMaxLength(32_767);
             y += 20;
 
             descriptionBox = panel(MultiLineEditBox.builder()
@@ -716,12 +577,12 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             showToastCheckbox = panel(Checkbox.builder(Component.literal("Toast"), this.font)
                     .pos(panelLeft, y)
                     .maxWidth(checkWidth)
-                    .selected(currentDisplay == null || currentDisplay.shouldShowToast())
+                    .selected(previousForm != null ? previousForm.toast() : currentDisplay == null || currentDisplay.shouldShowToast())
                     .build());
             announceChatCheckbox = panel(Checkbox.builder(Component.literal("Chat"), this.font)
                     .pos(panelLeft + checkWidth + (compactChecks ? 6 : 0), y)
                     .maxWidth(checkWidth)
-                    .selected(currentDisplay == null || currentDisplay.shouldAnnounceChat())
+                    .selected(previousForm != null ? previousForm.chat() : currentDisplay == null || currentDisplay.shouldAnnounceChat())
                     .build());
             if (compactChecks) {
                 y += 18;
@@ -729,7 +590,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             hiddenCheckbox = panel(Checkbox.builder(Component.literal("Hidden"), this.font)
                     .pos(compactChecks ? panelLeft : panelLeft + checkWidth * 2, y)
                     .maxWidth(checkWidth)
-                    .selected(currentDisplay != null && currentDisplay.isHidden())
+                    .selected(previousForm != null ? previousForm.hidden() : currentDisplay != null && currentDisplay.isHidden())
                     .build());
             y += 20;
 
@@ -759,7 +620,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             claimableRewardsCheckbox = panel(Checkbox.builder(Component.literal("Claim rewards manually"), this.font)
                     .pos(panelLeft, y)
                     .maxWidth(panelWidth)
-                    .selected(isCurrentClaimable())
+                    .selected(previousForm != null ? previousForm.claimable() : isCurrentClaimable())
                     .build());
             y += 18;
 
@@ -776,39 +637,13 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             }
             y += rewardRowCount * REWARD_ROW_HEIGHT + 4;
 
-            addRewardButton = panel(Button.builder(Component.literal("+ Add Reward"), b -> openRewardDialog(null))
+            panel(Button.builder(Component.literal("+ Add Reward"), b -> openRewardDialog(null))
                     .bounds(panelLeft, y, panelWidth, 16)
                     .build());
             y += 20;
 
-            int rewardTypeWidth = panelWidth - 70;
-            rewardTypeButton = panel(CycleButton.builder((RewardType t) -> Component.literal(t.label), RewardType.EXPERIENCE)
-                    .withValues(RewardType.values())
-                    .create(panelLeft, y, rewardTypeWidth, 20, Component.literal("Reward type"), (button, value) ->
-                            updateRewardFieldsVisibility(value)));
-            pickRewardItemButton = panel(Button.builder(Component.literal("Pick"), b -> pickRewardItem())
-                    .bounds(panelLeft + rewardTypeWidth + 6, y, panelWidth - rewardTypeWidth - 6, 20)
-                    .build());
-            y += 24;
-
-            rewardValueBox = panel(new EditBox(this.font, panelLeft, y, panelWidth, 16, Component.literal("Reward value")));
-            rewardValueBox.setMaxLength(256);
-            y += 20;
-
-            panel(new StringWidget(panelLeft, y, panelWidth, 8, Component.literal("Count (item rewards only)"), this.font));
-            y += 10;
-            rewardCountBox = panel(new EditBox(this.font, panelLeft, y, panelWidth, 16, Component.literal("Count")));
-            rewardCountBox.setMaxLength(8);
-            y += 20;
-
-            int rewardHalfWidth = (panelWidth - 10) / 2;
-            applyRewardButton = panel(Button.builder(Component.literal("Apply Reward"), b -> applyReward())
-                    .bounds(panelLeft, y, rewardHalfWidth, 20)
-                    .build());
-            removeRewardButton = panel(Button.builder(Component.literal("Remove"), b -> removeReward())
-                    .bounds(panelLeft + rewardHalfWidth + 10, y, rewardHalfWidth, 20)
-                    .build());
-            y += 26;
+            panel(new StringWidget(panelLeft, y, panelWidth, 10, Component.literal("Criteria"), this.font));
+            y += 14;
 
             int criteriaRowCount = Math.min(criteriaEntries.size(), MAX_CRITERIA_ROWS);
             for (int i = 0; i < criteriaRowCount; i++) {
@@ -823,80 +658,40 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             }
             y += criteriaRowCount * CRITERIA_ROW_HEIGHT + 4;
 
-            addCriterionButton = panel(Button.builder(Component.literal("+ Add Criterion"), b -> openCriterionDialog(null))
+            panel(Button.builder(Component.literal("+ Add Criterion"), b -> openCriterionDialog(null))
                     .bounds(panelLeft, y, panelWidth, 16)
                     .build());
             y += 20;
 
-            criterionNameBox = panel(new EditBox(this.font, panelLeft, y, panelWidth, 16, Component.literal("Criterion name")));
-            criterionNameBox.setMaxLength(256);
-            y += 20;
-
-            int criterionTypeWidth = panelWidth - 50;
-            criterionTypeButton = panel(CycleButton.builder((CriterionType t) -> Component.literal(t.label), CriterionType.IMPOSSIBLE)
-                    .withValues(CriterionType.values())
-                    .create(panelLeft, y, criterionTypeWidth, 20, Component.literal("Type"), (button, value) -> {
-                        criterionValueBox.active = value.hasValue;
-                        updateCriterionFieldsVisibility(value);
-                        if (value.hasValue && criterionValueBox.getValue().isEmpty() && value.exampleValue != null) {
-                            criterionValueBox.setValue(value.exampleValue);
-                        }
-                    }));
-            pickCriterionItemButton = panel(Button.builder(Component.literal("Pick"), b -> pickCriterionItem())
-                    .bounds(panelLeft + criterionTypeWidth + 6, y, panelWidth - criterionTypeWidth - 6, 20)
-                    .build());
-            y += 24;
-
-            statisticCategoryButton = panel(CycleButton.builder((StatisticCategory category) ->
-                            Component.literal("Statistic: " + category.label), StatisticCategory.CUSTOM)
-                    .withValues(StatisticCategory.values())
-                    .create(panelLeft, y, panelWidth, 16, Component.literal("Statistic category")));
-            y += 20;
-
-            // Multi-line (unlike EditBox, no default character cap) so long values - a raw custom
-            // JSON blob especially - don't silently get truncated at EditBox's 32-char default.
-            criterionValueBox = panel(MultiLineEditBox.builder()
-                    .setX(panelLeft)
-                    .setY(y)
-                    .setPlaceholder(Component.literal("Value"))
-                    .build(this.font, panelWidth, VALUE_HEIGHT, Component.literal("Value")));
-            y += VALUE_HEIGHT + 4;
-
-            int halfWidth = (panelWidth - 10) / 2;
-            applyCriterionButton = panel(Button.builder(Component.literal("Apply Criterion"), b -> applyCriterion())
-                    .bounds(panelLeft, y, halfWidth, 20)
-                    .build());
-            removeCriterionButton = panel(Button.builder(Component.literal("Remove"), b -> removeCriterion())
-                    .bounds(panelLeft + halfWidth + 10, y, halfWidth, 20)
-                    .build());
-            y += 26;
-
-            requirementModeButton = panel(CycleButton.builder((RequirementMode m) -> Component.literal(m.label), currentRequirementMode())
-                    .withValues(RequirementMode.values())
+            requirementModeButton = panel(CycleButton.builder((Requirements m) -> Component.literal(m.label), previousForm != null ? previousForm.requirements() : currentRequirements())
+                    .withValues(Requirements.values())
                     .create(panelLeft, y, panelWidth, 20, Component.literal("Requirements")));
+            y += 24;
+            panel(Button.builder(Component.literal("Edit Requirement Groups"), b -> openRequirementsEditor()).bounds(panelLeft, y, panelWidth, 20).build());
+            y += 24;
+            int halfWidth = (panelWidth - 10) / 2;
+            panel(Button.builder(Component.literal("Advanced JSON"), b -> openDocumentEditor()).bounds(panelLeft, y, halfWidth, 20).build());
+            panel(Button.builder(Component.literal("Undo Apply"), b -> undoApply()).bounds(panelLeft + halfWidth + 10, y, halfWidth, 20).build());
+            y += 24;
+            panel(Button.builder(Component.literal("Treasure Lists"), b -> {
+                if (applyEdit()) minecraft.setScreen(new TreasureListScreen(this));
+            }).bounds(panelLeft, y, panelWidth, 20).build());
+            y += 24;
+            panel(Button.builder(Component.literal("Quest Story & Rules"), b -> openQuestProperties()).bounds(panelLeft, y, panelWidth, 20).build());
+            y += 24;
+            panel(Button.builder(Component.literal("Recipe Editor"), b -> minecraft.setScreen(new RecipeEditorScreen(this))).bounds(panelLeft, y, panelWidth, 20).build());
+            y += 24;
+            panel(Button.builder(Component.literal("Pack Creator Tools"), b -> openPackTools()).bounds(panelLeft, y, panelWidth, 20).build());
             y += 24;
             panelContentBottom = y;
 
             if (selectedEditWidget != null) {
-                titleBox.setValue(selectedEditWidget.display().getTitle().getString());
-                descriptionBox.setValue(selectedEditWidget.display().getDescription().getString());
+                titleBox.setValue(previousForm != null ? previousForm.title() : selectedEditWidget.display().getTitle().getString());
+                descriptionBox.setValue(previousForm != null ? previousForm.description() : selectedEditWidget.display().getDescription().getString());
+                formAdvancementId = selectedEditWidget.node().holder().id();
             }
             refreshCriteriaList();
-            // Every init() rebuilds these widgets from scratch, so a still-valid selection is
-            // reapplied to the new instances rather than unconditionally wiped - otherwise any
-            // re-init triggered by something else entirely (e.g. opening the item picker for a
-            // reward's item id) would silently discard whatever criterion/reward was being edited.
-            if (selectedCriterionName != null && criteriaEntries.containsKey(selectedCriterionName)) {
-                selectCriterion(selectedCriterionName);
-            } else {
-                clearCriterionEditor();
-            }
             refreshRewardList();
-            if (selectedRewardIndex != null && selectedRewardIndex < rewardEntries.size()) {
-                selectReward(selectedRewardIndex);
-            } else {
-                clearRewardEditor();
-            }
             applyPanelScroll();
 
             // Pinned footer - outside the scrollable area (not wrapped via panel()) so these stay
@@ -904,7 +699,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             int footerTop = panelFooterTop();
             int fullPanelWidth = panelWidth();
             int thirdWidth = (fullPanelWidth - 20) / 3;
-            applyEditButton = addRenderableWidget(Button.builder(Component.literal("Apply Edit"), b -> applyEdit())
+            applyEditButton = addRenderableWidget(Button.builder(Component.literal("Apply"), b -> applyEdit())
                     .bounds(panelLeft, footerTop, thirdWidth, 20)
                     .build());
             saveEditsButton = addRenderableWidget(Button.builder(Component.literal("Save"), b -> saveEdits())
@@ -916,21 +711,13 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             statusWidget = addRenderableWidget(new MultiLineTextWidget(panelLeft, footerTop + 24, Component.empty(), this.font).setMaxWidth(fullPanelWidth));
         }
 
-        if (iconPickerOpen) {
-            initIconPicker();
-        } else if (identifierPickerOpen) {
-            initIdentifierPicker();
-        } else if (partyPanelOpen) {
+        if (partyPanelOpen) {
             initPartyPanel();
-        } else if (rewardDialogOpen) {
-            initRewardDialog();
-        } else if (criterionDialogOpen) {
-            initCriterionDialog();
         }
     }
 
     /** Replaces the normal edit form with a small "new tab"/"new advancement" form. */
-    private void initCreationPanel(int left, int windowWidth, int top) {
+    private void initCreationPanel(int left, int windowWidth, int top, CreationDraft draft) {
         int panelWidth = panelWidth() - PANEL_SCROLLBAR_GUTTER;
         int panelLeft = left + windowWidth + PANEL_GAP;
         int y = top;
@@ -948,20 +735,21 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
         newIdBox = panel(new EditBox(this.font, panelLeft, y, panelWidth, 16, Component.literal("Id")));
         newIdBox.setMaxLength(256);
+        if (draft != null) newIdBox.setValue(draft.id());
         newIdBox.setHint(Component.literal("e.g. my_advancement"));
         y += 20;
 
         int iconButtonSize = 20;
         newIconBox = panel(new EditBox(this.font, panelLeft + iconButtonSize + 4, y, panelWidth - iconButtonSize - 4, 16, Component.literal("Icon item id")));
         newIconBox.setMaxLength(256);
-        newIconBox.setValue("minecraft:stone");
+        newIconBox.setValue(draft != null ? draft.icon() : "minecraft:stone");
         panel(new IconPreviewButton(panelLeft, y - 2, iconButtonSize,
                 () -> resolveIconStack(newIconBox.getValue()),
                 id -> newIconBox.setValue(id.toString())));
         y += 20;
 
         if (isTab) {
-            backgroundOptionButton = panel(CycleButton.builder((BackgroundOption o) -> Component.literal(o.label), BackgroundOption.STONE)
+            backgroundOptionButton = panel(CycleButton.builder((BackgroundOption o) -> Component.literal(o.label), draft != null ? draft.background() : BackgroundOption.STONE)
                     .withValues(BackgroundOption.values())
                     .create(panelLeft, y, panelWidth, 20, Component.literal("Background"), (button, value) ->
                             newBackgroundBox.active = value == BackgroundOption.CUSTOM));
@@ -969,10 +757,13 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
             newBackgroundBox = panel(new EditBox(this.font, panelLeft, y, panelWidth, 16, Component.literal("Custom background id")));
             newBackgroundBox.setMaxLength(256);
-            newBackgroundBox.active = false;
+            newBackgroundBox.active = backgroundOptionButton.getValue() == BackgroundOption.CUSTOM;
+            if (draft != null) newBackgroundBox.setValue(draft.customBackground());
             y += 20;
         }
-        y += 4;
+        questTemplateButton = panel(CycleButton.builder((net.vg.codex.advancement.QuestTemplates.Type type) -> Component.literal(type.label), net.vg.codex.advancement.QuestTemplates.Type.OBTAIN)
+                .withValues(net.vg.codex.advancement.QuestTemplates.Type.values()).create(panelLeft, y, panelWidth, 20, Component.literal("Template")));
+        y += 28;
         panelContentBottom = y;
         applyPanelScroll();
 
@@ -997,195 +788,18 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     // ---- Item picker (icon selection) ----
 
-    private void initIconPicker() {
-        int left = iconPickerLeft();
-        int top = iconPickerTop();
-        // Registered via addWidget() (click/keyboard only, no automatic rendering) rather than
-        // addRenderableWidget() - the picker's own background/border is drawn later in
-        // extractIconPicker() (after super.extractRenderState() already ran), so an
-        // auto-rendered widget would get drawn *before* that background and then be painted over
-        // by it, leaving it visible but seemingly frozen (typed text never appeared to update,
-        // even though the box's value was in fact updating - it just wasn't visibly redrawn on
-        // top of the modal). Rendered manually, after the background, in extractIconPicker instead.
-        iconSearchBox = addWidget(new EditBox(this.font, left + 24, top + ICON_SEARCH_Y, ICON_PICKER_WIDTH - 34, 16, Component.literal("Search")));
-        iconSearchBox.setHint(Component.literal("Search items..."));
-        iconSearchBox.setValue(iconSearchText);
-        iconSearchBox.setResponder(this::refreshIconSearch);
-        iconPickerCancelButton = addWidget(Button.builder(Component.literal("Cancel"), b -> closeIconPicker())
-                .bounds(left + 10, top + ICON_PICKER_HEIGHT - 26, ICON_PICKER_WIDTH - 20, 20)
-                .build());
-        if (iconSearchResults.isEmpty()) {
-            refreshIconSearch(iconSearchText);
-        }
-    }
-
-    /** Opens the picker; {@code callback} is invoked with the chosen item's id and the picker
-     * closes itself. Used both by the creation forms' icon field and the normal edit panel's. */
     private void openIconPicker(Consumer<Identifier> callback) {
-        iconPickerOpen = true;
-        iconPickerCallback = callback;
-        iconSearchText = "";
-        iconGridScroll = 0;
-        refreshIconSearch("");
-        this.init(this.width, this.height);
+        this.minecraft.setScreen(new ItemPickerScreen(this, callback));
     }
 
-    private void closeIconPicker() {
-        iconPickerOpen = false;
-        iconPickerCallback = null;
-        this.init(this.width, this.height);
-    }
+    private int iconPickerLeft() { return (this.width - ICON_PICKER_WIDTH) / 2; }
+    private int iconPickerTop() { return (this.height - ICON_PICKER_HEIGHT) / 2; }
 
-    private void refreshIconSearch(String query) {
-        iconSearchText = query;
-        String needle = query.trim().toLowerCase(java.util.Locale.ROOT);
-        iconSearchResults.clear();
-        for (Item item : allItems()) {
-            if (needle.isEmpty()) {
-                iconSearchResults.add(item);
-                continue;
-            }
-            Identifier id = BuiltInRegistries.ITEM.getKey(item);
-            String displayName = item.getName(item.getDefaultInstance()).getString().toLowerCase(java.util.Locale.ROOT);
-            if (id.getPath().contains(needle) || displayName.contains(needle)) {
-                iconSearchResults.add(item);
-            }
-        }
-        iconGridScroll = 0;
-    }
-
-    private static List<Item> allItems() {
-        if (allItemsCache == null) {
-            List<Item> items = new ArrayList<>();
-            Identifier air = Identifier.withDefaultNamespace("air");
-            for (Item item : BuiltInRegistries.ITEM) {
-                if (!BuiltInRegistries.ITEM.getKey(item).equals(air)) {
-                    items.add(item);
-                }
-            }
-            allItemsCache = items;
-        }
-        return allItemsCache;
-    }
-
-    private int iconPickerLeft() {
-        return (this.width - ICON_PICKER_WIDTH) / 2;
-    }
-
-    private int iconPickerTop() {
-        return (this.height - ICON_PICKER_HEIGHT) / 2;
-    }
-
-    /** Centers the grid within the picker's inner width instead of hugging the left edge - integer
-     * division of available width by ICON_CELL almost never divides evenly, and the leftover slack
-     * previously just sat unused on the right, making the grid look off-center. */
-    private int iconGridLeft() {
-        int available = ICON_PICKER_WIDTH - 20;
-        int used = iconGridColumns() * ICON_CELL;
-        return iconPickerLeft() + 10 + (available - used) / 2;
-    }
-
-    private int iconGridTop() {
-        return iconPickerTop() + ICON_GRID_TOP_Y;
-    }
-
-    private int iconGridBottom() {
-        return iconPickerTop() + ICON_PICKER_HEIGHT - 30;
-    }
-
-    private int iconGridColumns() {
-        return (ICON_PICKER_WIDTH - 20) / ICON_CELL;
-    }
-
-    private Item iconGridItemAt(double mouseX, double mouseY) {
-        int gridLeft = iconGridLeft();
-        int gridTop = iconGridTop();
-        int gridBottom = iconGridBottom();
-        int columns = iconGridColumns();
-        if (mouseX < gridLeft || mouseX >= gridLeft + columns * ICON_CELL || mouseY < gridTop || mouseY >= gridBottom) {
-            return null;
-        }
-        int col = (int) ((mouseX - gridLeft) / ICON_CELL);
-        int row = (int) ((mouseY - gridTop) / ICON_CELL) + iconGridScroll;
-        int index = row * columns + col;
-        return index >= 0 && index < iconSearchResults.size() ? iconSearchResults.get(index) : null;
-    }
-
-    /**
-     * {@code blurBeforeThisStratum()} throws if a blur was already requested this frame - real
-     * vanilla screens only ever have one blur source active at a time, but with both Fabric API's
-     * and Architectury's screen-rendering mixins wrapping the same render call, extractRenderState
-     * can end up invoked more than once per actual rendered frame (confirmed by a live crash: "Can
-     * only blur once per frame" on a totally ordinary hover, not two blur sources overlapping on
-     * purpose). Purely a cosmetic effect, so skip it rather than crash the game over it.
-     */
     private void tryBlur(GuiGraphicsExtractor extractor) {
         try {
             extractor.blurBeforeThisStratum();
         } catch (IllegalStateException ignored) {
             // Already blurred this frame - fine, just skip the effect this time.
-        }
-    }
-
-    /** Hand-drawn magnifying glass (a ring of edge/corner pixels plus a diagonal handle) - there's
-     * no public vanilla sprite for the creative-search icon, so this is built from primitives. */
-    private void drawMagnifyingGlass(GuiGraphicsExtractor extractor, int x, int y, int color) {
-        extractor.horizontalLine(x + 2, x + 4, y, color);
-        extractor.horizontalLine(x + 2, x + 4, y + 6, color);
-        extractor.verticalLine(x, y + 2, y + 4, color);
-        extractor.verticalLine(x + 6, y + 2, y + 4, color);
-        extractor.fill(x + 1, y + 1, x + 2, y + 2, color);
-        extractor.fill(x + 5, y + 1, x + 6, y + 2, color);
-        extractor.fill(x + 1, y + 5, x + 2, y + 6, color);
-        extractor.fill(x + 5, y + 5, x + 6, y + 6, color);
-        extractor.fill(x + 7, y + 7, x + 9, y + 9, color);
-    }
-
-    private void extractIconPicker(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
-        extractor.nextStratum();
-        tryBlur(extractor);
-        extractor.fill(0, 0, this.width, this.height, 0xC0000000);
-
-        int left = iconPickerLeft();
-        int top = iconPickerTop();
-        extractor.fill(left, top, left + ICON_PICKER_WIDTH, top + ICON_PICKER_HEIGHT, 0xFF2B2B2B);
-        extractor.horizontalLine(left, left + ICON_PICKER_WIDTH - 1, top, 0xFF000000);
-        extractor.horizontalLine(left, left + ICON_PICKER_WIDTH - 1, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.verticalLine(left, top, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.verticalLine(left + ICON_PICKER_WIDTH - 1, top, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.text(this.font, "Pick an icon", left + 10, top + ICON_TITLE_Y, 0xFFFFFFFF, false);
-        // Vertically centered against the 16-tall search box (top + ICON_SEARCH_Y), left of the
-        // field's reserved 24px-from-`left` gap, so the box actually reads as a search bar.
-        drawMagnifyingGlass(extractor, left + 10, top + ICON_SEARCH_Y + 3, 0xFFAAAAAA);
-        // Rendered manually (not via addRenderableWidget) specifically so it draws after - not
-        // before - the modal background above; see initIconPicker's comment for why.
-        iconSearchBox.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        iconPickerCancelButton.extractRenderState(extractor, mouseX, mouseY, partialTick);
-
-        int gridLeft = iconGridLeft();
-        int gridTop = iconGridTop();
-        int columns = iconGridColumns();
-        int visibleRows = (iconGridBottom() - gridTop) / ICON_CELL;
-        iconGridHovered = null;
-        for (int row = 0; row < visibleRows; row++) {
-            for (int col = 0; col < columns; col++) {
-                int index = (row + iconGridScroll) * columns + col;
-                if (index >= iconSearchResults.size()) {
-                    continue;
-                }
-                Item item = iconSearchResults.get(index);
-                int cellX = gridLeft + col * ICON_CELL;
-                int cellY = gridTop + row * ICON_CELL;
-                if (mouseX >= cellX && mouseX < cellX + ICON_CELL && mouseY >= cellY && mouseY < cellY + ICON_CELL) {
-                    extractor.fill(cellX, cellY, cellX + ICON_CELL, cellY + ICON_CELL, 0x80FFFFFF);
-                    iconGridHovered = item;
-                }
-                extractor.fakeItem(new ItemStack(item), cellX + 1, cellY + 1);
-            }
-        }
-        if (iconGridHovered != null) {
-            extractor.setComponentTooltipForNextFrame(this.font,
-                    List.of(iconGridHovered.getName(iconGridHovered.getDefaultInstance())), mouseX, mouseY);
         }
     }
 
@@ -1222,6 +836,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
      * {@link #rawFullJson} and only ever get decoded server-side on save.
      */
     public void enterEditMode(List<RawAdvancement> snapshot, List<OpenAdvancementEditorPayload.ProgressEntry> progressSnapshot) {
+        Identifier editingBeforeRefresh = editMode && selectedEditWidget != null ? selectedEditWidget.node().holder().id() : null;
         rawFullJson.clear();
         for (RawAdvancement raw : snapshot) {
             rawFullJson.put(raw.id(), JsonParser.parseString(raw.json()).getAsJsonObject());
@@ -1235,8 +850,13 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             entry.progress().update(entry.requirements());
             editProgressSnapshot.put(entry.advancementId(), entry.progress());
         }
+        Identifier viewedTab = selectedViewTab == null ? null : selectedViewTab.getRootNode().holder().id();
         editMode = true;
         rebuildEditTree();
+        if (editingBeforeRefresh != null && effectiveJson().containsKey(editingBeforeRefresh)) selectEditNodeById(editingBeforeRefresh);
+        else if (viewedTab != null) selectEditNodeById(viewedTab);
+        if (selectedEditWidget == null && selectedEditTab != null) selectedEditWidget = selectedEditTab.getRoot();
+        revealSelectedTab();
         this.init(this.width, this.height);
     }
 
@@ -1262,7 +882,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registries());
         List<AdvancementHolder> holders = new ArrayList<>();
         for (Map.Entry<Identifier, JsonObject> e : effectiveJson().entrySet()) {
-            JsonObject json = e.getValue();
+            JsonObject json = e.getValue().deepCopy();
+            json.entrySet().removeIf(entry -> entry.getValue().isJsonNull());
             Optional<Identifier> parent = json.has("parent")
                     ? Optional.of(Identifier.parse(json.get("parent").getAsString()))
                     : Optional.empty();
@@ -1319,102 +940,14 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         }
     }
 
-    private enum StatisticCategory {
-        CUSTOM("custom", "Custom"), MINED("mined", "Blocks mined"), CRAFTED("crafted", "Items crafted"),
-        USED("used", "Items used"), BROKEN("broken", "Items broken"), PICKED_UP("picked_up", "Items picked up"),
-        DROPPED("dropped", "Items dropped"), KILLED("killed", "Entities killed"), KILLED_BY("killed_by", "Killed by entities");
-        final String key;
-        final String label;
-        StatisticCategory(String key, String label) { this.key = key; this.label = label; }
-        static StatisticCategory fromValue(String value) {
-            int split = value.indexOf('|');
-            if (split > 0) for (StatisticCategory category : values()) if (category.key.equals(value.substring(0, split))) return category;
-            return CUSTOM;
-        }
-    }
-
-    private void initIdentifierPicker() {
-        int left = iconPickerLeft();
-        int top = iconPickerTop();
-        identifierSearchBox = addWidget(new EditBox(this.font, left + 10, top + ICON_SEARCH_Y,
-                ICON_PICKER_WIDTH - 20, 16, Component.literal("Search")));
-        identifierSearchBox.setHint(Component.literal("Search registry entries..."));
-        identifierSearchBox.setResponder(this::refreshIdentifierSearch);
-        identifierPickerCancelButton = addWidget(Button.builder(Component.literal("Cancel"), b -> closeIdentifierPicker())
-                .bounds(left + 10, top + ICON_PICKER_HEIGHT - 26, ICON_PICKER_WIDTH - 20, 20).build());
-        identifierPickerButtons.clear();
-        for (int i = 0; i < 8; i++) {
-            int index = i;
-            Button button = addWidget(Button.builder(Component.empty(), b -> {
-                        if (index < identifierPickerResults.size()) {
-                            identifierPickerCallback.accept(identifierPickerResults.get(index));
-                            closeIdentifierPicker();
-                        }
-                    })
-                    .bounds(left + 10, top + 50 + i * 18, ICON_PICKER_WIDTH - 20, 16).build());
-            identifierPickerButtons.add(button);
-        }
-        refreshIdentifierSearch("");
-    }
-
-    private void openIdentifierPicker(String title, List<Identifier> entries, Consumer<Identifier> callback) {
-        identifierPickerOpen = true;
-        identifierPickerTitle = title;
-        identifierPickerCallback = callback;
-        identifierPickerEntries.clear();
-        identifierPickerEntries.addAll(entries);
-        identifierPickerEntries.sort(Comparator.comparing(Identifier::toString));
-        this.init(this.width, this.height);
-    }
-
-    /** Opens the same searchable modal used by registry pickers, but each row is a pending quest
-     * reward and immediately sends one precise claim request. */
     private void openClaimRewards() {
-        openIdentifierPicker("Claim a reward", ClientClaimableRewards.available(), id ->
-                NetworkManager.sendToServer(new ClaimAdvancementRewardPayload(id, -1)));
-    }
-
-    private void closeIdentifierPicker() {
-        identifierPickerOpen = false;
-        identifierPickerCallback = null;
-        this.init(this.width, this.height);
-    }
-
-    private void refreshIdentifierSearch(String query) {
-        String needle = query.trim().toLowerCase(java.util.Locale.ROOT);
-        identifierPickerResults.clear();
-        for (Identifier id : identifierPickerEntries) {
-            if (needle.isEmpty() || id.toString().toLowerCase(java.util.Locale.ROOT).contains(needle)) {
-                identifierPickerResults.add(id);
+        this.minecraft.setScreen(new IdentifierSelectionScreen(this, "Claim a Reward", ClientClaimableRewards.available(), id -> {
+            for (CodexAdvancementTab tab : viewTabs.values()) {
+                CodexAdvancementWidget widget = tab.findById(id);
+                if (widget != null) return widget.display().getTitle();
             }
-        }
-        for (int i = 0; i < identifierPickerButtons.size(); i++) {
-            Button button = identifierPickerButtons.get(i);
-            if (i < identifierPickerResults.size()) {
-                button.setMessage(Component.literal(identifierPickerResults.get(i).toString()));
-                button.visible = true;
-                button.active = true;
-            } else {
-                button.visible = false;
-                button.active = false;
-            }
-        }
-    }
-
-    private void extractIdentifierPicker(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
-        extractor.nextStratum();
-        tryBlur(extractor);
-        extractor.fill(0, 0, this.width, this.height, 0xC0000000);
-        int left = iconPickerLeft(); int top = iconPickerTop();
-        extractor.fill(left, top, left + ICON_PICKER_WIDTH, top + ICON_PICKER_HEIGHT, 0xFF2B2B2B);
-        extractor.horizontalLine(left, left + ICON_PICKER_WIDTH - 1, top, 0xFF000000);
-        extractor.horizontalLine(left, left + ICON_PICKER_WIDTH - 1, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.verticalLine(left, top, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.verticalLine(left + ICON_PICKER_WIDTH - 1, top, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.text(this.font, identifierPickerTitle, left + 10, top + ICON_TITLE_Y, 0xFFFFFFFF, false);
-        identifierSearchBox.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        for (Button button : identifierPickerButtons) if (button.visible) button.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        identifierPickerCancelButton.extractRenderState(extractor, mouseX, mouseY, partialTick);
+            return Component.literal(id.toString());
+        }, id -> NetworkManager.sendToServer(new ClaimAdvancementRewardPayload(id, -1))));
     }
 
     private void openPartyPanel() {
@@ -1430,6 +963,10 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     /** A lightweight player-facing wrapper around the party commands. Online names come from the
      * active connection, so this remains correct for dedicated servers and LAN worlds alike. */
     private void initPartyPanel() {
+        // The overlay owns input. Buttons beneath it must not intercept a party action.
+        for (var child : this.children()) {
+            if (child instanceof AbstractWidget widget) widget.active = false;
+        }
         int left = iconPickerLeft();
         int top = iconPickerTop();
         partyAcceptButton = addWidget(Button.builder(Component.literal("Accept pending invite"), b -> sendPartyCommand("codex party accept"))
@@ -1476,224 +1013,39 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     }
 
     private void openRewardDialog(Integer index) {
-        rewardDialogIndex = index;
-        rewardDialogDraftType = null;
-        rewardDialogDraftValue = null;
-        rewardDialogDraftCount = null;
-        rewardDialogOpen = true;
-        this.init(this.width, this.height);
+        JsonObject original = index == null ? null : rewardEntries.get(index);
+        this.minecraft.setScreen(new RewardEditorScreen(this, original, entry -> {
+            RewardType type = RewardType.valueOf(entry.get("type").getAsString());
+            if (rewardTypeConflict(type, index)) throw new IllegalArgumentException("Only one " + type.label + " reward is allowed");
+            if (index == null) rewardEntries.add(entry); else rewardEntries.set(index, entry);
+        }, index == null ? null : () -> rewardEntries.remove((int) index)));
     }
 
-    private void closeRewardDialog() {
-        rewardDialogOpen = false;
-        rewardDialogIndex = null;
-        rewardDialogDraftType = null;
-        rewardDialogDraftValue = null;
-        rewardDialogDraftCount = null;
-        this.init(this.width, this.height);
-    }
-
-    private void initRewardDialog() {
-        int left = iconPickerLeft();
-        int top = iconPickerTop();
-        RewardType initialType = rewardDialogDraftType == null ? RewardType.EXPERIENCE : rewardDialogDraftType;
-        String initialValue = rewardDialogDraftValue == null ? "" : rewardDialogDraftValue;
-        String initialCount = rewardDialogDraftCount == null ? "" : rewardDialogDraftCount;
-        if (rewardDialogDraftType == null && rewardDialogIndex != null && rewardDialogIndex < rewardEntries.size()) {
-            JsonObject entry = rewardEntries.get(rewardDialogIndex);
-            initialType = RewardType.valueOf(entry.get("type").getAsString());
-            initialValue = initialType == RewardType.EXPERIENCE ? String.valueOf(entry.get("amount").getAsInt()) : entry.get("id").getAsString();
-            initialCount = initialType == RewardType.ITEM ? String.valueOf(entry.get("count").getAsInt()) : "";
+    private void openCriterionDialog(String originalName) {
+        String name = originalName;
+        if (name == null) {
+            name = "criterion";
+            for (int suffix = 2; criteriaEntries.containsKey(name); suffix++) name = "criterion_" + suffix;
         }
-        rewardDialogType = addWidget(CycleButton.builder((RewardType type) -> Component.literal(type.label), initialType)
-                .withValues(RewardType.values()).create(left + 10, top + 34, ICON_PICKER_WIDTH - 20, 20, Component.literal("Reward type")));
-        rewardDialogValue = addWidget(new EditBox(this.font, left + 10, top + 60, ICON_PICKER_WIDTH - 20, 16, Component.literal("Value")));
-        rewardDialogValue.setValue(initialValue);
-        rewardDialogValue.setMaxLength(256);
-        rewardDialogCount = addWidget(new EditBox(this.font, left + 10, top + 82, ICON_PICKER_WIDTH - 20, 16, Component.literal("Count")));
-        rewardDialogCount.setValue(initialCount);
-        rewardDialogCount.setMaxLength(8);
-        rewardDialogPick = addWidget(Button.builder(Component.literal("Pick Item / Recipe"), b -> pickRewardDialogValue())
-                .bounds(left + 10, top + 104, ICON_PICKER_WIDTH - 20, 16).build());
-        rewardDialogSave = addWidget(Button.builder(Component.literal(rewardDialogIndex == null ? "Add Reward" : "Save Reward"), b -> saveRewardDialog())
-                .bounds(left + 10, top + 124, ICON_PICKER_WIDTH - 20, 20).build());
-        rewardDialogCancel = addWidget(Button.builder(Component.literal("Cancel"), b -> closeRewardDialog())
-                .bounds(left + 10, top + ICON_PICKER_HEIGHT - 26, ICON_PICKER_WIDTH - 20, 20).build());
-    }
-
-    private void saveRewardDialog() {
-        RewardType type = rewardDialogType.getValue();
-        if (rewardTypeConflict(type, rewardDialogIndex)) return;
-        JsonObject entry = new JsonObject();
-        try {
-            entry.addProperty("type", type.name());
-            if (type == RewardType.EXPERIENCE) {
-                entry.addProperty("amount", rewardDialogValue.getValue().isBlank() ? 0 : Integer.parseInt(rewardDialogValue.getValue().trim()));
-            } else if (type == RewardType.ITEM) {
-                entry.addProperty("id", Identifier.parse(rewardDialogValue.getValue().trim()).toString());
-                int count = rewardDialogCount.getValue().isBlank() ? 1 : Integer.parseInt(rewardDialogCount.getValue().trim());
-                if (count < 1) throw new IllegalArgumentException("count must be at least 1");
-                entry.addProperty("count", count);
-            } else {
-                entry.addProperty("id", Identifier.parse(rewardDialogValue.getValue().trim()).toString());
+        this.minecraft.setScreen(new CriterionEditorScreen(this, name, criteriaEntries.get(name), effectiveJson(), (key, entry) -> {
+            if (criteriaEntries.containsKey(key) && !key.equals(originalName)) throw new IllegalArgumentException("A criterion already has that key");
+            if (originalName != null && !originalName.equals(key)) {
+                renameRequirementReference(originalName, key);
+                criteriaEntries.remove(originalName);
             }
-        } catch (RuntimeException ignored) {
-            return;
-        }
-        if (rewardDialogIndex == null) rewardEntries.add(entry); else rewardEntries.set(rewardDialogIndex, entry);
-        closeRewardDialog();
+            criteriaEntries.put(key, entry);
+        }, originalName == null ? null : () -> {
+            if (criteriaEntries.size() == 1) throw new IllegalArgumentException("An advancement needs at least one criterion");
+            criteriaEntries.remove(originalName);
+        }));
     }
 
-    private void pickRewardDialogValue() {
-        rewardDialogDraftType = rewardDialogType.getValue();
-        rewardDialogDraftValue = rewardDialogValue.getValue();
-        rewardDialogDraftCount = rewardDialogCount.getValue();
-        if (rewardDialogDraftType == RewardType.ITEM) {
-            openIconPicker(id -> rewardDialogDraftValue = id.toString());
-        } else if (rewardDialogDraftType == RewardType.RECIPE) {
-            openIdentifierPicker("Pick recipe", ClientRecipeIds.all(), id -> rewardDialogDraftValue = id.toString());
-        }
-    }
-
-    private void extractRewardDialog(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
-        extractor.nextStratum();
-        tryBlur(extractor);
-        extractor.fill(0, 0, this.width, this.height, 0xC0000000);
-        int left = iconPickerLeft(); int top = iconPickerTop();
-        extractor.fill(left, top, left + ICON_PICKER_WIDTH, top + ICON_PICKER_HEIGHT, 0xFF2B2B2B);
-        extractor.horizontalLine(left, left + ICON_PICKER_WIDTH - 1, top, 0xFF000000);
-        extractor.horizontalLine(left, left + ICON_PICKER_WIDTH - 1, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.verticalLine(left, top, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.verticalLine(left + ICON_PICKER_WIDTH - 1, top, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.text(this.font, rewardDialogIndex == null ? "Add Reward" : "Edit Reward", left + 10, top + ICON_TITLE_Y, 0xFFFFFFFF, false);
-        extractor.text(this.font, "Value: XP amount or a registry id", left + 10, top + 20, 0xFFAAAAAA, false);
-        rewardDialogType.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        rewardDialogValue.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        rewardDialogCount.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        rewardDialogPick.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        rewardDialogSave.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        rewardDialogCancel.extractRenderState(extractor, mouseX, mouseY, partialTick);
-    }
-
-    private void openCriterionDialog(String name) {
-        criterionDialogOriginalName = name;
-        criterionDialogDraftName = null;
-        criterionDialogDraftValue = null;
-        criterionDialogDraftType = null;
-        criterionDialogOpen = true;
-        this.init(this.width, this.height);
-    }
-
-    private void closeCriterionDialog() {
-        criterionDialogOpen = false;
-        criterionDialogOriginalName = null;
-        criterionDialogDraftName = null;
-        criterionDialogDraftValue = null;
-        criterionDialogDraftType = null;
-        this.init(this.width, this.height);
-    }
-
-    private void initCriterionDialog() {
-        int left = iconPickerLeft(); int top = iconPickerTop();
-        CriterionType type = criterionDialogDraftType == null ? CriterionType.IMPOSSIBLE : criterionDialogDraftType;
-        String value = criterionDialogDraftValue == null ? "" : criterionDialogDraftValue;
-        String name = criterionDialogDraftName == null ? criterionDialogOriginalName : criterionDialogDraftName;
-        if (criterionDialogDraftType == null && criterionDialogOriginalName != null && criteriaEntries.containsKey(criterionDialogOriginalName)) {
-            JsonObject entry = criteriaEntries.get(criterionDialogOriginalName);
-            type = CriterionType.fromJson(entry);
-            value = extractValue(type, entry);
-        }
-        criterionDialogName = addWidget(new EditBox(this.font, left + 10, top + 34, ICON_PICKER_WIDTH - 20, 16, Component.literal("Criterion name")));
-        criterionDialogName.setValue(name == null ? "criterion" : name);
-        criterionDialogName.setMaxLength(256);
-        criterionDialogType = addWidget(CycleButton.builder((CriterionType kind) -> Component.literal(kind.label), type)
-                .withValues(CriterionType.values()).create(left + 10, top + 56, ICON_PICKER_WIDTH - 20, 20, Component.literal("Criterion type")));
-        criterionDialogValue = addWidget(MultiLineEditBox.builder().setX(left + 10).setY(top + 82)
-                .setPlaceholder(Component.literal("Value")).build(this.font, ICON_PICKER_WIDTH - 20, 36, Component.literal("Criterion value")));
-        criterionDialogValue.setValue(value);
-        criterionDialogStatisticCategory = addWidget(CycleButton.builder((StatisticCategory category) ->
-                        Component.literal("Stats: " + category.label), StatisticCategory.fromValue(value))
-                .withValues(StatisticCategory.values()).create(left + 10, top + 120, ICON_PICKER_WIDTH - 20, 16, Component.literal("Statistic category")));
-        criterionDialogPick = addWidget(Button.builder(Component.literal("Pick Registry Value"), b -> pickCriterionDialogValue())
-                .bounds(left + 10, top + 140, ICON_PICKER_WIDTH - 20, 16).build());
-        criterionDialogSave = addWidget(Button.builder(Component.literal(criterionDialogOriginalName == null ? "Add Criterion" : "Save Criterion"), b -> saveCriterionDialog())
-                .bounds(left + 10, top + 160, ICON_PICKER_WIDTH - 20, 20).build());
-        criterionDialogCancel = addWidget(Button.builder(Component.literal("Cancel"), b -> closeCriterionDialog())
-                .bounds(left + 10, top + ICON_PICKER_HEIGHT - 26, ICON_PICKER_WIDTH - 20, 20).build());
-    }
-
-    private void saveCriterionDialog() {
-        String name = criterionDialogName.getValue().trim();
-        if (name.isEmpty()) return;
-        try {
-            JsonObject entry = buildCriterionJson(criterionDialogType.getValue(), criterionDialogValue.getValue());
-            if (criterionDialogOriginalName != null && !criterionDialogOriginalName.equals(name)) criteriaEntries.remove(criterionDialogOriginalName);
-            criteriaEntries.put(name, entry);
-            selectedCriterionName = name;
-            closeCriterionDialog();
-        } catch (RuntimeException ignored) { }
-    }
-
-    private void pickCriterionDialogValue() {
-        criterionDialogDraftName = criterionDialogName.getValue();
-        criterionDialogDraftValue = criterionDialogValue.getValue();
-        criterionDialogDraftType = criterionDialogType.getValue();
-        CriterionType type = criterionDialogDraftType;
-        if (type == CriterionType.ITEM_OBTAINED) {
-            openIconPicker(id -> criterionDialogDraftValue = id.toString());
-            return;
-        }
-        List<Identifier> entries = new ArrayList<>();
-        if (type == CriterionType.PLAYER_KILLED_ENTITY || type == CriterionType.ENTITY_KILLED_PLAYER) {
-            for (var entity : BuiltInRegistries.ENTITY_TYPE) entries.add(BuiltInRegistries.ENTITY_TYPE.getKey(entity));
-        } else if (type == CriterionType.RECIPE_UNLOCKED) {
-            entries.addAll(ClientRecipeIds.all());
-        } else if (type == CriterionType.CHANGED_DIMENSION) {
-            entries.addAll(List.of(Identifier.withDefaultNamespace("overworld"), Identifier.withDefaultNamespace("the_nether"), Identifier.withDefaultNamespace("the_end")));
-        } else if (type == CriterionType.LOCATION_BIOME || type == CriterionType.LOCATION_STRUCTURE) {
-            if (this.minecraft.level != null) {
-                if (type == CriterionType.LOCATION_BIOME) {
-                    this.minecraft.level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.BIOME).keySet().forEach(entries::add);
-                } else {
-                    this.minecraft.level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.STRUCTURE).keySet().forEach(entries::add);
-                }
-            }
-        } else if (type == CriterionType.STATISTIC) {
-            StatisticCategory category = criterionDialogStatisticCategory.getValue();
-            switch (category) {
-                case CUSTOM -> { for (var stat : BuiltInRegistries.CUSTOM_STAT) entries.add(BuiltInRegistries.CUSTOM_STAT.getKey(stat)); }
-                case MINED -> { for (var block : BuiltInRegistries.BLOCK) entries.add(BuiltInRegistries.BLOCK.getKey(block)); }
-                case CRAFTED, USED, BROKEN, PICKED_UP, DROPPED -> { for (var item : BuiltInRegistries.ITEM) entries.add(BuiltInRegistries.ITEM.getKey(item)); }
-                case KILLED, KILLED_BY -> { for (var entity : BuiltInRegistries.ENTITY_TYPE) entries.add(BuiltInRegistries.ENTITY_TYPE.getKey(entity)); }
-            }
-        } else if (type == CriterionType.ITEM_USED_ON_BLOCK) {
-            for (var block : BuiltInRegistries.BLOCK) entries.add(BuiltInRegistries.BLOCK.getKey(block));
-        }
-        if (!entries.isEmpty()) openIdentifierPicker("Pick criterion value", entries, id -> {
-            criterionDialogDraftValue = type == CriterionType.ITEM_USED_ON_BLOCK ? id + ";minecraft:stick"
-                    : type == CriterionType.STATISTIC ? criterionDialogStatisticCategory.getValue().key + "|" + id + " >= 1"
-                    : id.toString();
-        });
-    }
-
-    private void extractCriterionDialog(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
-        extractor.nextStratum();
-        tryBlur(extractor);
-        extractor.fill(0, 0, this.width, this.height, 0xC0000000);
-        int left = iconPickerLeft(); int top = iconPickerTop();
-        extractor.fill(left, top, left + ICON_PICKER_WIDTH, top + ICON_PICKER_HEIGHT, 0xFF2B2B2B);
-        extractor.horizontalLine(left, left + ICON_PICKER_WIDTH - 1, top, 0xFF000000);
-        extractor.horizontalLine(left, left + ICON_PICKER_WIDTH - 1, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.verticalLine(left, top, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.verticalLine(left + ICON_PICKER_WIDTH - 1, top, top + ICON_PICKER_HEIGHT - 1, 0xFF000000);
-        extractor.text(this.font, criterionDialogOriginalName == null ? "Add Criterion" : "Edit Criterion", left + 10, top + ICON_TITLE_Y, 0xFFFFFFFF, false);
-        criterionDialogName.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        criterionDialogType.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        criterionDialogValue.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        criterionDialogStatisticCategory.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        criterionDialogPick.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        criterionDialogSave.extractRenderState(extractor, mouseX, mouseY, partialTick);
-        criterionDialogCancel.extractRenderState(extractor, mouseX, mouseY, partialTick);
+    private void renameRequirementReference(String oldName, String newName) {
+        if (selectedEditWidget == null) return;
+        Identifier id = selectedEditWidget.node().holder().id(); JsonObject base = baseJsonFor(id);
+        if (base == null || !base.has("requirements")) return;
+        JsonObject updated = base.deepCopy(); updated.add("requirements", AdvancementDocument.renameReference(base.getAsJsonArray("requirements"), oldName, newName));
+        rememberUndo(id, base, updated); dirty.put(id, updated);
     }
 
     private Map<Identifier, int[]> layoutPositions() {
@@ -1818,7 +1170,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         List<ClientAdvancementRequiredItems.Hint> hints = new ArrayList<>();
         for (JsonElement element : json.getAsJsonObject("criteria").asMap().values()) {
             if (!element.isJsonObject()) continue;
-            JsonObject criterion = element.getAsJsonObject();
+            JsonObject criterion = net.vg.codex.advancement.CriterionFormats.authoringView(element.getAsJsonObject());
             if (!criterion.has("trigger") || !"minecraft:recipe_unlocked".equals(criterion.get("trigger").getAsString())
                     || !criterion.has("conditions") || !criterion.get("conditions").isJsonObject()) continue;
             JsonObject conditions = criterion.getAsJsonObject("conditions");
@@ -1844,6 +1196,18 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     private Map<Identifier, CodexAdvancementTab> activeTabs() {
         return editMode ? editTabs : viewTabs;
+    }
+
+    private void revealSelectedTab() {
+        CodexAdvancementTab selected = activeSelectedTab();
+        if (selected == null) return;
+        List<CodexAdvancementTab> tabs = new ArrayList<>(activeTabs().values());
+        int selectedIndex = tabs.indexOf(selected);
+        int capacity = Math.max(1, windowWidth() / CodexAdvancementTab.TAB_SLOT);
+        if (tabs.size() + (editMode ? 1 : 0) > capacity) {
+            int visible = Math.max(1, capacity - 2);
+            if (selectedIndex < tabPageStart || selectedIndex >= tabPageStart + visible) tabPageStart = Math.max(0, selectedIndex - visible / 2);
+        }
     }
 
     private CodexAdvancementTab activeSelectedTab() {
@@ -1917,6 +1281,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             setStatus("Save in progress - wait for the server reload before closing.");
             return;
         }
+        if (editMode && selectedEditWidget != null && titleBox != null && !applyEdit()) return;
         // dirty only lives in this screen instance's memory - closing without saving discards it
         // for good (a new CodexAdvancementsScreen starts with an empty dirty map), so confirm
         // first rather than silently losing whatever's pending.
@@ -1937,20 +1302,21 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     @Override
     public void removed() {
+        super.removed();
         advancements.setListener(null);
     }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor extractor, int mouseX, int mouseY, float partialTick) {
-        super.extractRenderState(extractor, mouseX, mouseY, partialTick);
         int left = windowLeft();
         int top = windowTop();
         int windowWidth = windowWidth();
         int windowHeight = windowHeight();
 
-        drawWindowFrame(extractor, left, top, windowWidth, windowHeight);
-
         CodexAdvancementTab selectedTab = activeSelectedTab();
+        frameLocation = !editMode && selectedTab != null ? ClientTabSummaries.windowTexture(WINDOW_LOCATION, selectedTab.getRootNode().holder().id()) : WINDOW_LOCATION;
+        drawWindowFrame(extractor, left, top, windowWidth, windowHeight);
+        if (!editMode && selectedTab != null) ClientTabSummaries.completionSheen(extractor, selectedTab.getRootNode().holder().id(), left, top, windowWidth);
 
         if (activeTabs().size() > 1 || editMode) {
             List<TabRowSlot> tabRow = buildTabRow(windowWidth);
@@ -1962,6 +1328,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                 TabRowSlot slot = tabRow.get(i);
                 boolean selected = slot.tab() != null && slot.tab() == selectedTab;
                 Identifier sprite = CodexAdvancementTab.tabSprite(i == 0, i == tabRow.size() - 1, selected);
+                if (!editMode && slot.tab() != null) sprite = ClientTabSummaries.tabSprite(sprite, slot.tab().getRootNode().holder().id());
                 extractor.blitSprite(RenderPipelines.GUI_TEXTURED, sprite, x, tabRowY,
                         CodexAdvancementTab.TAB_WIDTH, CodexAdvancementTab.TAB_HEIGHT);
                 x += CodexAdvancementTab.TAB_SLOT;
@@ -1969,7 +1336,9 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             x = left;
             for (TabRowSlot slot : tabRow) {
                 if (slot.tab() != null) {
-                    slot.tab().extractIcon(extractor, x, tabRowY);
+                    slot.tab().extractIcon(extractor, x, tabRowY, editMode ? 1 : ClientTabSummaries.iconScale(slot.tab().getRootNode().holder().id(), !partyPanelOpen && mouseX >= x && mouseX < x + CodexAdvancementTab.TAB_WIDTH && mouseY >= tabRowY && mouseY < tabRowY + CodexAdvancementTab.TAB_HEIGHT));
+                    if (!partyPanelOpen && mouseX >= x && mouseX < x + CodexAdvancementTab.TAB_WIDTH && mouseY >= tabRowY && mouseY < tabRowY + CodexAdvancementTab.TAB_HEIGHT)
+                        extractor.setComponentTooltipForNextFrame(font, ClientTabSummaries.tooltip(slot.tab().getRootNode().holder().id(), slot.tab().getTitle()), mouseX, mouseY);
                 } else if (slot.isAdd()) {
                     extractor.centeredText(this.font, "+", x + CodexAdvancementTab.TAB_WIDTH / 2,
                             tabRowY + (CodexAdvancementTab.TAB_HEIGHT - this.font.lineHeight) / 2, 0xFFFFFFFF);
@@ -1983,7 +1352,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         }
 
         Component title = selectedTab != null ? selectedTab.getTitle() : this.title;
-        extractor.text(this.font, title, left + 8, top + 6, 0xFF404040, false);
+        int headerActionsWidth = windowWidth < 300 ? 145 : 218;
+        extractor.text(this.font, this.font.plainSubstrByWidth(title.getString(), Math.max(20, windowWidth - headerActionsWidth - 16)), left + 8, top + 6, 0xFF404040, false);
 
         CodexAdvancementWidget hovered = null;
         int hoverX = 0;
@@ -1994,36 +1364,27 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             int contentY = top + BORDER_TOP;
             int contentWidth = contentWidth();
             int contentHeight = contentHeight();
-            selectedTab.extractContents(extractor, contentX, contentY, contentWidth, contentHeight, zoom, editMode);
-
+            ClientQuests.view(editMode ? null : selectedTab.getRootNode().holder().id());
+            if (pressedWidget != null && CodexClientSettings.holdAccept && ClientQuests.canAccept(ClientQuests.info(pressedWidget.node().holder().id())))
+                QuestFeedback.hold(pressedWidget.node().holder().id(), (System.nanoTime() - pressedAt) / 700_000_000F);
             int cBottom = contentY + contentHeight;
-            // The persisted widget (if any, still in this tab) keeps priority over whatever's under
-            // the cursor - without this, moving the mouse from the icon into the hover box, over a
-            // *different* advancement's icon that happens to sit underneath the box, instantly
-            // stole the hover to that other widget, making it impossible to actually read the box's
-            // own content whenever advancements are packed close together. Recomputed fresh every
-            // frame (not reusing a stale rect) so it stays correct across scroll/zoom.
-            if (lastHoveredWidget != null && selectedTab == lastHoveredTab) {
+            // A visible card owns its actual rectangle, including item chips over other nodes.
+            if (!editMode && lastHoveredWidget != null && selectedTab == lastHoveredTab) {
                 int cx = selectedTab.widgetScreenX(lastHoveredWidget, contentX, zoom);
                 int cy = selectedTab.widgetScreenY(lastHoveredWidget, contentY, zoom);
-                CodexAdvancementWidget.HoverBounds bounds =
-                        lastHoveredWidget.computeHoverBounds(this.font, cx, cy, this.width, cBottom);
-                if (bounds.contains(mouseX, mouseY)) {
-                    hovered = lastHoveredWidget;
-                    hoverX = cx;
-                    hoverY = cy;
-                    hoverBottom = cBottom;
+                if (lastHoveredWidget.computeHoverBounds(font, cx, cy, width, cBottom).contains(mouseX, mouseY)) {
+                    hovered = lastHoveredWidget; hoverX = cx; hoverY = cy; hoverBottom = cBottom;
                 }
             }
             if (hovered == null) {
-                CodexAdvancementWidget iconHovered = selectedTab.findHovered(contentX, contentY, contentWidth, contentHeight, zoom, mouseX, mouseY);
-                if (iconHovered != null) {
-                    hovered = iconHovered;
-                    hoverX = selectedTab.widgetScreenX(iconHovered, contentX, zoom);
-                    hoverY = selectedTab.widgetScreenY(iconHovered, contentY, zoom);
-                    hoverBottom = cBottom;
+                hovered = selectedTab.findHovered(contentX, contentY, contentWidth, contentHeight, zoom, mouseX, mouseY);
+                if (hovered != null) {
+                    hoverX = selectedTab.widgetScreenX(hovered, contentX, zoom);
+                    hoverY = selectedTab.widgetScreenY(hovered, contentY, zoom); hoverBottom = cBottom;
                 }
             }
+            selectedTab.animateHover(hovered);
+            selectedTab.extractContents(extractor, contentX, contentY, contentWidth, contentHeight, zoom, editMode);
         } else {
             // No advancements to show at all (e.g. a fresh world before anything's synced yet) -
             // without this, the content area was fully transparent instead of matching vanilla's
@@ -2037,6 +1398,12 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             extractor.centeredText(this.font, Component.literal("No advancements to show"),
                     contentX + contentWidth / 2, contentY + contentHeight / 2 - this.font.lineHeight / 2, 0xFFAAAAAA);
         }
+        int pendingClaims = ClientClaimableRewards.available().size();
+        claimsButton.setMessage(Component.literal(windowWidth < 300 ? "R(" + pendingClaims + ")" : "Rewards (" + pendingClaims + ")"));
+        claimsButton.active = !partyPanelOpen && pendingClaims > 0;
+        claimAllButton.active = !partyPanelOpen && pendingClaims > 0;
+        super.extractRenderState(extractor, mouseX, mouseY, partialTick);
+
         lastHoveredWidget = hovered;
         lastHoveredTab = selectedTab;
 
@@ -2077,17 +1444,10 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             tryBlur(extractor);
             hovered.extractHover(extractor, this.font, hoverX, hoverY, this.width, hoverBottom, mouseX, mouseY);
         }
+        QuestFeedback.render(extractor);
 
-        if (iconPickerOpen) {
-            extractIconPicker(extractor, mouseX, mouseY, partialTick);
-        } else if (identifierPickerOpen) {
-            extractIdentifierPicker(extractor, mouseX, mouseY, partialTick);
-        } else if (partyPanelOpen) {
+        if (partyPanelOpen) {
             extractPartyPanel(extractor, mouseX, mouseY, partialTick);
-        } else if (rewardDialogOpen) {
-            extractRewardDialog(extractor, mouseX, mouseY, partialTick);
-        } else if (criterionDialogOpen) {
-            extractCriterionDialog(extractor, mouseX, mouseY, partialTick);
         }
     }
 
@@ -2095,6 +1455,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
      * Draws the window chrome as 4 fixed-size corners plus tiled (not stretched) edges, using the
      * real vanilla border art, so it can scale to any size without blurring a stretched blit.
      */
+    private Identifier frameLocation = WINDOW_LOCATION;
+
     private void drawWindowFrame(GuiGraphicsExtractor extractor, int left, int top, int width, int height) {
         // Corners (native size, no scaling).
         blitRegion(extractor, left, top, 0, 0, BORDER_LEFT, BORDER_TOP);
@@ -2114,7 +1476,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     }
 
     private void blitRegion(GuiGraphicsExtractor extractor, int x, int y, int u, int v, int w, int h) {
-        extractor.blit(RenderPipelines.GUI_TEXTURED, WINDOW_LOCATION, x, y, (float) u, (float) v, w, h, 256, 256);
+        extractor.blit(RenderPipelines.GUI_TEXTURED, frameLocation, x, y, (float) u, (float) v, w, h, 256, 256);
     }
 
     private void tileHorizontal(GuiGraphicsExtractor extractor, int x, int y, int totalWidth, int u, int v, int chunkHeight) {
@@ -2137,26 +1499,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     @Override
     public boolean keyPressed(net.minecraft.client.input.KeyEvent event) {
-        // Otherwise Escape falls through to the default Screen behavior and closes the whole
-        // advancements screen (triggering the unsaved-changes prompt) while the picker is open.
-        if (iconPickerOpen && event.isEscape()) {
-            closeIconPicker();
-            return true;
-        }
-        if (identifierPickerOpen && event.isEscape()) {
-            closeIdentifierPicker();
-            return true;
-        }
         if (partyPanelOpen && event.isEscape()) {
             closePartyPanel();
-            return true;
-        }
-        if (rewardDialogOpen && event.isEscape()) {
-            closeRewardDialog();
-            return true;
-        }
-        if (criterionDialogOpen && event.isEscape()) {
-            closeCriterionDialog();
             return true;
         }
         return super.keyPressed(event);
@@ -2164,32 +1508,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubled) {
-        if (iconPickerOpen) {
-            // Consumes every click while open (even ones that miss the grid/search/cancel), so
-            // nothing underneath - panel widgets, the tree, tabs - is reachable through the modal.
-            if (event.button() == 0 && !super.mouseClicked(event, doubled)) {
-                Item clicked = iconGridItemAt(event.x(), event.y());
-                if (clicked != null && iconPickerCallback != null) {
-                    iconPickerCallback.accept(BuiltInRegistries.ITEM.getKey(clicked));
-                    closeIconPicker();
-                }
-            }
-            return true;
-        }
-
-        if (identifierPickerOpen) {
-            if (event.button() == 0) super.mouseClicked(event, doubled);
-            return true;
-        }
         if (partyPanelOpen) {
-            if (event.button() == 0) super.mouseClicked(event, doubled);
-            return true;
-        }
-        if (rewardDialogOpen) {
-            if (event.button() == 0) super.mouseClicked(event, doubled);
-            return true;
-        }
-        if (criterionDialogOpen) {
             if (event.button() == 0) super.mouseClicked(event, doubled);
             return true;
         }
@@ -2228,7 +1547,10 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                     if (slot.tab() != null) {
                         CodexAdvancementTab tab = slot.tab();
                         if (editMode) {
+                            if (selectedEditWidget != null && titleBox != null && !applyEdit()) return true;
                             selectedEditTab = tab;
+                            selectedEditWidget = tab.getRoot();
+                            panelScrollOffset = 0;
                             customLayoutMode = tabHasCustomLayout(tab);
                             pendingLayoutResetTab = null;
                             if (creationMode != CreationMode.NONE) {
@@ -2291,7 +1613,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         // Hover-table actions are intentionally left-clickable: the exact submission item sends
         // that task, and a displayed claimable reward claims that quest. This is checked before
         // the broader node right-click shortcut below.
-        if (!editMode && event.button() == 0 && selectedViewTab != null && lastHoveredWidget != null
+        if (!editMode && (event.button() == 0 || event.button() == 1) && selectedViewTab != null && lastHoveredWidget != null
                 && lastHoveredTab == selectedViewTab) {
             int contentX = left + BORDER_LEFT;
             int contentY = top + BORDER_TOP;
@@ -2300,6 +1622,19 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             int contentBottom = contentY + contentHeight();
             int mouseX = (int) event.x();
             int mouseY = (int) event.y();
+            boolean insideCard = lastHoveredWidget.computeHoverBounds(font, widgetX, widgetY, width, contentBottom).contains(mouseX, mouseY);
+            if (insideCard && event.button() == 1) {
+                if (mouseX >= widgetX + 3 && mouseX < widgetX + 29 && mouseY >= widgetY && mouseY < widgetY + 26 && !ClientQuests.locked(lastHoveredWidget.node().holder().id())) {
+                    var tasks = ClientSubmissionTasks.forAdvancement(lastHoveredWidget.node().holder().id());
+                    if (!tasks.isEmpty()) NetworkManager.sendToServer(new SubmitAdvancementItemsPayload(tasks.get(0).advancementId(), tasks.get(0).criterion(), java.util.Optional.empty()));
+                    else if (ClientClaimableRewards.contains(lastHoveredWidget.node().holder().id())) NetworkManager.sendToServer(new ClaimAdvancementRewardPayload(lastHoveredWidget.node().holder().id(), -1));
+                }
+                return true;
+            }
+            if (insideCard && mouseX >= widgetX + 3 && mouseX < widgetX + 29 && mouseY >= widgetY && mouseY < widgetY + 26) {
+                pressedWidget = lastHoveredWidget; pressX = event.x(); pressY = event.y(); pressedAt = System.nanoTime(); holdSent = false;
+                ClientQuests.watch(lastHoveredWidget.node().holder().id()); return true;
+            }
             var submission = lastHoveredWidget.submissionAt(this.font, widgetX, widgetY, this.width, contentBottom, mouseX, mouseY);
             if (submission != null) {
                 NetworkManager.sendToServer(new SubmitAdvancementItemsPayload(submission.task().advancementId(), submission.task().criterion(), java.util.Optional.of(submission.itemId())));
@@ -2311,12 +1646,21 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                 NetworkManager.sendToServer(new ClaimAdvancementRewardPayload(id, rewardIndex));
                 return true;
             }
+            if (insideCard) return true;
+        }
+        if (!editMode && event.button() == 0 && selectedViewTab != null) {
+            CodexAdvancementWidget hit = selectedViewTab.findHovered(left + BORDER_LEFT, top + BORDER_TOP, contentWidth(), contentHeight(), zoom, event.x(), event.y());
+            if (hit != null) {
+                pressedWidget = hit; pressX = event.x(); pressY = event.y(); pressedAt = System.nanoTime(); holdSent = false;
+                ClientQuests.watch(hit.node().holder().id());
+                return true;
+            }
         }
         if (!editMode && event.button() == 1 && selectedViewTab != null) {
             int contentX = left + BORDER_LEFT;
             int contentY = top + BORDER_TOP;
             CodexAdvancementWidget hit = selectedViewTab.findHovered(contentX, contentY, contentWidth(), contentHeight(), zoom, event.x(), event.y());
-            if (hit != null) {
+            if (hit != null && !ClientQuests.locked(hit.node().holder().id())) {
                 var tasks = ClientSubmissionTasks.forAdvancement(hit.node().holder().id());
                 if (!tasks.isEmpty()) {
                     var task = tasks.get(0);
@@ -2407,23 +1751,17 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         }
         JsonObject advancement = new JsonObject();
         advancement.add("display", display);
-        advancement.add("criteria", defaultCriteria());
-        advancement.add("requirements", defaultRequirements());
+        JsonObject tabRules = new JsonObject(); tabRules.addProperty("quest_tab", true); advancement.add("codex_quest", tabRules);
+        advancement.add("criteria", net.vg.codex.advancement.QuestTemplates.criteria(questTemplateButton.getValue()));
         dirty.put(id, advancement);
 
         creationMode = CreationMode.NONE;
         rebuildEditTree();
         selectEditNodeById(id);
         this.init(this.width, this.height);
-        setStatus("Created tab " + id + " - it starts with a placeholder criterion (Impossible) so it's "
-                + "always saveable; replace it via the criteria list below, then Save.");
+        setStatus("Created editable quest from template — configure its criteria, then Save.");
     }
 
-    /**
-     * Debug-only: bulk-creates a batch of throwaway root tabs so the tab strip's overflow
-     * wrapping (ABOVE/BELOW caps at 8 tabs, LEFT/RIGHT caps at 5) can actually be exercised
-     * without hand-creating a dozen tabs one at a time through the normal New Tab flow.
-     */
     private void addTestTabs() {
         int created = 0;
         int idx = 1;
@@ -2473,8 +1811,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         JsonObject advancement = new JsonObject();
         advancement.addProperty("parent", parentId.toString());
         advancement.add("display", display);
-        advancement.add("criteria", defaultCriteria());
-        advancement.add("requirements", defaultRequirements());
+        advancement.add("criteria", net.vg.codex.advancement.QuestTemplates.criteria(questTemplateButton.getValue()));
         dirty.put(id, advancement);
 
         creationMode = CreationMode.NONE;
@@ -2566,6 +1903,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
     }
 
     private void selectEditWidget(CodexAdvancementWidget widget) {
+        if (selectedEditWidget != null && widget != selectedEditWidget && titleBox != null && !savePending && !applyEdit()) return;
         selectedEditWidget = widget;
         panelScrollOffset = 0;
         // Full re-init rather than poking existing widgets: Checkbox (unlike EditBox) has no
@@ -2623,6 +1961,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         try {
             return switch (RewardType.valueOf(entry.get("type").getAsString())) {
                 case EXPERIENCE -> new ItemStack(Items.EXPERIENCE_BOTTLE);
+                case TREASURE_BAG -> new ItemStack(net.vg.codex.advancement.TreasureBagItem.ITEM);
                 case ITEM -> new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(entry.get("id").getAsString())));
                 default -> new ItemStack(Items.PAPER);
             };
@@ -2760,68 +2099,28 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
      * represents the same data as proper Item entries.
      */
     private List<JsonObject> loadRewardEntries(JsonObject rewards) {
-        List<JsonObject> entries = new ArrayList<>();
-        if (rewards.has("experience")) {
-            JsonObject entry = new JsonObject();
-            entry.addProperty("type", RewardType.EXPERIENCE.name());
-            entry.addProperty("amount", rewards.get("experience").getAsInt());
-            entries.add(entry);
-        }
-        if (rewards.has("function")) {
-            JsonObject entry = new JsonObject();
-            entry.addProperty("type", RewardType.FUNCTION.name());
-            entry.addProperty("id", rewards.get("function").getAsString());
-            entries.add(entry);
-        }
-        if (rewards.has("recipes") && rewards.get("recipes").isJsonArray()) {
-            for (JsonElement e : rewards.getAsJsonArray("recipes")) {
-                JsonObject entry = new JsonObject();
-                entry.addProperty("type", RewardType.RECIPE.name());
-                entry.addProperty("id", e.getAsString());
-                entries.add(entry);
-            }
-        }
-        String generatedLootId = selectedEditWidget != null
-                ? AdvancementPackIO.generatedLootTableId(selectedEditWidget.node().holder().id()).toString()
-                : null;
-        if (rewards.has("loot") && rewards.get("loot").isJsonArray()) {
-            for (JsonElement e : rewards.getAsJsonArray("loot")) {
-                String id = e.getAsString();
-                if (id.equals(generatedLootId)) {
-                    continue;
-                }
-                JsonObject entry = new JsonObject();
-                entry.addProperty("type", RewardType.LOOT_TABLE.name());
-                entry.addProperty("id", id);
-                entries.add(entry);
-            }
-        }
-        if (rewards.has("codex_items") && rewards.get("codex_items").isJsonArray()) {
-            for (JsonElement e : rewards.getAsJsonArray("codex_items")) {
-                JsonObject item = e.getAsJsonObject();
-                JsonObject entry = new JsonObject();
-                entry.addProperty("type", RewardType.ITEM.name());
-                entry.addProperty("id", item.get("id").getAsString());
-                entry.addProperty("count", item.has("count") ? item.get("count").getAsInt() : 1);
-                entries.add(entry);
-            }
-        }
-        return entries;
+        return QuestRewards.entries(rewards, selectedEditWidget == null ? null : selectedEditWidget.node().holder().id());
     }
 
-    private RequirementMode currentRequirementMode() {
+    private Requirements currentRequirements() {
         if (selectedEditWidget == null) {
-            return RequirementMode.ALL;
+            return Requirements.ALL;
         }
         JsonObject base = baseJsonFor(selectedEditWidget.node().holder().id());
         if (base == null) {
-            return RequirementMode.ALL;
+            return Requirements.ALL;
         }
         int criteriaCount = base.has("criteria") && base.get("criteria").isJsonObject()
                 ? base.getAsJsonObject("criteria").size() : 0;
         JsonArray requirements = base.has("requirements") && base.get("requirements").isJsonArray()
                 ? base.getAsJsonArray("requirements") : null;
-        return RequirementMode.fromJson(requirements, criteriaCount);
+        return Requirements.fromJson(requirements, criteriaCount);
+    }
+
+    private boolean isCurrentClaimable() {
+        if (selectedEditWidget == null) return false;
+        JsonObject base = baseJsonFor(selectedEditWidget.node().holder().id());
+        return base != null && base.has("codex_claimable") && base.get("codex_claimable").getAsBoolean();
     }
 
     // ---- Criteria list/editor ----
@@ -2835,7 +2134,15 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                 String name = currentCriteriaNames.get(i);
                 JsonObject json = criteriaEntries.get(name);
                 String triggerId = json.has("trigger") ? json.get("trigger").getAsString() : "?";
-                button.setMessage(Component.literal(name + " (" + triggerId + ")"));
+                CriterionType type = CriterionType.fromJson(json);
+                String label = type == CriterionType.CUSTOM ? "Advanced: " + name : type.label;
+                if (type == CriterionType.ITEM_OBTAINED) {
+                    String value = net.vg.codex.advancement.QuestCriteria.extractValue(type, json);
+                    label = value.startsWith("#") ? "Obtain any " + Identifier.parse(value.substring(1)).getPath().replace('_', ' ')
+                            : "Obtain " + resolveIconStack(value).getHoverName().getString();
+                }
+                button.setMessage(Component.literal(label));
+                button.setTooltip(Tooltip.create(Component.literal("Key: " + name + "\nTrigger: " + triggerId)));
                 button.visible = true;
                 button.active = true;
             } else {
@@ -2843,194 +2150,6 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                 button.active = false;
             }
         }
-    }
-
-    private void selectCriterionAt(int index) {
-        if (index >= 0 && index < currentCriteriaNames.size()) {
-            selectCriterion(currentCriteriaNames.get(index));
-        }
-    }
-
-    private void selectCriterion(String name) {
-        JsonObject json = criteriaEntries.get(name);
-        if (json == null) {
-            return;
-        }
-        selectedCriterionName = name;
-        criterionNameBox.setValue(name);
-        CriterionType type = CriterionType.fromJson(json);
-        criterionTypeButton.setValue(type);
-        String value = extractValue(type, json);
-        if (type == CriterionType.STATISTIC && statisticCategoryButton != null) {
-            statisticCategoryButton.setValue(StatisticCategory.fromValue(value));
-        }
-        criterionValueBox.active = type.hasValue;
-        updateCriterionFieldsVisibility(type);
-        criterionValueBox.setValue(value);
-        setStatus("");
-    }
-
-    private void clearCriterionEditor() {
-        selectedCriterionName = null;
-        if (criterionNameBox != null) {
-            criterionNameBox.setValue("");
-            criterionTypeButton.setValue(CriterionType.IMPOSSIBLE);
-            criterionValueBox.setValue("");
-            criterionValueBox.active = false;
-            updateCriterionFieldsVisibility(CriterionType.IMPOSSIBLE);
-        }
-    }
-
-    private boolean isCurrentClaimable() {
-        if (selectedEditWidget == null) return false;
-        JsonObject base = baseJsonFor(selectedEditWidget.node().holder().id());
-        return base != null && base.has("codex_claimable") && base.get("codex_claimable").getAsBoolean();
-    }
-
-    private void updateCriterionFieldsVisibility(CriterionType type) {
-        boolean supportsItemPicker = type == CriterionType.ITEM_OBTAINED
-                || type == CriterionType.PLAYER_KILLED_ENTITY || type == CriterionType.ENTITY_KILLED_PLAYER
-                || type == CriterionType.CHANGED_DIMENSION || type == CriterionType.LOCATION_STRUCTURE
-                || type == CriterionType.LOCATION_BIOME || type == CriterionType.STATISTIC
-                || type == CriterionType.RECIPE_UNLOCKED || type == CriterionType.ITEM_USED_ON_BLOCK;
-        if (pickCriterionItemButton != null) {
-            pickCriterionItemButton.visible = supportsItemPicker;
-            pickCriterionItemButton.active = supportsItemPicker;
-        }
-        if (statisticCategoryButton != null) {
-            boolean statistic = type == CriterionType.STATISTIC;
-            statisticCategoryButton.visible = statistic;
-            statisticCategoryButton.active = statistic;
-        }
-    }
-
-    /** Reuses the icon picker for the common inventory_changed criterion. */
-    private void pickCriterionItem() {
-        if (criterionTypeButton == null) return;
-        CriterionType type = criterionTypeButton.getValue();
-        if (type == CriterionType.PLAYER_KILLED_ENTITY || type == CriterionType.ENTITY_KILLED_PLAYER) {
-            List<Identifier> entities = new ArrayList<>();
-            for (EntityType<?> entity : BuiltInRegistries.ENTITY_TYPE) entities.add(BuiltInRegistries.ENTITY_TYPE.getKey(entity));
-            openIdentifierPicker("Pick entity", entities, id -> applyPickedCriterion(type, id));
-            return;
-        }
-        if (type == CriterionType.CHANGED_DIMENSION) {
-            openIdentifierPicker("Pick dimension", List.of(
-                    Identifier.withDefaultNamespace("overworld"), Identifier.withDefaultNamespace("the_nether"),
-                    Identifier.withDefaultNamespace("the_end")), id -> applyPickedCriterion(type, id));
-            return;
-        }
-        if (type == CriterionType.LOCATION_BIOME || type == CriterionType.LOCATION_STRUCTURE) {
-            if (this.minecraft.level == null) return;
-            List<Identifier> entries = new ArrayList<>();
-            if (type == CriterionType.LOCATION_BIOME) {
-                this.minecraft.level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.BIOME)
-                        .keySet().forEach(entries::add);
-            } else {
-                this.minecraft.level.registryAccess().lookupOrThrow(net.minecraft.core.registries.Registries.STRUCTURE)
-                        .keySet().forEach(entries::add);
-            }
-            openIdentifierPicker(type == CriterionType.LOCATION_BIOME ? "Pick biome" : "Pick structure", entries,
-                    id -> applyPickedCriterion(type, id));
-            return;
-        }
-        if (type == CriterionType.STATISTIC) {
-            StatisticCategory category = statisticCategoryButton == null ? StatisticCategory.CUSTOM : statisticCategoryButton.getValue();
-            List<Identifier> entries = new ArrayList<>();
-            switch (category) {
-                case CUSTOM -> { for (var stat : BuiltInRegistries.CUSTOM_STAT) entries.add(BuiltInRegistries.CUSTOM_STAT.getKey(stat)); }
-                case MINED -> { for (var block : BuiltInRegistries.BLOCK) entries.add(BuiltInRegistries.BLOCK.getKey(block)); }
-                case CRAFTED, USED, BROKEN, PICKED_UP, DROPPED -> { for (var item : BuiltInRegistries.ITEM) entries.add(BuiltInRegistries.ITEM.getKey(item)); }
-                case KILLED, KILLED_BY -> { for (var entity : BuiltInRegistries.ENTITY_TYPE) entries.add(BuiltInRegistries.ENTITY_TYPE.getKey(entity)); }
-            }
-            openIdentifierPicker("Pick " + category.label.toLowerCase(java.util.Locale.ROOT), entries,
-                    id -> applyPickedCriterionValue(type, category.key + "|" + id + " >= 1"));
-            return;
-        }
-        if (type == CriterionType.RECIPE_UNLOCKED) {
-            openIdentifierPicker("Pick recipe", ClientRecipeIds.all(), id -> applyPickedCriterion(type, id));
-            return;
-        }
-        if (type == CriterionType.ITEM_USED_ON_BLOCK) {
-            List<Identifier> blocks = new ArrayList<>();
-            for (var block : BuiltInRegistries.BLOCK) blocks.add(BuiltInRegistries.BLOCK.getKey(block));
-            String current = criterionValueBox == null ? "" : criterionValueBox.getValue();
-            String itemPart = current.contains(";") ? current.substring(current.indexOf(';') + 1).trim() : "minecraft:stick";
-            openIdentifierPicker("Pick required block", blocks,
-                    id -> applyPickedCriterionValue(type, id + ";" + itemPart));
-            return;
-        }
-        if (type != CriterionType.ITEM_OBTAINED) return;
-        openIconPicker(id -> applyPickedCriterion(type, id));
-    }
-
-    private void applyPickedCriterion(CriterionType type, Identifier id) {
-        applyPickedCriterionValue(type, id.toString());
-    }
-
-    private void applyPickedCriterionValue(CriterionType type, String value) {
-        String requestedName = criterionNameBox == null ? "" : criterionNameBox.getValue().trim();
-        String name = requestedName.isEmpty() ? selectedCriterionName : requestedName;
-        if (name == null || name.isBlank()) {
-            name = type == CriterionType.ITEM_OBTAINED ? "item_obtained" : "kill_entity";
-            int suffix = 2;
-            while (criteriaEntries.containsKey(name)) name = name + "_" + suffix++;
-        }
-        if (selectedCriterionName != null && !selectedCriterionName.equals(name)) {
-            criteriaEntries.remove(selectedCriterionName);
-        }
-        criteriaEntries.put(name, buildCriterionJson(type, value));
-        selectedCriterionName = name;
-    }
-
-    private void addCriterion() {
-        String base = "criterion";
-        String name = base;
-        int n = 1;
-        while (criteriaEntries.containsKey(name)) {
-            name = base + "_" + (n++);
-        }
-        criteriaEntries.put(name, buildCriterionJson(CriterionType.IMPOSSIBLE, ""));
-        // Row count grows with criteriaEntries, so a full re-init (not just refreshCriteriaList)
-        // is needed to actually build the new row - init() leaves criteriaEntries itself alone
-        // since criteriaEntriesSelection still matches the currently-selected widget.
-        this.init(this.width, this.height);
-        selectCriterion(name);
-    }
-
-    private void applyCriterion() {
-        String name = criterionNameBox.getValue().trim();
-        if (name.isEmpty()) {
-            setStatus("Criterion name can't be blank.");
-            return;
-        }
-        CriterionType type = criterionTypeButton.getValue();
-        JsonObject json;
-        try {
-            json = buildCriterionJson(type, criterionValueBox.getValue());
-        } catch (RuntimeException e) {
-            setStatus("Invalid criterion: " + e.getMessage());
-            return;
-        }
-        if (selectedCriterionName != null && !selectedCriterionName.equals(name)) {
-            criteriaEntries.remove(selectedCriterionName);
-        }
-        criteriaEntries.put(name, json);
-        // A rename (name != selectedCriterionName) or first-time add changes the row count, so
-        // this needs the same full re-init as addCriterion - see its comment above.
-        this.init(this.width, this.height);
-        selectCriterion(name);
-        setStatus("Criterion applied to this advancement - hit Apply Edit, then Save.");
-    }
-
-    private void removeCriterion() {
-        if (selectedCriterionName == null) {
-            setStatus("Select a criterion first.");
-            return;
-        }
-        criteriaEntries.remove(selectedCriterionName);
-        this.init(this.width, this.height);
-        setStatus("Criterion removed - hit Apply Edit, then Save.");
     }
 
     // ---- Reward list/editor ----
@@ -3049,65 +2168,8 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         }
     }
 
-    private String describeReward(JsonObject entry) {
-        RewardType type = RewardType.valueOf(entry.get("type").getAsString());
-        return switch (type) {
-            case EXPERIENCE -> "Experience: " + entry.get("amount").getAsInt();
-            case ITEM -> "Item: " + entry.get("id").getAsString() + " x" + entry.get("count").getAsInt();
-            case RECIPE -> "Recipe: " + entry.get("id").getAsString();
-            case LOOT_TABLE -> "Loot table: " + entry.get("id").getAsString();
-            case FUNCTION -> "Function: " + entry.get("id").getAsString();
-        };
-    }
+    private String describeReward(JsonObject entry) { return ClientRewardPresentation.label(entry); }
 
-    private void selectRewardAt(int index) {
-        if (index >= 0 && index < rewardEntries.size()) {
-            selectReward(index);
-        }
-    }
-
-    private void selectReward(int index) {
-        JsonObject entry = rewardEntries.get(index);
-        selectedRewardIndex = index;
-        RewardType type = RewardType.valueOf(entry.get("type").getAsString());
-        rewardTypeButton.setValue(type);
-        updateRewardFieldsVisibility(type);
-        rewardValueBox.setValue(type == RewardType.EXPERIENCE
-                ? String.valueOf(entry.get("amount").getAsInt())
-                : entry.get("id").getAsString());
-        rewardCountBox.setValue(type == RewardType.ITEM ? String.valueOf(entry.get("count").getAsInt()) : "");
-        setStatus("");
-    }
-
-    private void clearRewardEditor() {
-        selectedRewardIndex = null;
-        if (rewardTypeButton != null) {
-            rewardTypeButton.setValue(RewardType.EXPERIENCE);
-            rewardValueBox.setValue("");
-            rewardCountBox.setValue("");
-            updateRewardFieldsVisibility(RewardType.EXPERIENCE);
-        }
-    }
-
-    /** Item rewards need a count; item and recipe rewards both have searchable pickers. */
-    private void updateRewardFieldsVisibility(RewardType type) {
-        boolean isItem = type == RewardType.ITEM;
-        if (rewardCountBox != null) {
-            rewardCountBox.visible = isItem;
-            rewardCountBox.active = isItem;
-        }
-        if (pickRewardItemButton != null) {
-            boolean hasPicker = isItem || type == RewardType.RECIPE;
-            pickRewardItemButton.visible = hasPicker;
-            pickRewardItemButton.active = hasPicker;
-        }
-    }
-
-    /**
-     * True if a second entry of {@code type} (excluding {@code excludeIndex}, when editing an
-     * existing entry in place) would violate vanilla's one-value-not-a-list shape for "experience"/
-     * "function". Recipes/loot tables/items are real vanilla arrays, so any number is fine.
-     */
     private boolean rewardTypeConflict(RewardType type, Integer excludeIndex) {
         if (type != RewardType.EXPERIENCE && type != RewardType.FUNCTION) {
             return false;
@@ -3123,354 +2185,6 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         return false;
     }
 
-    /** Reads whatever's currently in the type/value/count fields into a new entry, matching
-     * {@link #rewardEntries}' working format. A blank Experience amount defaults to 0 (so a bare
-     * "Add Reward" click without typing anything still works); every other blank/invalid value is a
-     * hard error, not silently defaulted, since there's no sane default id to fall back to. */
-    private JsonObject buildRewardEntryFromFields(RewardType type) {
-        JsonObject entry = new JsonObject();
-        entry.addProperty("type", type.name());
-        switch (type) {
-            case EXPERIENCE -> {
-                String text = rewardValueBox.getValue().trim();
-                entry.addProperty("amount", text.isEmpty() ? 0 : Integer.parseInt(text));
-            }
-            case ITEM -> {
-                Identifier itemId = Identifier.parse(rewardValueBox.getValue().trim());
-                String countText = rewardCountBox.getValue().trim();
-                int count = countText.isEmpty() ? 1 : Integer.parseInt(countText);
-                if (count < 1) {
-                    throw new NumberFormatException("count must be at least 1");
-                }
-                entry.addProperty("id", itemId.toString());
-                entry.addProperty("count", count);
-            }
-            default -> entry.addProperty("id", Identifier.parse(rewardValueBox.getValue().trim()).toString());
-        }
-        return entry;
-    }
-
-    /**
-     * Opens the item picker and, once something's picked, commits it straight into the selected
-     * entry (creating one first if nothing's selected yet, e.g. the user set the type to Item and
-     * clicked Pick without ever clicking Add Reward) - never just the value box, since opening the
-     * picker triggers a full panel re-init (new EditBox instances) that would otherwise wipe
-     * anything only staged in a text field before the entry itself gets committed.
-     */
-    private void pickRewardItem() {
-        if (rewardTypeButton != null && rewardTypeButton.getValue() == RewardType.RECIPE) {
-            openIdentifierPicker("Pick recipe", ClientRecipeIds.all(), this::applyPickedRecipeReward);
-            return;
-        }
-        String pendingCountText = rewardCountBox != null ? rewardCountBox.getValue().trim() : "";
-        openIconPicker(id -> {
-            int index;
-            JsonObject entry;
-            if (selectedRewardIndex != null && selectedRewardIndex < rewardEntries.size()) {
-                index = selectedRewardIndex;
-                entry = rewardEntries.get(index);
-            } else {
-                entry = new JsonObject();
-                rewardEntries.add(entry);
-                index = rewardEntries.size() - 1;
-            }
-            entry.addProperty("type", RewardType.ITEM.name());
-            entry.addProperty("id", id.toString());
-            int count = 1;
-            try {
-                count = pendingCountText.isEmpty() ? 1 : Integer.parseInt(pendingCountText);
-            } catch (NumberFormatException ignored) {
-                // Fall back to 1 rather than reject the pick outright over an unrelated typo.
-            }
-            entry.addProperty("count", Math.max(1, count));
-            selectedRewardIndex = index;
-        });
-    }
-
-    /** Picker callbacks survive a full screen re-init, so write into the reward working list
-     * rather than the soon-to-be-disposed EditBox instance. */
-    private void applyPickedRecipeReward(Identifier id) {
-        int index;
-        JsonObject entry;
-        if (selectedRewardIndex != null && selectedRewardIndex < rewardEntries.size()) {
-            index = selectedRewardIndex;
-            entry = rewardEntries.get(index);
-        } else {
-            entry = new JsonObject();
-            rewardEntries.add(entry);
-            index = rewardEntries.size() - 1;
-        }
-        entry.addProperty("type", RewardType.RECIPE.name());
-        entry.addProperty("id", id.toString());
-        selectedRewardIndex = index;
-    }
-
-    private void addReward() {
-        RewardType type = rewardTypeButton.getValue();
-        if (rewardTypeConflict(type, null)) {
-            setStatus("Only one " + type.label + " reward is allowed - select and edit the existing one instead.");
-            return;
-        }
-        JsonObject entry;
-        try {
-            entry = buildRewardEntryFromFields(type);
-        } catch (RuntimeException e) {
-            setStatus("Invalid reward: " + e.getMessage());
-            return;
-        }
-        rewardEntries.add(entry);
-        int index = rewardEntries.size() - 1;
-        // Row count grows with rewardEntries, so a full re-init is needed to build the new row -
-        // same reasoning as addCriterion/applyCriterion above.
-        this.init(this.width, this.height);
-        selectReward(index);
-        setStatus("Reward added - hit Apply Edit, then Save.");
-    }
-
-    private void applyReward() {
-        if (selectedRewardIndex == null) {
-            setStatus("Select a reward first.");
-            return;
-        }
-        RewardType type = rewardTypeButton.getValue();
-        if (rewardTypeConflict(type, selectedRewardIndex)) {
-            setStatus("Only one " + type.label + " reward is allowed - select and edit the existing one instead.");
-            return;
-        }
-        JsonObject entry;
-        try {
-            entry = buildRewardEntryFromFields(type);
-        } catch (RuntimeException e) {
-            setStatus("Invalid reward: " + e.getMessage());
-            return;
-        }
-        rewardEntries.set(selectedRewardIndex, entry);
-        int index = selectedRewardIndex;
-        this.init(this.width, this.height);
-        selectReward(index);
-        setStatus("Reward applied - hit Apply Edit, then Save.");
-    }
-
-    private void removeReward() {
-        if (selectedRewardIndex == null) {
-            setStatus("Select a reward first.");
-            return;
-        }
-        rewardEntries.remove((int) selectedRewardIndex);
-        // Explicitly cleared rather than left to the index-bounds check in init() - a removal from
-        // the middle of the list leaves the same numeric index still in bounds (pointing at
-        // whatever shifted into that slot), which would otherwise look like that entry got selected.
-        selectedRewardIndex = null;
-        this.init(this.width, this.height);
-        setStatus("Reward removed - hit Apply Edit, then Save.");
-    }
-
-    /**
-     * Builds the raw JSON for one criterion from a curated type + simplified value, matching real
-     * vanilla shapes confirmed from actual advancement files rather than guessed.
-     */
-    private JsonObject buildCriterionJson(CriterionType type, String value) {
-        if (type == CriterionType.CUSTOM) {
-            String text = value.isBlank() ? "{}" : value;
-            return JsonParser.parseString(text).getAsJsonObject();
-        }
-        JsonObject obj = new JsonObject();
-        obj.addProperty("trigger", type.triggerId);
-        JsonObject conditions = new JsonObject();
-        String trimmed = value.trim();
-        switch (type) {
-            case SUBMIT_ITEMS -> {
-                JsonArray items = new JsonArray();
-                for (String part : trimmed.split(";")) {
-                    String entry = part.trim();
-                    if (entry.isEmpty()) continue;
-                    String[] pair = entry.split("\\s*[xX]\\s*", 2);
-                    Identifier id = Identifier.parse(pair[0].trim());
-                    int count = pair.length == 2 ? Integer.parseInt(pair[1].trim()) : 1;
-                    if (count < 1) throw new IllegalArgumentException("submission counts must be positive");
-                    JsonObject item = new JsonObject();
-                    item.addProperty("id", id.toString());
-                    item.addProperty("count", count);
-                    items.add(item);
-                }
-                if (items.isEmpty()) throw new IllegalArgumentException("add at least one item to submit");
-                obj.add("codex_submission", items);
-            }
-            case STATISTIC -> {
-                String[] parts = trimmed.split(">=", 2);
-                if (parts.length != 2) throw new IllegalArgumentException("use statistic_id >= target");
-                String statistic = parts[0].trim();
-                String[] statisticParts = statistic.split("\\|", 2);
-                if (statisticParts.length != 2) throw new IllegalArgumentException("use category|id >= target");
-                if (!List.of("custom", "mined", "crafted", "used", "broken", "picked_up", "dropped", "killed", "killed_by").contains(statisticParts[0])) {
-                    throw new IllegalArgumentException("unknown statistic category");
-                }
-                Identifier.parse(statisticParts[1].trim());
-                int target = Integer.parseInt(parts[1].trim());
-                if (target < 0) throw new IllegalArgumentException("statistic target must be non-negative");
-                JsonObject task = new JsonObject();
-                task.addProperty("id", statistic);
-                task.addProperty("target", target);
-                obj.add("codex_statistic", task);
-            }
-            case ITEM_OBTAINED -> {
-                JsonArray items = new JsonArray();
-                JsonObject item = new JsonObject();
-                item.addProperty("items", trimmed.isEmpty() ? "minecraft:stone" : trimmed);
-                items.add(item);
-                conditions.add("items", items);
-            }
-            case PLAYER_KILLED_ENTITY, ENTITY_KILLED_PLAYER -> {
-                if (!trimmed.isEmpty()) {
-                    JsonObject predicateInner = new JsonObject();
-                    predicateInner.addProperty("type", trimmed);
-                    conditions.add("entity", wrapEntityProperties(predicateInner));
-                }
-            }
-            case CHANGED_DIMENSION -> {
-                if (!trimmed.isEmpty()) {
-                    conditions.addProperty("to", trimmed);
-                }
-            }
-            case LOCATION_STRUCTURE, LOCATION_BIOME -> {
-                if (!trimmed.isEmpty()) {
-                    JsonObject location = new JsonObject();
-                    location.addProperty(type == CriterionType.LOCATION_STRUCTURE ? "structures" : "biomes", trimmed);
-                    JsonObject predicateInner = new JsonObject();
-                    predicateInner.add("location", location);
-                    conditions.add("player", wrapEntityProperties(predicateInner));
-                }
-            }
-            case ITEM_USED_ON_BLOCK -> {
-                String[] parts = trimmed.split(";", 2);
-                String block = parts.length > 0 && !parts[0].isBlank() ? parts[0].trim() : "minecraft:stone";
-                String item = parts.length > 1 && !parts[1].isBlank() ? parts[1].trim() : "minecraft:stick";
-                JsonArray location = new JsonArray();
-
-                JsonObject blockCheck = new JsonObject();
-                blockCheck.addProperty("condition", "minecraft:location_check");
-                JsonObject blockPredicate = new JsonObject();
-                JsonObject blockField = new JsonObject();
-                blockField.addProperty("blocks", block);
-                blockPredicate.add("block", blockField);
-                blockCheck.add("predicate", blockPredicate);
-                location.add(blockCheck);
-
-                JsonObject toolCheck = new JsonObject();
-                toolCheck.addProperty("condition", "minecraft:match_tool");
-                JsonObject toolPredicate = new JsonObject();
-                toolPredicate.addProperty("items", item);
-                toolCheck.add("predicate", toolPredicate);
-                location.add(toolCheck);
-
-                conditions.add("location", location);
-            }
-            case RECIPE_UNLOCKED -> conditions.addProperty("recipe", trimmed);
-            default -> {
-                // IMPOSSIBLE / TICK take no fields.
-            }
-        }
-        if (!conditions.isEmpty()) {
-            obj.add("conditions", conditions);
-        }
-        return obj;
-    }
-
-    private JsonArray wrapEntityProperties(JsonObject predicateInner) {
-        JsonObject condition = new JsonObject();
-        condition.addProperty("condition", "minecraft:entity_properties");
-        condition.addProperty("entity", "this");
-        condition.add("predicate", predicateInner);
-        JsonArray array = new JsonArray();
-        array.add(condition);
-        return array;
-    }
-
-    /** Best-effort reverse of {@link #buildCriterionJson} for populating the value box on select. */
-    private String extractValue(CriterionType type, JsonObject criterionJson) {
-        if (type == CriterionType.CUSTOM) {
-            return GSON.toJson(criterionJson);
-        }
-        // Codex-only criterion metadata deliberately has no vanilla conditions payload. Read it
-        // before the vanilla-shape guard so reopening an editor modal never erases its value.
-        if (type == CriterionType.SUBMIT_ITEMS && criterionJson.has("codex_submission")) {
-            try {
-                List<String> parts = new ArrayList<>();
-                for (JsonElement element : criterionJson.getAsJsonArray("codex_submission")) {
-                    JsonObject item = element.getAsJsonObject();
-                    parts.add(item.get("id").getAsString() + " x" + item.get("count").getAsInt());
-                }
-                return String.join("; ", parts);
-            } catch (RuntimeException ignored) { return ""; }
-        }
-        if (type == CriterionType.STATISTIC && criterionJson.has("codex_statistic")) {
-            try {
-                JsonObject task = criterionJson.getAsJsonObject("codex_statistic");
-                return task.get("id").getAsString() + " >= " + task.get("target").getAsInt();
-            } catch (RuntimeException ignored) { return ""; }
-        }
-        if (!criterionJson.has("conditions") || !criterionJson.get("conditions").isJsonObject()) {
-            return "";
-        }
-        JsonObject conditions = criterionJson.getAsJsonObject("conditions");
-        try {
-            return switch (type) {
-                case SUBMIT_ITEMS, STATISTIC -> "";
-                case ITEM_OBTAINED -> conditions.getAsJsonArray("items").get(0).getAsJsonObject().get("items").getAsString();
-                case PLAYER_KILLED_ENTITY, ENTITY_KILLED_PLAYER -> {
-                    if (!conditions.has("entity")) {
-                        yield "";
-                    }
-                    JsonObject predicate = conditions.getAsJsonArray("entity").get(0).getAsJsonObject().getAsJsonObject("predicate");
-                    yield predicate.has("type") ? predicate.get("type").getAsString() : "";
-                }
-                case CHANGED_DIMENSION -> conditions.has("to") ? conditions.get("to").getAsString() : "";
-                case LOCATION_STRUCTURE, LOCATION_BIOME -> {
-                    JsonObject location = locationPredicate(criterionJson, "player");
-                    if (location == null) {
-                        yield "";
-                    }
-                    String key = type == CriterionType.LOCATION_STRUCTURE ? "structures" : "biomes";
-                    yield location.has(key) ? location.get(key).getAsString() : "";
-                }
-                case ITEM_USED_ON_BLOCK -> {
-                    if (!conditions.has("location")) {
-                        yield "";
-                    }
-                    JsonArray checks = conditions.getAsJsonArray("location");
-                    String block = "";
-                    String item = "";
-                    for (JsonElement checkElement : checks) {
-                        JsonObject check = checkElement.getAsJsonObject();
-                        String condition = check.has("condition") ? check.get("condition").getAsString() : "";
-                        JsonObject predicate = check.has("predicate") ? check.getAsJsonObject("predicate") : null;
-                        if (predicate == null) {
-                            continue;
-                        }
-                        if ("minecraft:location_check".equals(condition) && predicate.has("block")) {
-                            JsonObject blockField = predicate.getAsJsonObject("block");
-                            if (blockField.has("blocks") && blockField.get("blocks").isJsonPrimitive()) {
-                                block = blockField.get("blocks").getAsString();
-                            }
-                        } else if ("minecraft:match_tool".equals(condition) && predicate.has("items")
-                                && predicate.get("items").isJsonPrimitive()) {
-                            item = predicate.get("items").getAsString();
-                        }
-                    }
-                    yield block + ";" + item;
-                }
-                case RECIPE_UNLOCKED -> conditions.has("recipe") ? conditions.get("recipe").getAsString() : "";
-                default -> "";
-            };
-        } catch (RuntimeException e) {
-            // Shape didn't match what this type expects (e.g. hand-edited, from a mod, or a
-            // block/item list rather than a single value) - fall back to blank rather than crash;
-            // the raw JSON is still intact under the hood since we only ever replace an entry
-            // wholesale via applyCriterion.
-            return "";
-        }
-    }
-
     // ---- Apply / Save ----
 
     /**
@@ -3481,47 +2195,130 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
      * turning it into a real generated loot table (see that class and {@code AdvancementPackIO}).
      */
     private JsonObject buildRewardsJson() {
-        JsonObject rewards = new JsonObject();
-        JsonArray recipes = new JsonArray();
-        JsonArray loot = new JsonArray();
-        JsonArray items = new JsonArray();
-        for (JsonObject entry : rewardEntries) {
-            RewardType type = RewardType.valueOf(entry.get("type").getAsString());
-            switch (type) {
-                case EXPERIENCE -> rewards.addProperty("experience", entry.get("amount").getAsInt());
-                case FUNCTION -> rewards.addProperty("function", entry.get("id").getAsString());
-                case RECIPE -> recipes.add(entry.get("id").getAsString());
-                case LOOT_TABLE -> loot.add(entry.get("id").getAsString());
-                case ITEM -> {
-                    JsonObject item = new JsonObject();
-                    item.addProperty("id", entry.get("id").getAsString());
-                    item.addProperty("count", entry.get("count").getAsInt());
-                    items.add(item);
-                }
-            }
-        }
-        if (!recipes.isEmpty()) {
-            rewards.add("recipes", recipes);
-        }
-        if (!loot.isEmpty()) {
-            rewards.add("loot", loot);
-        }
-        if (!items.isEmpty()) {
-            rewards.add("codex_items", items);
-        }
-        return rewards;
+        return QuestRewards.serialize(rewardEntries, currentRewardsJson(), selectedEditWidget == null ? null : selectedEditWidget.node().holder().id());
     }
 
-    private void applyEdit() {
+    private void rememberUndo(Identifier id, JsonObject before, JsonObject after) {
+        if (before.equals(after)) return;
+        var history = undoHistory.computeIfAbsent(id, ignored -> new java.util.ArrayDeque<>());
+        history.push(before.deepCopy());
+        while (history.size() > 20) history.removeLast();
+    }
+
+    private void undoApply() {
+        if (selectedEditWidget == null || savePending) return;
+        Identifier id = selectedEditWidget.node().holder().id();
+        for (DraftBatch batch : java.util.List.copyOf(batchUndo)) if (batch.after().containsKey(id)) {
+            Map<Identifier, JsonObject> current = effectiveJson();
+            boolean exact = batch.after().entrySet().stream().allMatch(e -> java.util.Objects.equals(current.get(e.getKey()), e.getValue()));
+            if (exact) {
+                for (var entry : batch.before().entrySet()) {
+                    if (entry.getValue() == null) dirty.remove(entry.getKey());
+                    else {
+                        dirty.put(entry.getKey(), entry.getValue().deepCopy());
+                        var undo = undoHistory.get(entry.getKey());
+                        if (undo != null && !undo.isEmpty() && undo.peek().equals(entry.getValue())) undo.pop();
+                    }
+                }
+                batchUndo.remove(batch); formAdvancementId = null; criteriaEntriesSelection = null;
+                rebuildEditTree(); selectEditNodeById(id); this.init(this.width, this.height);
+                setStatus("Linked draft batch restored. Save writes the result."); return;
+            }
+            if (java.util.Objects.equals(current.get(id), batch.after().get(id))) {
+                setStatus("Undo later edits on the linked quests first, then undo this batch."); return;
+            }
+            break;
+        }
+        var history = undoHistory.get(id);
+        if (history == null || history.isEmpty()) { setStatus("No applied changes to undo."); return; }
+        dirty.put(id, history.pop());
+        formAdvancementId = null;
+        criteriaEntriesSelection = null;
+        rebuildEditTree(); selectEditNodeById(id); this.init(this.width, this.height);
+        setStatus("Previous draft restored; Save Changes writes it to the server.");
+    }
+
+    private void openRequirementsEditor() {
+        if (selectedEditWidget == null || !applyEdit()) return;
+        Identifier id = selectedEditWidget.node().holder().id();
+        JsonObject base = baseJsonFor(id);
+        minecraft.setScreen(new RequirementsScreen(this, criteriaEntries.keySet(), base.has("requirements") ? base.getAsJsonArray("requirements") : null, groups -> {
+            JsonObject updated = base.deepCopy(); updated.add("requirements", groups);
+            requirementModeButton.setValue(Requirements.fromJson(groups, criteriaEntries.size()));
+            rememberUndo(id, base, updated); dirty.put(id, updated);
+        }));
+    }
+
+    private void openQuestProperties() {
+        if (selectedEditWidget == null || !applyEdit()) return;
+        Identifier id = selectedEditWidget.node().holder().id(); JsonObject base = baseJsonFor(id);
+        Map<Identifier, JsonObject> definitions = new LinkedHashMap<>(rawFullJson); definitions.putAll(dirty);
+        minecraft.setScreen(new QuestPropertiesScreen(this, id, base.has("codex_quest") ? base.getAsJsonObject("codex_quest") : new JsonObject(), definitions, metadata -> {
+            JsonObject updated = base.deepCopy(); updated.add("codex_quest", metadata);
+            net.vg.codex.advancement.QuestDefinitions.validateAdvancement(metadata, updated);
+            Map<Identifier, JsonObject> changes = net.vg.codex.advancement.PackAuthoring.linkBranches(definitions, id, metadata);
+            changes.put(id, updated);
+            for (var entry : changes.entrySet()) {
+                JsonObject rules = entry.getValue().has("codex_quest") ? entry.getValue().getAsJsonObject("codex_quest") : new JsonObject();
+                net.vg.codex.advancement.QuestDefinitions.validateAdvancement(rules, entry.getValue());
+            }
+            applyDraftBatch(changes);
+        }));
+    }
+
+    private void applyDraftBatch(Map<Identifier, JsonObject> changes) {
+        Map<Identifier, JsonObject> beforeBatch = new LinkedHashMap<>(), afterBatch = new LinkedHashMap<>();
+        Map<Identifier, JsonObject> current = effectiveJson();
+        changes.forEach((id, value) -> { beforeBatch.put(id, current.containsKey(id) ? current.get(id).deepCopy() : null); afterBatch.put(id, value.deepCopy()); });
+        if (changes.size() > 1 || beforeBatch.values().stream().anyMatch(java.util.Objects::isNull)) {
+            batchUndo.push(new DraftBatch(beforeBatch, afterBatch)); while (batchUndo.size() > 20) batchUndo.removeLast();
+        }
+        for (var entry : changes.entrySet()) {
+            JsonObject before = effectiveJson().get(entry.getKey());
+            if (before != null) rememberUndo(entry.getKey(), before, entry.getValue());
+            dirty.put(entry.getKey(), entry.getValue().deepCopy());
+        }
+        formAdvancementId = null; criteriaEntriesSelection = null;
+        rebuildEditTree();
+        setStatus("Updated " + changes.size() + " drafts. Save writes them to the server.");
+    }
+
+    private void openPackTools() {
+        if (savePending || selectedEditWidget == null || !applyEdit()) return;
+        Identifier selected = selectedEditWidget.node().holder().id();
+        minecraft.setScreen(new PackToolsScreen(this, effectiveJson(), selected, this::applyDraftBatch,
+                id -> { formAdvancementId = null; criteriaEntriesSelection = null; selectEditNodeById(id); }));
+    }
+
+    private void openDocumentEditor() {
+        if (selectedEditWidget == null || !applyEdit()) return;
+        Identifier id = selectedEditWidget.node().holder().id(); JsonObject base = baseJsonFor(id);
+        minecraft.setScreen(new JsonDocumentScreen(this, base, updated -> {
+            if (!updated.has("criteria") || updated.getAsJsonObject("criteria").isEmpty()) throw new IllegalArgumentException("At least one criterion is required");
+            for (var criterion : updated.getAsJsonObject("criteria").entrySet()) {
+                JsonObject value = criterion.getValue().getAsJsonObject();
+                if (!value.has("trigger") || !value.get("trigger").isJsonPrimitive() || !value.get("trigger").getAsJsonPrimitive().isString()) throw new IllegalArgumentException("Every criterion needs a trigger identifier");
+                Identifier.parse(value.get("trigger").getAsString());
+            }
+            if (updated.has("requirements") && !updated.get("requirements").isJsonNull()) AdvancementDocument.validateGroups(updated.getAsJsonArray("requirements"), updated.getAsJsonObject("criteria").keySet());
+            if (updated.has("parent") && !updated.get("parent").isJsonNull()) Identifier.parse(updated.get("parent").getAsString());
+            if (updated.has("display") && !updated.get("display").isJsonNull()) DisplayInfo.CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, registries()), updated.get("display")).getOrThrow();
+            net.vg.codex.advancement.AdvancementValidation.validateParents(id, updated, parent -> parent.equals(id) ? updated : effectiveJson().get(parent));
+            rememberUndo(id, base, updated); dirty.put(id, updated);
+            formAdvancementId = null; criteriaEntriesSelection = null; rebuildEditTree(); selectEditNodeById(id);
+        }));
+    }
+
+    private boolean applyEdit() {
         if (selectedEditWidget == null) {
             setStatus("Select an advancement first.");
-            return;
+            return false;
         }
         Identifier id = selectedEditWidget.node().holder().id();
         JsonObject base = dirty.containsKey(id) ? dirty.get(id) : rawFullJson.get(id);
         if (base == null) {
             setStatus("No base data for this advancement.");
-            return;
+            return false;
         }
         JsonObject updated = base.deepCopy();
 
@@ -3537,7 +2334,18 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
                 hiddenCheckbox.selected()
         );
         RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, registries());
-        updated.add("display", DisplayInfo.CODEC.encodeStart(ops, updatedDisplay).getOrThrow());
+        JsonObject display = base.getAsJsonObject("display").deepCopy();
+        JsonObject encoded = DisplayInfo.CODEC.encodeStart(ops, updatedDisplay).getOrThrow().getAsJsonObject();
+        // Preserve rich components, icon properties, and unknown display fields on a normal save.
+        DisplayInfo sourceDisplay = DisplayInfo.CODEC.parse(ops, display).getOrThrow();
+        if (!titleBox.getValue().equals(sourceDisplay.getTitle().getString())) display.add("title", encoded.get("title"));
+        if (!descriptionBox.getValue().equals(sourceDisplay.getDescription().getString())) display.add("description", encoded.get("description"));
+        if (!DisplayInfo.CODEC.encodeStart(ops, sourceDisplay).getOrThrow().getAsJsonObject().get("icon").equals(encoded.get("icon"))) display.add("icon", encoded.get("icon"));
+        if (old.getType() != sourceDisplay.getType()) display.add("frame", encoded.get("frame"));
+        if (showToastCheckbox.selected() != sourceDisplay.shouldShowToast()) display.addProperty("show_toast", showToastCheckbox.selected());
+        if (announceChatCheckbox.selected() != sourceDisplay.shouldAnnounceChat()) display.addProperty("announce_to_chat", announceChatCheckbox.selected());
+        if (hiddenCheckbox.selected() != sourceDisplay.isHidden()) display.addProperty("hidden", hiddenCheckbox.selected());
+        updated.add("display", display);
 
         JsonObject criteriaJson = new JsonObject();
         for (Map.Entry<String, JsonObject> e : criteriaEntries.entrySet()) {
@@ -3545,37 +2353,26 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         }
         updated.add("criteria", criteriaJson);
 
-        // Requirements name the criteria groups that must be met to complete the advancement -
-        // always rebuilt from the current mode + criteria list rather than only when criteria keys
-        // change, so the Requirements picker stays authoritative instead of silently keeping a
-        // stale grouping from before it existed.
-        JsonArray requirements = new JsonArray();
-        if (requirementModeButton.getValue() == RequirementMode.ANY && criteriaEntries.size() > 1) {
-            JsonArray group = new JsonArray();
-            for (String name : criteriaEntries.keySet()) {
-                group.add(name);
-            }
-            requirements.add(group);
-        } else {
-            for (String name : criteriaEntries.keySet()) {
-                JsonArray group = new JsonArray();
-                group.add(name);
-                requirements.add(group);
-            }
+        try {
+            JsonArray requirements = AdvancementDocument.requirements(base, criteriaEntries.keySet(), requirementModeButton.getValue());
+            if (requirements != null) updated.add("requirements", requirements);
+        } catch (RuntimeException error) {
+            setStatus(error.getMessage());
+            return false;
         }
-        updated.add("requirements", requirements);
 
         JsonObject rewards;
         try {
             rewards = buildRewardsJson();
         } catch (RuntimeException e) {
             setStatus("Invalid reward: " + e.getMessage());
-            return;
+            return false;
         }
-        updated.add("rewards", rewards);
-        updated.addProperty("codex_claimable", claimableRewardsCheckbox.selected());
+        if (base.has("rewards") || !rewards.isEmpty()) updated.add("rewards", rewards);
+        if (base.has("codex_claimable") || claimableRewardsCheckbox.selected()) updated.addProperty("codex_claimable", claimableRewardsCheckbox.selected());
 
-        dirty.put(id, updated);
+        rememberUndo(id, base, updated);
+        if (!updated.equals(base) || dirty.containsKey(id)) dirty.put(id, updated);
         selectedEditWidget.setDisplay(updatedDisplay);
         // Without this, the hover's reward/required chips would only refresh on the next full tree
         // rebuild (rebuildEditTree, e.g. after Save) - both overrides are otherwise only set there.
@@ -3593,6 +2390,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             selectedEditTab.refreshDisplay(updatedDisplay);
         }
         setStatus("Edit applied - not saved yet.");
+        return true;
     }
 
     private void saveEdits() {
@@ -3604,6 +2402,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             setStatus("Save queued - it will run after the current reload.");
             return;
         }
+        if (editMode && selectedEditWidget != null && titleBox != null && !applyEdit()) return;
         if (dirty.isEmpty()) {
             setStatus("Nothing to save - apply an edit first.");
             return;
@@ -3709,6 +2508,10 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     @Override
     public boolean mouseDragged(MouseButtonEvent event, double dragX, double dragY) {
+        if (pressedWidget != null && event.button() == 0) {
+            if (Math.hypot(event.x() - pressX, event.y() - pressY) < 5) return true;
+            pressedWidget = null;
+        }
         CodexAdvancementTab selectedTab = activeSelectedTab();
         if (event.button() == 0 && customLayoutMode && layoutDragWidget != null) {
             layoutDragRawX += (float) (dragX / zoom);
@@ -3735,6 +2538,11 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     @Override
     public boolean mouseReleased(MouseButtonEvent event) {
+        if (event.button() == 0 && pressedWidget != null) {
+            var hit = pressedWidget; pressedWidget = null;
+            if (!holdSent && (!CodexClientSettings.holdAccept || System.nanoTime() - pressedAt < 250_000_000L || !ClientQuests.canAccept(ClientQuests.info(hit.node().holder().id()))) && Math.hypot(event.x() - pressX, event.y() - pressY) < 5) minecraft.setScreen(new QuestDetailsScreen(this, hit.node().holder().id(), hit.display().getTitle(), hit.display().getDescription()));
+            return true;
+        }
         isScrolling = false;
         if (event.button() == 0) layoutDragWidget = null;
         return super.mouseReleased(event);
@@ -3742,14 +2550,6 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-        if (iconPickerOpen) {
-            int columns = iconGridColumns();
-            int totalRows = (iconSearchResults.size() + columns - 1) / columns;
-            int visibleRows = (iconGridBottom() - iconGridTop()) / ICON_CELL;
-            int maxScroll = Math.max(0, totalRows - visibleRows);
-            iconGridScroll = Mth.clamp(iconGridScroll - (int) Math.signum(scrollY), 0, maxScroll);
-            return true;
-        }
         if (isMouseOverPanel(mouseX, mouseY)) {
             scrollPanel(-scrollY * 16.0);
             return true;
@@ -3762,6 +2562,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
     }
 
+    //? if <26.3
     @Override
     public void onAddAdvancementRoot(AdvancementNode node) {
         CodexAdvancementTab tab = CodexAdvancementTab.create(node);
@@ -3779,11 +2580,13 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         }
     }
 
+    //? if <26.3
     @Override
     public void onRemoveAdvancementRoot(AdvancementNode node) {
         viewTabs.remove(node.holder().id());
     }
 
+    //? if <26.3
     @Override
     public void onAddAdvancementTask(AdvancementNode node) {
         CodexAdvancementTab tab = getViewTab(node);
@@ -3793,6 +2596,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         }
     }
 
+    //? if <26.3
     @Override
     public void onRemoveAdvancementTask(AdvancementNode node) {
         // A server datapack reload removes the old task graph and then adds the replacement graph.
@@ -3803,6 +2607,7 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
         selectedViewTab = null;
     }
 
+    //? if <26.3
     @Override
     public void onUpdateAdvancementProgress(AdvancementNode node, AdvancementProgress progress) {
         CodexAdvancementTab tab = getViewTab(node);
@@ -3825,6 +2630,29 @@ public final class CodexAdvancementsScreen extends Screen implements ClientAdvan
             }
         }
     }
+
+    //? if >=26.3 {
+    /*@Override
+    public void onAdvancementsUpdated() {
+        Identifier selected = selectedViewTab == null ? null : selectedViewTab.getRootNode().holder().id();
+        Identifier hovered = lastHoveredWidget == null ? null : lastHoveredWidget.node().holder().id();
+        var previous = new LinkedHashMap<>(viewTabs); viewTabs.clear();
+        var tree = advancements.tree();
+        for (var root : tree.roots()) onAddAdvancementRoot(root);
+        for (var node : tree.tasks()) { var tab=getViewTab(node); if(tab!=null)tab.addAdvancement(node); }
+        for (var entry : advancements.progress().entrySet()) {
+            var node=tree.get(entry.getKey()); if(node!=null)onUpdateAdvancementProgress(node,entry.getValue());
+        }
+        for (var entry : viewTabs.entrySet()) {
+            entry.getValue().applyLayout(ClientAdvancementLayout.positions());
+            var prior=previous.get(entry.getKey()); if(prior!=null)entry.getValue().copyViewportFrom(prior);
+        }
+        selectedViewTab=selected==null?null:viewTabs.get(selected);
+        var hoveredNode=hovered==null?null:tree.get(hovered);
+        lastHoveredTab=hoveredNode==null?null:getViewTab(hoveredNode);
+        lastHoveredWidget=lastHoveredTab==null?null:lastHoveredTab.findById(hovered);
+    }
+    *///?}
 
     @Override
     public void onSelectedTabChanged(AdvancementHolder holder) {

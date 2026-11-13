@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "spelunkery:silver_ingot"
+    },
+    "title": "Silver",
+    "description": "Find and smelt silver. It becomes useful for electrum.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "spelunkery:silver_ingot",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:workshop/root"
+}

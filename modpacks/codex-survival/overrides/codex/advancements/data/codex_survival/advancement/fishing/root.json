@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:fishing_rod"
+    },
+    "title": "Fishing",
+    "description": "Fishing Frenzy adds species, bait and equipment. Keep a few different catches: they contribute to the crafted Exotic Eye. Check bait and rod tooltips for the controls.",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "frame": "task",
+    "background": "minecraft:block/stone"
+  },
+  "criteria": {
+    "arrive": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}

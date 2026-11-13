@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "  B",
+    " BS",
+    "B S"
+  ],
+  "key": {
+    "B": "spelunkery:bronze_ingot",
+    "S": "minecraft:string"
+  },
+  "result": {
+    "id": "fishingfrenzy:deluxe_fishing_rod",
+    "count": 1
+  }
+}

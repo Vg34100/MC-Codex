@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:story/lava_bucket",
+  "criteria": {
+    "obsidian": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:obsidian"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": "Two familiar materials make something stubbornly new. Obtain obsidian with the usual vanilla objective.",
+    "icon": {
+      "id": "minecraft:obsidian"
+    },
+    "title": "Water Meets Fire"
+  },
+  "requirements": [
+    [
+      "obsidian"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

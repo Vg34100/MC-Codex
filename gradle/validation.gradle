@@ -1,0 +1,123 @@
+def codexPlatform = project.findProperty("codexLoader") ?: project.name
+// Opt-in server scenarios. These sources and the test mod never enter release jars.
+def scenarios = sourceSets.create('codexTest') {
+    java.srcDirs = [rootProject.file('tests/server/common'), rootProject.file("tests/server/${codexPlatform}")]
+    resources.srcDirs = [rootProject.file("tests/server/${codexPlatform}-resources")]
+    compileClasspath += sourceSets.main.output
+    runtimeClasspath += sourceSets.main.output
+}
+configurations.codexTestCompileClasspath.extendsFrom(configurations.compileClasspath)
+configurations.codexTestRuntimeClasspath.extendsFrom(configurations.runtimeClasspath)
+// The same native Stonecutter rules apply to test sources as to production sources.
+def testTrees = ['tests/server/common', "tests/server/${codexPlatform}"]
+def testChanges = layout.buildDirectory.dir('stonecutter/codexTest/changes')
+def prepareTest = stonecutter.tasks.prepare.get('codexTest')
+prepareTest.configure {
+    root.set(rootProject.projectDir)
+    source.setFrom(testTrees.collect { tree -> rootProject.fileTree(tree) { include '**/*.java' } })
+    destination.set(testChanges)
+}
+def generateTest = tasks.register('prepareCodexTestSources', Sync) {
+    dependsOn prepareTest
+    into layout.buildDirectory.dir('stonecutter/codexTest/sources')
+    from(testChanges)
+    testTrees.each { tree ->
+        from(rootProject.file(tree)) {
+            into tree
+            exclude { entry -> new File(testChanges.get().asFile, "${tree}/${entry.path}").isFile() }
+        }
+    }
+}
+tasks.named('compileCodexTestJava') {
+    dependsOn generateTest
+    setSource(files(testTrees.collect { tree -> generateTest.map { new File(it.destinationDir, tree) } }).asFileTree)
+}
+def transport = providers.gradleProperty('codex_transport').isPresent()
+def bundledProbe = providers.gradleProperty('codex_bundled_probe').isPresent()
+def recipeProbe = providers.gradleProperty('codex_recipe_probe').isPresent()
+def migrationProbe = providers.gradleProperty('codex_migration_probe').isPresent()
+def codexTestNode = project.name
+def testDirectory = rootProject.file(bundledProbe ? "runs/bundled-validation/${project.name}" : recipeProbe ? "runs/recipe-validation/${project.name}" : migrationProbe ? "runs/migration-validation/${project.name}/server" : transport ? "runs/transport/${project.name}/server" : "runs/validation/${project.name}")
+def controlDirectory = rootProject.file("runs/transport/${project.name}/control")
+if (providers.gradleProperty('codex_compat_dir').isPresent()) {
+    dependencies {
+        implementation fileTree(dir: new File(providers.gradleProperty('codex_compat_dir').get(), codexPlatform), include: '*.jar')
+    }
+}
+loom {
+    mods {
+        codex { sourceSet sourceSets.main }
+        codex_tests { sourceSet scenarios }
+    }
+    runs {
+        codexTest {
+            server()
+            if (recipeProbe) vmArg '-Dcodex.test.recipe_probe=true'
+            if (bundledProbe) vmArg '-Dcodex.test.bundled_probe=true'
+            else vmArg '-Dcodex.examples.disabled=true'
+            source scenarios
+            runDir = testDirectory
+            vmArg "-Dcodex.test.phase=${providers.gradleProperty('codex_test_phase').getOrElse('initial')}"
+            vmArg "-Dcodex.test.compat=${providers.gradleProperty('codex_test_compat').getOrElse('')}"
+            if (migrationProbe) {
+                vmArg '-Dcodex.test.migration_probe=true'
+                vmArg "-Dcodex.test.migration_target=${providers.gradleProperty('codex_migration_target').getOrElse('codex_test:reward_renamed')}"
+                vmArg "-Dcodex.test.world=${providers.gradleProperty('codex_test_world').getOrElse('world-a')}"
+            }
+            if (transport) {
+                vmArg '-Dcodex.test.transport=true'
+                vmArg "-Dcodex.test.control=${controlDirectory.absolutePath}"
+            }
+            programArg 'nogui'
+        }
+    }
+}
+tasks.named('runCodexTest') {
+    dependsOn tasks.named('codexTestClasses')
+    doFirst {
+        testDirectory.mkdirs()
+        new File(testDirectory, 'eula.txt').text = 'eula=true\n'
+        def world = providers.gradleProperty('codex_test_world').getOrElse('world-a')
+        if (!(world ==~ /world-[ab]/)) throw new GradleException('Use isolated world-a or world-b')
+        new File(testDirectory, 'server.properties').text = "online-mode=false\nserver-port=${transport ? 25577 : 0}\nserver-ip=${transport ? '127.0.0.1' : ''}\nlevel-name=${world}\nspawn-protection=0\nview-distance=2\nsimulation-distance=2\nmax-tick-time=120000\n"
+        new File(testDirectory, 'results.json').delete()
+    }
+}
+
+// Opt-in rendered TCP clients. Their classes and test entrypoints never enter release artifacts.
+if (transport) {
+    def clients = sourceSets.create('codexClientTest') {
+        java.srcDirs = [rootProject.file('tests/client/common'), rootProject.file("tests/client/${codexPlatform}")]
+        compileClasspath += sourceSets.main.output + scenarios.output + sourceSets.main.compileClasspath
+        runtimeClasspath += sourceSets.main.runtimeClasspath + scenarios.output
+    }
+    configurations.codexClientTestCompileClasspath.extendsFrom(configurations.codexTestCompileClasspath)
+    configurations.codexClientTestRuntimeClasspath.extendsFrom(configurations.codexTestRuntimeClasspath)
+    def actor = providers.gradleProperty('codex_test_actor').getOrElse('alice')
+    if (!(actor in ['alice', 'bob'])) throw new GradleException('Unknown isolated test actor')
+    def clientDirectory = rootProject.file("runs/transport/${project.name}/${actor}")
+    loom.mods.codex_tests.sourceSet clients
+    loom.runs {
+        codexTransportClient {
+            client()
+            source clients
+            runDir = clientDirectory
+            vmArg '-Dcodex.test.client=true'
+            vmArg "-Dcodex.test.control=${controlDirectory.absolutePath}"
+            vmArg "-Dcodex.test.actor=${actor}"
+            vmArg '-Dcodex.test.port=25577'
+            vmArg '-Xmx1536m'
+            programArg "--username=${actor == 'alice' ? 'CodexTransportA' : 'CodexTransportB'}"
+            programArg '--width=640'
+            programArg '--height=360'
+        }
+    }
+    tasks.named('runCodexTransportClient') {
+        dependsOn tasks.named('codexClientTestClasses')
+        doFirst {
+            clientDirectory.mkdirs()
+            def options = new File(clientDirectory, 'options.txt')
+            if (!options.exists()) options.text = 'guiScale:2\ntutorialStep:none\nmaxFps:15\nrenderDistance:2\nsimulationDistance:5\npauseOnLostFocus:false\nsoundCategory_master:0.0\n'
+        }
+    }
+}

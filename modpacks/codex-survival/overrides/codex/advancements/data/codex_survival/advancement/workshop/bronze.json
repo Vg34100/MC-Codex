@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "spelunkery:bronze_ingot"
+    },
+    "title": "First Alloy",
+    "description": "Produce four bronze ingots. Check JEI for the foundry ingredients.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "spelunkery:bronze_ingot",
+            "count": {
+              "min": 4
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:workshop/foundry"
+}

@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "endrem:rogue_eye"
+    },
+    "title": "Jungle Pyramids",
+    "description": "Search jungle-pyramid loot. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "endrem:rogue_eye",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:end/root"
+}

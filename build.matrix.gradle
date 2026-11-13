@@ -1,0 +1,294 @@
+import java.util.Properties
+import java.util.zip.ZipFile
+
+plugins {
+    id 'dev.architectury.loom-no-remap' version '1.17.493' apply false
+    id 'dev.architectury.loom' version '1.17.493' apply false
+    id 'com.modrinth.minotaur' version '2.10.0' apply false
+    id 'net.darkhax.curseforgegradle' version '1.3.33' apply false
+}
+
+def matrixFile = rootProject.file("gradle/matrix/${project.name}.properties")
+def matrix = new Properties()
+matrixFile.withInputStream { matrix.load(it) }
+def required = { String key ->
+    def value = matrix.getProperty(key)
+    if (!value) throw new GradleException("Missing ${key} in ${matrixFile}")
+    value
+}
+def loader = required('loader')
+def minecraftVersion = required('minecraft_version')
+def javaVersion = required('java_version') as int
+def legacy = required('loom_generation') == 'legacy'
+ext.codexLoader = loader
+ext.codexMinecraft = minecraftVersion
+def isFabric = loader == 'fabric'
+def isForge = loader == 'forge'
+if (isForge && (!legacy || minecraftVersion != '1.20.1' || javaVersion != 17)) {
+    throw new GradleException('Forge requires Minecraft 1.20.1, legacy remapping and Java 17')
+}
+
+
+group = rootProject.maven_group
+version = rootProject.mod_version
+apply plugin: legacy ? 'dev.architectury.loom' : 'dev.architectury.loom-no-remap'
+// Each node already owns common + loader sources. Architectury API remains a
+// dependency, but no common-project transformation/Gradle plugin is required.
+if (loader == 'neoforge') loom { neoForge {} }
+if (isForge) loom { forge { mixinConfig 'codex.mixins.json' } }
+if (legacy) loom { silentMojangMappingsLicense() }
+
+// Exact, bidirectional class rename; gameplay stays in the canonical Java files.
+stonecutter {
+    replacements.string(!legacy) {
+        replace('ResourceLocation', 'Identifier')
+        replace('GuiGraphics', 'GuiGraphicsExtractor')
+        replace('MobEffects.MOVEMENT_SLOWDOWN', 'MobEffects.SLOWNESS')
+    }
+}
+
+apply from: rootProject.file('gradle/source-compat.gradle')
+
+base { archivesName = "${rootProject.archives_name}-${loader}-${minecraftVersion}" }
+repositories {
+    maven { url 'https://maven.terraformersmc.com/releases/' }
+    maven { url 'https://maven.blamejared.com'; content { includeGroup 'mezz.jei' } }
+    maven { url 'https://maven.neoforged.net/releases/' }
+    maven { url 'https://maven.minecraftforge.net/' }
+}
+
+sourceSets.main {
+    java.setSrcDirs([
+        rootProject.file('common/src/main/java'),
+        rootProject.file('common/src/client/java'),
+        rootProject.file("${loader}/src/main/java")
+    ])
+    resources.setSrcDirs([
+        rootProject.file('common/src/main/resources'),
+        rootProject.file('common/src/client/resources'),
+        rootProject.file("${loader}/src/main/resources")
+    ])
+}
+
+// Stonecutter's default pipeline assumes a single root src/. Feed its native
+// preparer our canonical trees instead; no Java text rewriting happens here.
+def processedJava = layout.buildDirectory.dir('stonecutter/changes')
+def compatRoots = ['common', loader].collectEntries { tree ->
+    [(tree): rootProject.file("gradle/compat/legacy/${tree}")]
+}
+def overrides = compatRoots.collectEntries { tree, dir ->
+    def paths = [] as Set
+    if (legacy && dir.isDirectory()) {
+        fileTree(dir).visit { element ->
+            if (!element.directory && element.path.endsWith('.java')) paths.add(element.path)
+        }
+    }
+    [(tree): paths]
+}
+def prepareJava = stonecutter.tasks.prepare.get('main')
+prepareJava.configure {
+    root.set(rootProject.projectDir)
+    source.setFrom(['common', loader].collect { tree ->
+        rootProject.fileTree("${tree}/src/main/java") {
+            include '**/*.java'
+            exclude overrides[tree]
+        }
+    })
+    if (legacy) source.from(compatRoots.values().collect { dir -> fileTree(dir) { include '**/*.java' } })
+    source.from(rootProject.fileTree('common/src/client/java') { include '**/*.java'; exclude overrides['common'] })
+    destination.set(processedJava)
+}
+stonecutter.tasks.merge.get('main').configure {
+    // Prepared paths are repository-relative, not relative to a root src/.
+    into rootProject.projectDir
+}
+// Native preparation emits only changed files. Merge those with unchanged
+// originals, exactly as Stonecutter's normal single-src generation does.
+def generateJava = tasks.register('prepareTargetSources', Sync) {
+    dependsOn prepareJava
+    into layout.buildDirectory.dir('stonecutter/sources')
+    from(processedJava) { exclude 'gradle/compat/**' }
+    ['common', loader].each { tree ->
+        from(rootProject.file("${tree}/src/main/java")) {
+            into "${tree}/src/main/java"
+            exclude overrides[tree]
+            exclude { element ->
+                new File(processedJava.get().asFile, "${tree}/src/main/java/${element.path}").isFile()
+            }
+        }
+        if (legacy) {
+            from(processedJava.map { it.dir("gradle/compat/legacy/${tree}") }) { into "${tree}/src/main/java" }
+            from(compatRoots[tree]) {
+                into "${tree}/src/main/java"
+                exclude { element ->
+                    new File(processedJava.get().asFile, "gradle/compat/legacy/${tree}/${element.path}").isFile()
+                }
+            }
+        }
+    }
+    from(rootProject.file('common/src/client/java')) {
+        into 'common/src/client/java'
+        exclude overrides['common']
+        exclude { element -> new File(processedJava.get().asFile, 'common/src/client/java/' + element.path).isFile() }
+    }
+    doLast {
+        if (fileTree(destinationDir).matching { include '**/*.java' }.isEmpty()) {
+            throw new GradleException("No processed Java sources for ${project.path}")
+        }
+    }
+}
+tasks.named('compileJava') {
+    dependsOn generateJava
+    setSource(files(['common', loader].collect { tree ->
+        generateJava.map { new File(it.destinationDir, "${tree}/src/main/java") }
+    } + [generateJava.map { new File(it.destinationDir, 'common/src/client/java') }]).asFileTree)
+}
+// Give inactive IDE modules distinct processed roots. Legacy's structural
+// overrides also require this view; edit canonical/compat files, never this cache.
+if (!stonecutter.current.active || legacy) {
+    sourceSets.main.java.setSrcDirs(['common/src/main/java','common/src/client/java',loader+'/src/main/java'].collect { path -> layout.buildDirectory.dir('stonecutter/sources/'+path) })
+}
+
+dependencies {
+    minecraft "net.minecraft:minecraft:${minecraftVersion}"
+    if (legacy) mappings loom.officialMojangMappings()
+    def modDependency = { notation -> add(legacy ? 'modImplementation' : 'implementation', notation) }
+    if (isFabric) {
+        modDependency("net.fabricmc:fabric-loader:${required('fabric_loader_version')}")
+        modDependency("net.fabricmc.fabric-api:fabric-api:${required('fabric_api_version')}")
+    } else if (isForge) {
+        forge "net.minecraftforge:forge:${minecraftVersion}-${required('forge_version')}"
+        compileOnly "net.fabricmc:fabric-loader:${required('fabric_loader_version')}"
+    } else {
+        neoForge "net.neoforged:neoforge:${required('neoforge_version')}"
+        // Common client annotations compile against Fabric Loader on both loaders.
+        compileOnly "net.fabricmc:fabric-loader:${required('fabric_loader_version')}"
+    }
+    modDependency("dev.architectury:architectury-${loader}:${required('architectury_api_version')}")
+    def jeiVersion=matrix.getProperty('jei_version')
+    if (jeiVersion) add(legacy ? 'modCompileOnly' : 'compileOnly', "mezz.jei:jei-${minecraftVersion}-common-api:${jeiVersion}")
+}
+
+java {
+    withSourcesJar()
+    toolchain { languageVersion = JavaLanguageVersion.of(javaVersion) }
+    sourceCompatibility = JavaVersion.toVersion(javaVersion)
+    targetCompatibility = JavaVersion.toVersion(javaVersion)
+}
+tasks.withType(JavaCompile).configureEach { options.release = javaVersion }
+tasks.named('sourcesJar') { dependsOn generateJava }
+
+def metadata = [
+    version: project.version,
+    minecraft_version: minecraftVersion,
+    java_version: javaVersion,
+    architectury_api_version: required('architectury_api_version'),
+    fabric_loader_version: required('fabric_loader_version'),
+    neoforge_version: matrix.getProperty('neoforge_version', ''),
+    forge_version: matrix.getProperty('forge_version', ''),
+    neoforge_icon_field: stonecutter.eval(minecraftVersion, '>=26.2') ? 'iconFile' : 'logoFile'
+]
+processResources {
+    // Canonical resources take priority over checked-in datagen duplicates.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    inputs.properties(metadata)
+    filesMatching(['fabric.mod.json', 'META-INF/neoforge.mods.toml', 'META-INF/mods.toml', '*.mixins.json']) { expand(metadata) }
+}
+apply from: rootProject.file('gradle/resource-compat.gradle')
+processResources {
+    from(rootProject.file('scripts/migrate-advancement.py')) { into 'tools/codex' }
+    from(rootProject.file('examples/bundled')) { into 'examples/codex' }
+}
+apply from: rootProject.file('gradle/development.gradle')
+if (providers.gradleProperty('codex_tests').isPresent()) apply from: rootProject.file('gradle/validation.gradle')
+
+loom {
+    runs.configureEach { if (!name.startsWith('codex')) runDir = rootProject.file("runs/${project.name}/${name}") }
+}
+if (providers.gradleProperty('codex_server_smoke').isPresent()) {
+    def smokeDir = rootProject.file("runs/matrix-smoke/${project.name}")
+    loom.runs.server { runDir = smokeDir }
+    tasks.named('runServer') {
+        doFirst {
+            smokeDir.mkdirs()
+            new File(smokeDir,'eula.txt').text='eula=true\n'
+            new File(smokeDir,'server.properties').text='online-mode=false\nserver-ip=127.0.0.1\nserver-port=0\nlevel-name=smoke-world\nview-distance=2\nsimulation-distance=2\nmax-tick-time=120000\n'
+        }
+    }
+}
+tasks.register('verifyLaunchSetup') {
+    group = 'verification'
+    dependsOn 'configureLaunch'
+    doLast {
+        ['runClient', 'runServer'].each { name ->
+            def launch = tasks.named(name, JavaExec).get().javaLauncher.get()
+            if (launch.metadata.languageVersion.asInt() != javaVersion) {
+                throw new GradleException("${project.path}:${name} must use Java ${javaVersion}")
+            }
+        }
+    }
+}
+
+tasks.named('jar') {
+    if (isForge) manifest.attributes('MixinConfigs': 'codex.mixins.json')
+    destinationDirectory = rootProject.layout.buildDirectory.dir("libs/${project.name}")
+    from(rootProject.file('LICENSE.txt')) { rename { "${it}_${rootProject.archives_name}" } }
+}
+if (legacy) {
+    tasks.named('remapJar') { destinationDirectory = rootProject.layout.buildDirectory.dir("libs/${project.name}") }
+}
+tasks.register('packageTarget') {
+    group = 'build'
+    dependsOn legacy ? 'remapJar' : 'jar'
+}
+
+// Publication is opt-in. Ordinary builds do not load credentials or manifests.
+if (providers.gradleProperty('publish_manifest').isPresent()) {
+    apply plugin: 'com.modrinth.minotaur'
+    apply plugin: 'net.darkhax.curseforgegradle'
+    tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
+    apply from: rootProject.file('gradle/publishing.gradle')
+}
+
+// Stage ordinary installed mods for either production launcher. Dependencies
+// come from their original artifacts, never Loom's remapped development cache.
+if (isFabric || loader in ['forge', 'neoforge']) {
+    def smokeRun = layout.dir(providers.gradleProperty('release_smoke_dir').map { rootProject.file(it) })
+    def smokeDependencies = configurations.create('releaseSmokeMods') {
+        canBeConsumed = false
+        extendsFrom(*((legacy ? ['modImplementation', 'modRuntimeOnly', 'modLocalRuntime']
+                : ['implementation', 'runtimeOnly', 'localRuntime']).collect { configurations.getByName(it) }))
+        attributes.attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, Usage.JAVA_RUNTIME))
+    }
+    def stage = tasks.register('stageReleaseClient') {
+        dependsOn 'packageTarget'
+        doLast {
+            def modsDir = new File(smokeRun.get().asFile, 'mods')
+            if (modsDir.exists()) throw new GradleException("Refusing reused production mods directory: ${modsDir}")
+            modsDir.mkdirs()
+            def release = tasks.named(legacy ? 'remapJar' : 'jar').get().archiveFile.get().asFile
+            def dependencies = smokeDependencies.files.findAll { jar ->
+                new ZipFile(jar).withCloseable { zip ->
+                    if (zip.getEntry('net/vg/codex/ModMain.class')) {
+                        throw new GradleException("Unexpected extra Codex jar: ${jar}")
+                    }
+                    isFabric
+                            ? zip.getEntry('fabric.mod.json') != null && !jar.name.startsWith('fabric-loader-')
+                            : zip.getEntry('META-INF/neoforge.mods.toml') != null || zip.getEntry('META-INF/mods.toml') != null
+                }
+            }
+            copy { from release, dependencies; into modsDir }
+            logger.lifecycle("RELEASE_SMOKE_JAR: ${new File(modsDir, release.name)}")
+        }
+    }
+    if (isFabric) tasks.register('runReleaseClient', net.fabricmc.loom.task.prod.ClientProductionRunTask) {
+        dependsOn stage
+        mods.setFrom([]) // Only normal discovery from this fresh mods directory.
+        runDir.set(smokeRun)
+        useXVFB.set(false)
+        jvmArgs.add(legacy
+                ? '-Xlog:class+load=info,class+init=info:file=class-load-%p.log:uptime,level,tags'
+                : '-Xlog:class+load=info:file=class-load-%p.log:uptime,level,tags')
+        programArgs.addAll('--username', 'ReleaseSmoke', '--accessToken', '0', '--version', minecraftVersion)
+    }
+}

@@ -1,0 +1,13 @@
+modLoader = "javafml"
+loaderVersion = "[2,)"
+license = "MIT"
+[[mods]]
+modId = "codex_tests"
+version = "1"
+displayName = "Codex isolated server scenarios"
+[[dependencies.codex_tests]]
+modId = "codex"
+type = "required"
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"

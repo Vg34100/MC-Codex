@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:chest"
+    },
+    "title": "Supplies for the Unknown",
+    "description": "Deliver 8 oak logs and 16 cobblestone using the Submit controls. Partial deliveries are saved. These supplies become the journal's first expedition fund; claim your provisions afterward.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "deliver": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "codex_demo:field_journal/first_page"
+}

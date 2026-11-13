@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:blaze_rod"
+    },
+    "title": "Brewing Materials",
+    "description": "Obtain six blaze rods. Save some for powder and a brewing stand.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:blaze_rod",
+            "count": {
+              "min": 6
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:nether/fortress"
+}

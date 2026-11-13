@@ -47,6 +47,7 @@ public final class CodexStatisticTasks {
             try {
                 Identifier advancementId = Identifier.parse(entry.getKey().substring(0, split));
                 String criterion = entry.getKey().substring(split + 1);
+                if (QuestDefinitions.repeat(QuestDefinitions.get(advancementId))) { QuestRuntime.refresh(player, advancementId); continue; }
                 JsonObject task = entry.getValue();
                 String statistic = task.get("id").getAsString();
                 int target = task.get("target").getAsInt();
@@ -76,9 +77,11 @@ public final class CodexStatisticTasks {
             try {
                 String encoded = entry.getValue().get("id").getAsString();
                 int target = entry.getValue().get("target").getAsInt();
+                Identifier id = Identifier.parse(entry.getKey().substring(0, split));
+                String current = QuestDefinitions.repeat(QuestDefinitions.get(id)) ? formatValue(player, encoded, QuestRuntime.statistic(player, id, entry.getKey(), entry.getValue(), QuestRuntime.state(player, id))) : format(player, encoded);
                 entries.add(new StatisticProgressPayload.Entry(
-                        Identifier.parse(entry.getKey().substring(0, split)), entry.getKey().substring(split + 1),
-                        format(player, encoded), formatTarget(player, encoded, target)));
+                        id, entry.getKey().substring(split + 1),
+                        current, formatValue(player, encoded, target)));
             } catch (RuntimeException e) {
                 LOGGER.error("Failed to format Codex statistic task {} for {}", entry.getKey(), player.getScoreboardName(), e);
             }
@@ -88,7 +91,7 @@ public final class CodexStatisticTasks {
 
     /** `custom|id`, `mined|block`, `crafted|item`, `used|item`, `broken|item`, `picked_up|item`,
      * `dropped|item`, `killed|entity`, and `killed_by|entity` cover vanilla and mod registries. */
-    private static int value(ServerPlayer player, String encoded) {
+    public static int value(ServerPlayer player, String encoded) {
         String[] parts = encoded.contains("|") ? encoded.split("\\|", 2) : new String[]{"custom", encoded};
         Identifier id = Identifier.parse(parts[1]);
         return switch (parts[0]) {
@@ -114,7 +117,7 @@ public final class CodexStatisticTasks {
         return statistic(player, encoded).format(value(player, encoded));
     }
 
-    private static String formatTarget(ServerPlayer player, String encoded, int target) {
+    private static String formatValue(ServerPlayer player, String encoded, int target) {
         return statistic(player, encoded).format(target);
     }
 

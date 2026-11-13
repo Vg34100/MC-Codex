@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:story/smelt_iron",
+  "criteria": {
+    "iron_pickaxe": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:iron_pickaxe"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": "Iron opens a longer working day. Make a pick that can follow your curiosity beneath the surface.",
+    "icon": {
+      "id": "minecraft:iron_pickaxe"
+    },
+    "title": "Work That Lasts"
+  },
+  "requirements": [
+    [
+      "iron_pickaxe"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

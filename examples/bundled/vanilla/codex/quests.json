@@ -1,0 +1,42 @@
+{
+  "minecraft:story/root": {
+    "dialogue": {
+      "intro": "There is no appointed road here. A tool, a shelter, a strange horizon: choose what makes you curious.",
+      "progress": "Gather wood and make your first tools.",
+      "complete": "Your first workshop is a promise that tomorrow can be different."
+    }
+  },
+  "minecraft:story/upgrade_tools": {
+    "dialogue": {
+      "intro": "Craft a stone pickaxe to mine iron and other ores.",
+      "progress": "Use cobblestone to craft a stone pickaxe.",
+      "complete": "Less time fighting the stone; more time deciding what to build."
+    }
+  },
+  "minecraft:story/enter_the_nether": {
+    "dialogue": {
+      "intro": "Build a doorway and step through when you are ready. Pack supplies; this chapter has no prescribed route.",
+      "progress": "Bring food, blocks and a way to relight your portal.",
+      "complete": "The world has become stranger, and larger."
+    }
+  },
+  "minecraft:husbandry/plant_seed": {
+    "dialogue": {
+      "intro": "Plant a seed. The smallest investment in a place can make it worth returning to.",
+      "progress": "Till soil near water, then plant your seeds.",
+      "complete": "A living world grows in the spaces between your adventures."
+    }
+  },
+  "minecraft:story/mine_stone": {
+    "dialogue": {
+      "intro": "Mine stone with a pickaxe and collect the cobblestone.",
+      "complete": "Keep some cobblestone for a furnace and better tools. Claim a small field ration before your next trip."
+    }
+  },
+  "minecraft:story/smelt_iron": {
+    "dialogue": {
+      "intro": "Smelt raw iron in a furnace to obtain your first iron ingot.",
+      "complete": "The first ingot catches the firelight. Tools, a bucket, a new direction: the metal promises none of them, but permits all of them."
+    }
+  }
+}

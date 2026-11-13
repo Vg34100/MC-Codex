@@ -15,7 +15,7 @@ public record DeleteAdvancementsPayload(List<Identifier> ids) implements CustomP
             new Type<>(Identifier.fromNamespaceAndPath(ModMain.MOD_ID, "delete_advancements"));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, DeleteAdvancementsPayload> STREAM_CODEC = StreamCodec.composite(
-            Identifier.STREAM_CODEC.apply(ByteBufCodecs.list()), DeleteAdvancementsPayload::ids,
+            Identifier.STREAM_CODEC.apply(ByteBufCodecs.list(1024)), DeleteAdvancementsPayload::ids,
             DeleteAdvancementsPayload::new
     );
 

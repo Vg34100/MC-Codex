@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "spelunkery:foundry"
+    },
+    "title": "The Foundry",
+    "description": "Build a foundry. It processes the mod's alloys using ingredients and lava.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "spelunkery:foundry",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:workshop/tin"
+}

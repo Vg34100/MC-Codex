@@ -36,6 +36,20 @@ public final class AdvancementEditorClient {
     }
 
     public static void init() {
+        NetworkManager.registerReceiver(NetworkManager.s2c(), net.vg.codex.network.TabSummaryPayload.TYPE, net.vg.codex.network.TabSummaryPayload.STREAM_CODEC,
+                (payload, context) -> context.queue(() -> net.vg.codex.client.advancements.ClientTabSummaries.receive(payload)));
+        NetworkManager.registerReceiver(NetworkManager.s2c(), net.vg.codex.network.RecipeEditorResponse.TYPE, net.vg.codex.network.RecipeEditorResponse.STREAM_CODEC, (payload, context) -> context.queue(() -> {
+            if (Minecraft.getInstance().screen instanceof net.vg.codex.client.advancements.RecipeEditorScreen screen) screen.receive(com.google.gson.JsonParser.parseString(payload.json()).getAsJsonObject());
+        }));
+        NetworkManager.registerReceiver(NetworkManager.s2c(), net.vg.codex.network.QuestPresentationPayload.TYPE, net.vg.codex.network.QuestPresentationPayload.STREAM_CODEC,
+                (payload, context) -> context.queue(() -> net.vg.codex.client.advancements.ClientQuests.receive(payload)));
+        NetworkManager.registerReceiver(NetworkManager.s2c(), net.vg.codex.network.QuestInfoPayload.TYPE, net.vg.codex.network.QuestInfoPayload.STREAM_CODEC,
+                (payload, context) -> context.queue(() -> net.vg.codex.client.advancements.ClientQuests.receive(payload)));
+        NetworkManager.registerReceiver(NetworkManager.s2c(), net.vg.codex.network.TreasureListsPayload.TYPE, net.vg.codex.network.TreasureListsPayload.STREAM_CODEC,
+                (payload, context) -> context.queue(() -> {
+                    net.vg.codex.client.advancements.ClientTreasureLists.set(payload);
+                    if (Minecraft.getInstance().screen instanceof net.vg.codex.client.advancements.TreasureListScreen screen) screen.saved(payload.status());
+                }));
         NetworkManager.registerReceiver(NetworkManager.s2c(), SaveAdvancementResultPayload.TYPE, SaveAdvancementResultPayload.STREAM_CODEC,
                 (payload, context) -> context.queue(() -> {
                     if (Minecraft.getInstance().screen instanceof CodexAdvancementsScreen screen) {

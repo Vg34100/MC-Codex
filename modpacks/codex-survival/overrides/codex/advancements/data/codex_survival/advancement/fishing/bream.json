@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "fishingfrenzy:bream"
+    },
+    "title": "Bream",
+    "description": "Catch or obtain a bream. Keep one for the Exotic Eye recipe.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "fishingfrenzy:bream",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:fishing/catch"
+}

@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:cod"
+    },
+    "title": "First Catch",
+    "description": "Reel in a fish or fishing loot with a rod.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "catch": {
+      "trigger": "minecraft:fishing_rod_hooked"
+    }
+  },
+  "parent": "codex_survival:fishing/rod"
+}

@@ -1,0 +1,11 @@
+{
+  "minecraft:story/mine_stone": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "minecraft:bread",
+        "count": 3
+      }
+    ]
+  }
+}

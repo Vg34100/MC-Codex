@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "fishingfrenzy:carp"
+    },
+    "title": "Carp",
+    "description": "Catch a carp and keep a few for crafting and supplies.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "fishingfrenzy:carp",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:fishing/catch"
+}

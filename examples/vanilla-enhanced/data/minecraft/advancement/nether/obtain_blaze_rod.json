@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:nether/find_fortress",
+  "criteria": {
+    "blaze_rod": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:blaze_rod"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": "Obtain a blaze rod. It can become a tool for experiments or a step toward another journey.",
+    "icon": {
+      "id": "minecraft:blaze_rod"
+    },
+    "title": "Fire You Can Keep"
+  },
+  "requirements": [
+    [
+      "blaze_rod"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

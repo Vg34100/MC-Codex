@@ -1,0 +1,32 @@
+def codexPlatform = project.findProperty("codexLoader") ?: project.name
+def codexVersion = project.findProperty("codexMinecraft") ?: rootProject.minecraft_version
+// The regular IDE/Gradle client uses the same bundled examples as the release.
+// Optional companion jars remain development-only. Disable with -Pcodex_dev_demo=false.
+// Delegation keeps existing IntelliJ configurations in step with Gradle's runtime jars/VM args.
+// Loom backs up the old Application configuration when switching its type to Gradle.
+loom.runs.client { preferGradleTask.set(true) }
+
+if (!providers.gradleProperty('codex_tests').isPresent()
+        && providers.gradleProperty('codex_dev_demo').getOrElse('true').toBoolean()) {
+    def compatibilityJars = ['sagittary', 'sleepcycle'].collect { mod ->
+        def candidates = fileTree(rootProject.file("../${mod}/build/publishing/github-assets")) {
+            include "${mod}-${codexPlatform}-${codexVersion}-*.jar"
+        }.files.sort { a, b -> b.lastModified() <=> a.lastModified() }
+        if (candidates.isEmpty()) {
+            candidates = fileTree(rootProject.file("runs/compat-mods/${codexPlatform}")) {
+                include "${mod}-${codexPlatform}-${codexVersion}-*.jar"
+            }.files.sort { a, b -> b.lastModified() <=> a.lastModified() }
+        }
+        if (candidates.isEmpty()) {
+            logger.warn("Codex development demo: missing ${mod} ${codexPlatform} ${codexVersion} jar")
+            return null
+        }
+        return candidates.first()
+    }.findAll { it != null }
+    dependencies { runtimeOnly files(compatibilityJars) }
+    loom.runs.client {
+        // Loom otherwise randomizes Player### on each launch, creating a different offline UUID.
+        // Personal quest state must be reviewed with the same identity across restarts.
+        programArg "--username=${providers.gradleProperty('codex_dev_username').getOrElse('CodexDeveloper')}"
+    }
+}

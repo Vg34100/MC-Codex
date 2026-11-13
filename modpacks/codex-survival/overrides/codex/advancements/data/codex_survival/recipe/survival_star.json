@@ -1,0 +1,37 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BIE",
+    "RSC",
+    "HDT"
+  ],
+  "key": {
+    "B": "spelunkery:bronze_block",
+    "I": "spelunkery:invar_block",
+    "E": "spelunkery:electrum_block",
+    "R": "fishingfrenzy:deluxe_fishing_rod",
+    "S": "minecraft:nether_star",
+    "C": "sagittary:compound_bow",
+    "H": "minecraft:heart_of_the_sea",
+    "D": "minecraft:dragon_breath",
+    "T": "minecraft:diamond_block"
+  },
+  "result": {
+    "id": "minecraft:nether_star",
+    "count": 1,
+    "components": {
+      "minecraft:custom_name": {
+        "text": "Survival Star"
+      },
+      "minecraft:lore": [
+        {
+          "text": "Codex Survival — completed"
+        }
+      ],
+      "minecraft:custom_data": {
+        "codex_survival_finale": true
+      }
+    }
+  }
+}

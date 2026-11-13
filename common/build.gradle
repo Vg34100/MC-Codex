@@ -13,7 +13,12 @@ loom {
     }
 }
 
+repositories {
+    maven { url = 'https://maven.blamejared.com'; content { includeGroup 'mezz.jei' } }
+}
+
 dependencies {
+    clientCompileOnly "mezz.jei:jei-${rootProject.minecraft_version}-common-api:29.6.2.38"
     // We depend on Fabric Loader here to use the Fabric @Environment annotations,
     // which get remapped to the correct annotations on each platform.
     // Do NOT use other classes from Fabric Loader.
@@ -30,4 +35,10 @@ afterEvaluate {
     // any client-sourceset class, causing transform to fail unpredictably depending on exact
     // bytecode shape. Add the client compile classpath so it can resolve those too.
     configurations.architecturyTransformerClasspath.extendsFrom(configurations.clientCompileClasspath)
+}
+
+// The migration assistant exports this one maintained tool; no test harness ships in the mod.
+tasks.named('processResources') {
+    from(rootProject.file('scripts/migrate-advancement.py')) { into 'tools/codex' }
+    from(rootProject.file('examples/bundled')) { into 'examples/codex' }
 }

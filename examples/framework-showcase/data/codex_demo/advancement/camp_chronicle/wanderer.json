@@ -1,0 +1,30 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:oak_sapling"
+    },
+    "title": "Let the Trees Be Your Roof",
+    "description": "The wanderer branch: enter any forest. An ordinary Minecraft location trigger; no fixed coordinates or NPC.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "forest": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "biomes": "minecraft:forest"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_demo:camp_chronicle/root"
+}

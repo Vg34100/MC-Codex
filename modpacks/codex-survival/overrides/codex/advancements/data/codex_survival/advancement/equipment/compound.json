@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "sagittary:compound_bow"
+    },
+    "title": "A Ranged Upgrade",
+    "description": "Obtain a compound bow. Check JEI for its recipe.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "sagittary:compound_bow",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:equipment/quiver"
+}

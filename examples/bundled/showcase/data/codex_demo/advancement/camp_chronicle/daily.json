@@ -1,0 +1,17 @@
+{
+  "parent": "codex_demo:camp_chronicle/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:stick"
+    },
+    "title": "A Little Kindling",
+    "description": "A daily personal errand: accept and deliver 2 sticks. Claim a field ration. The next cycle unlocks at 00:00 UTC; unfinished work and rewards remain available.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "deliver": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

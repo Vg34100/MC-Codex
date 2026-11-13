@@ -1,0 +1,25 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:oak_log"
+    },
+    "title": "A Mark on the Page",
+    "description": "Gather an oak log. Someone once wrote that every great workshop began with a tree and an unreasonable idea. This seems worth testing.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "wood": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:oak_log"
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_demo:field_journal/root"
+}

@@ -1,0 +1,149 @@
+{
+  "minecraft:story/root": {
+    "dialogue": {
+      "intro": "There is no appointed road here. A tool, a shelter, a strange horizon: choose what makes you curious.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "Your first workshop is a promise that tomorrow can be different."
+    }
+  },
+  "minecraft:story/upgrade_tools": {
+    "dialogue": {
+      "intro": "The next tool should make room for the next idea. Ordinary stone tools still satisfy this milestone.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "Less time fighting the stone; more time deciding what to build."
+    }
+  },
+  "minecraft:story/iron_tools": {
+    "dialogue": {
+      "intro": "Iron opens a longer working day. Make a pick that can follow your curiosity beneath the surface.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "A dependable tool changes how far you are willing to wander."
+    }
+  },
+  "minecraft:story/obtain_armor": {
+    "dialogue": {
+      "intro": "Exploration includes mistakes. A suit of iron gives you time to learn from the next one.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "Protection is another kind of preparation."
+    }
+  },
+  "minecraft:story/lava_bucket": {
+    "dialogue": {
+      "intro": "A bucket can carry more than water. Bring the heat home, wherever home happens to be.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "A dangerous thing becomes a useful tool in careful hands."
+    }
+  },
+  "minecraft:story/deflect_arrow": {
+    "dialogue": {
+      "intro": "You do not have to win every fight by rushing forward. Raise a shield when an arrow finds you.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "That small pause can be the difference between a story and an ending."
+    }
+  },
+  "minecraft:story/form_obsidian": {
+    "dialogue": {
+      "intro": "Two familiar materials make something stubbornly new. Obtain obsidian with the usual vanilla objective.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "The hardest part of a doorway is sometimes its frame."
+    }
+  },
+  "minecraft:story/mine_diamond": {
+    "dialogue": {
+      "intro": "A blue glint interrupts an ordinary mining trip. Keep a diamond; decide later what it deserves to become.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "There is still more below the places you already know."
+    }
+  },
+  "minecraft:story/enter_the_nether": {
+    "dialogue": {
+      "intro": "Build a doorway and step through when you are ready. Pack supplies; this chapter has no prescribed route.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "The world has become stranger, and larger."
+    }
+  },
+  "minecraft:story/shiny_gear": {
+    "dialogue": {
+      "intro": "Some discoveries become equipment. Diamond armor is a milestone, not a requirement to stop exploring your own way.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "You have turned a rare find into another chance to come home."
+    }
+  },
+  "minecraft:story/enchant_item": {
+    "dialogue": {
+      "intro": "A workshop can hold books as well as tools. Enchant an item using the ordinary vanilla table.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "The item is familiar. What it can do is new."
+    }
+  },
+  "minecraft:story/cure_zombie_villager": {
+    "dialogue": {
+      "intro": "Some encounters offer more than a fight. Cure a zombie villager whenever your travels bring the opportunity.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "Not every victory leaves something defeated."
+    }
+  },
+  "minecraft:story/follow_ender_eye": {
+    "dialogue": {
+      "intro": "Let an eye suggest a direction. The supplies, detours and company are still yours to choose.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "An old structure becomes the beginning of a new question."
+    }
+  },
+  "minecraft:story/enter_the_end": {
+    "dialogue": {
+      "intro": "Prepare on your own terms, then enter the End. This keeps the vanilla dimension objective and its place in the tree.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "The horizon has changed again. Your story has not run out."
+    }
+  },
+  "minecraft:nether/root": {
+    "dialogue": {
+      "intro": "A new dimension is a place to explore, not an itinerary. Find your footing and choose your next curiosity.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "Another kind of wilderness is now part of your world."
+    }
+  },
+  "minecraft:nether/find_fortress": {
+    "dialogue": {
+      "intro": "Discover a Nether fortress through ordinary exploration. No fixed structure or world seed is required.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "There are stories in these walls, even if you never learn their names."
+    }
+  },
+  "minecraft:nether/obtain_blaze_rod": {
+    "dialogue": {
+      "intro": "Obtain a blaze rod. It can become a tool for experiments or a step toward another journey.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "A little of this place can travel with you."
+    }
+  },
+  "minecraft:nether/brew_potion": {
+    "dialogue": {
+      "intro": "Brew a potion with the ordinary vanilla objective. A small workshop can change the odds of a much larger adventure.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "Preparation can fit in a bottle."
+    }
+  },
+  "minecraft:end/root": {
+    "dialogue": {
+      "intro": "Arrive in the End. Take your time; a milestone does not prescribe the order of everything that follows.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "Even here, there is room for your own plan."
+    }
+  },
+  "minecraft:end/kill_dragon": {
+    "dialogue": {
+      "intro": "Defeat the Ender Dragon. Keep the vanilla challenge and rewards while giving this milestone its own closing page.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "An ending can make room for a larger beginning."
+    }
+  },
+  "minecraft:husbandry/plant_seed": {
+    "dialogue": {
+      "intro": "Plant a seed. The smallest investment in a place can make it worth returning to.",
+      "progress": "Your ordinary vanilla objective is still active. Return when you want to read this chapter again.",
+      "complete": "A living world grows in the spaces between your adventures."
+    }
+  }
+}

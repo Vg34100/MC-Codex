@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "endrem:witch_eye"
+    },
+    "title": "Witch Eye",
+    "description": "Craft it using a Witch Pupil; check JEI for the recipe. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "endrem:witch_eye",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:end/root"
+}

@@ -1,0 +1,30 @@
+{
+  "codex_survival:start/supplies#deliver": {
+    "items": [
+      {
+        "id": "minecraft:cobblestone",
+        "count": 16
+      },
+      {
+        "id": "minecraft:oak_log",
+        "count": 8
+      }
+    ]
+  },
+  "codex_survival:fishing/fish_exchange#deliver": {
+    "items": [
+      {
+        "id": "fishingfrenzy:carp",
+        "count": 4
+      }
+    ]
+  },
+  "codex_survival:provisions/meal_exchange#deliver": {
+    "items": [
+      {
+        "id": "farmersdelight:beef_stew",
+        "count": 2
+      }
+    ]
+  }
+}

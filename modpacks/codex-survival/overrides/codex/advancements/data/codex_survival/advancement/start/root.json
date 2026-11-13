@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:book"
+    },
+    "title": "Start Here",
+    "description": "A survival pack about useful preparation and expeditions. Collect twelve different End Remastered eyes, reach the End, defeat the dragon, and assemble the Survival Star. Other sections are open from the start.",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "frame": "task",
+    "background": "minecraft:block/stone"
+  },
+  "criteria": {
+    "arrive": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}

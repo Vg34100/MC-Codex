@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:story/iron_tools",
+  "criteria": {
+    "diamond": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:diamond"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": "A blue glint interrupts an ordinary mining trip. Keep a diamond; decide later what it deserves to become.",
+    "icon": {
+      "id": "minecraft:diamond"
+    },
+    "title": "Beneath the Everyday"
+  },
+  "requirements": [
+    [
+      "diamond"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

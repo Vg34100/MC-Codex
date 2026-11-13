@@ -1,0 +1,23 @@
+{
+  "sagittary:arsenal": {
+    "dialogue": {
+      "intro": "Prepare ranged equipment before your next fight. Keep spare arrows within reach.",
+      "progress": "Check your equipment and ammunition before setting out.",
+      "complete": "Your ranged kit is ready for the next expedition."
+    }
+  },
+  "sagittary:bamboo": {
+    "dialogue": {
+      "intro": "Bamboo can be useful even when there is no forest nearby. Keep some when you find it.",
+      "progress": "Look along rivers and through jungle biomes.",
+      "complete": "Plant a little near home for a renewable supply."
+    }
+  },
+  "sagittary:compound_bow": {
+    "dialogue": {
+      "intro": "Prepare a compound bow for your next expedition.",
+      "progress": "Check the recipe and gather the materials you need.",
+      "complete": "Take it somewhere you have room to aim."
+    }
+  }
+}

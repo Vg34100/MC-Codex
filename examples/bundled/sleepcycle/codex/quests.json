@@ -1,0 +1,23 @@
+{
+  "sleepcycle:root": {
+    "dialogue": {
+      "intro": "Long trips need rest as well as food. Keep a bed somewhere safe.",
+      "progress": "Watch your fatigue while exploring.",
+      "complete": "A safe place to sleep makes the next trip easier."
+    }
+  },
+  "sleepcycle:tired": {
+    "dialogue": {
+      "intro": "If the day is catching up with you, find somewhere safe to rest.",
+      "progress": "Keep a bed handy on longer journeys.",
+      "complete": "Time to rest before heading out again."
+    }
+  },
+  "sleepcycle:well_rested": {
+    "dialogue": {
+      "intro": "A full rest helps you prepare for the day ahead.",
+      "progress": "Sleep somewhere safe before the next expedition.",
+      "complete": "Rested and ready to set out."
+    }
+  }
+}

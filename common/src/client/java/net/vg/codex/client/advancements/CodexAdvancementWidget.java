@@ -34,25 +34,11 @@ import java.util.List;
 public final class CodexAdvancementWidget {
     // Confirmed via AdvancementWidget's own bytecode rather than guessed.
     private static final Identifier TITLE_BOX_SPRITE = Identifier.withDefaultNamespace("advancements/title_box");
-    private static final int TITLE_MAX_WIDTH = 163;
+    private static final int TITLE_MAX_WIDTH = 220;
     private static final int TITLE_MIN_WIDTH = 80;
     private static final int REWARD_CHIP_SIZE = 18;
-    // Description's own vertical slack, baked into its box-height formula (6+9*lines) as bottom
-    // padding when description trails the title (the normal, unflipped case - it's the box's last
-    // section, so it only needs padding after the text). When flipped, description becomes the
-    // box's *first* section instead (see extractHover), and needs that same slack moved to the top
-    // instead - otherwise its first line starts flush against the box's own top edge instead of
-    // sitting inside it.
-    private static final int DESC_BOX_SLACK = 6;
-    // Flat right-edge padding for a title with no progress counter sharing its row - without it,
-    // the box is sized to the exact pixel width of the longest line, so its last character sits
-    // right on the box's own border.
-    private static final int TITLE_RIGHT_PAD = 6;
-    // Gap between the title text and the progress counter that shares its row, and the counter's
-    // own margin from the box's right edge - both needed, not just one: reserving only a trailing
-    // margin left the counter's own text butted directly against the end of the title with no gap.
+    // Text/icon insets are mirrored when the card opens left.
     private static final int PROGRESS_GAP = 6;
-    private static final int PROGRESS_RIGHT_MARGIN = 6;
     // Gap between the reward row and whatever's above it (description, or title if there's no
     // description), and between the last row of chips and the box's own bottom edge - separate
     // constants since the top one used to double as a label's own line height before the "To
@@ -87,8 +73,14 @@ public final class CodexAdvancementWidget {
         this.node = node;
         this.display = display;
         this.icon = display.getIcon().create();
+        //? if >=26.3 {
+        /*this.x = Mth.floor(node.x() * 28.0F);
+        this.y = Mth.floor(node.y() * 27.0F);
+        *///?} else {
         this.x = Mth.floor(display.getX() * 28.0F);
         this.y = Mth.floor(display.getY() * 27.0F);
+        //?}
+
     }
 
     public AdvancementNode node() {
@@ -118,6 +110,19 @@ public final class CodexAdvancementWidget {
     }
 
     void setProgress(AdvancementProgress progress) {
+        // Unsaved editor nodes have no server progress until their first save/reload.
+        if (progress == null) {
+            this.progress = null;
+            previousProgress = -1;
+            return;
+        }
+        float next = progress.getPercent();
+        if (previousProgress >= 0 && next > previousProgress) {
+            java.util.Set<String> items = new java.util.HashSet<>();
+            ClientAdvancementRequiredItems.forAdvancement(node.holder().id()).forEach(i -> items.add(i.toString()));
+            QuestFeedback.pulse(node.holder().id(), next >= 1 ? "complete" : "obtain", items);
+        }
+        previousProgress = next;
         this.progress = progress;
     }
 
@@ -161,30 +166,85 @@ public final class CodexAdvancementWidget {
         return !display.isHidden() || (progress != null && progress.isDone());
     }
 
+    private boolean hovered;
+    private float hoverAmount;
+    private long lastFrame;
+    private float previousProgress = -1;
+    public void hovered(boolean value) { hovered = value; }
+
+    private float percent() {
+        JsonObject state = rewardsOverride == null ? ClientQuests.presentation(node.holder().id()) : new JsonObject();
+        if (!state.isEmpty()) {
+            if (!state.get("unlocked").getAsBoolean()) return 0;
+            if (state.get("ready").getAsBoolean()) return 1;
+            if (state.get("managed").getAsBoolean() || progress != null && progress.isDone()) return 0;
+        }
+        return progress == null ? 0 : progress.getPercent();
+    }
+    private static boolean flag(JsonObject json, String key) { return json.has(key) && json.get(key).getAsBoolean(); }
+
+    /** The tree and the card use this same renderer; the covered base icon is omitted. */
+    private void extractIcon(GuiGraphicsExtractor g, int px, int py) {
+        Identifier id = node.holder().id(); JsonObject state = rewardsOverride == null ? ClientQuests.presentation(id) : new JsonObject();
+        long now = System.nanoTime();
+        float dt = lastFrame == 0 ? 0 : Math.min(0.05F, (now - lastFrame) / 1_000_000_000F); lastFrame = now;
+        hoverAmount += ((hovered && CodexClientSettings.animations ? 1F : 0F) - hoverAmount) * (1F - (float)Math.exp(-18F * dt));
+        if (!CodexClientSettings.animations) hoverAmount = 0;
+        float hold = QuestFeedback.hold(id), accept = QuestFeedback.pulse(id, "accept");
+        float complete = QuestFeedback.pulse(id, "complete"), claim = QuestFeedback.pulse(id, "claim");
+        float pop = (float)Math.sin(Math.PI * Math.max(complete, Math.max(accept, claim)));
+        float scale = 1 + hoverAmount * 0.075F - hold * 0.035F + pop * 0.10F;
+        boolean locked = rewardsOverride == null && ClientQuests.locked(id);
+        var type = percent() >= 1 ? AdvancementWidgetType.OBTAINED : AdvancementWidgetType.UNOBTAINED;
+        g.pose().pushMatrix();
+        g.pose().translate(px + 16, py + 13 - hoverAmount); g.pose().scale(scale); g.pose().translate(-px - 16, -py - 13);
+        if (hoverAmount > 0.02F) g.fill(px + 4, py + 3, px + 29, py + 28, ((int)(hoverAmount * 100) << 24));
+        g.blitSprite(RenderPipelines.GUI_TEXTURED, type.frameSprite(display.getType()), px + 3, py, 26, 26);
+        g.fakeItem(icon, px + 8, py + 5);
+        if (hold > 0 || accept > 0) {
+            float fill = accept > 0 ? 1 : hold;
+            int edge = px + 3 + Math.round(26 * fill);
+            g.enableScissor(px + 3, py, edge, py + 26);
+            int alpha = accept > 0 ? (int)(170 * Math.min(1, accept * 2)) : 140;
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, type.frameSprite(display.getType()), px + 3, py, 26, 26, (alpha << 24) | 0x65F68D);
+            g.fill(px + 6, py + 3, px + 26, py + 23, (Math.max(0, alpha / 3) << 24) | 0x41ED75);
+            g.disableScissor();
+        }
+        if (complete > 0 || claim > 0) {
+            float amount = Math.max(complete, claim);
+            int edge = px + 3 + Math.round(26 * (1 - amount));
+            g.enableScissor(edge, py, Math.min(px + 29, edge + 4), py + 26);
+            g.blitSprite(RenderPipelines.GUI_TEXTURED, type.frameSprite(display.getType()), px + 3, py, 26, 26, 0xCFFFF1A0);
+            g.disableScissor();
+            int color = ((int)(amount * 220) << 24) | 0xFFEB92;
+            for (int i = 0; i < 4; i++) { int sx = px + 6 + i * 6, sy = py + 3 + (i % 2) * 18; g.fill(sx, sy, sx + 2, sy + 2, color); }
+        }
+        // Keep the lock shade inside the sprite silhouette, including transparent frame corners.
+        if (locked) g.blitSprite(RenderPipelines.GUI_TEXTURED, type.frameSprite(display.getType()), px + 3, py, 26, 26,
+                flag(state, "excluded") ? 0xBD252525 : 0x85252525);
+        else {
+            boolean finished = flag(state, "ready") && !flag(state, "claim_pending") && !flag(state, "repeat");
+            List<Integer> dots = new ArrayList<>();
+            if (flag(state, "can_accept")) dots.add(0xFF65E7CE);
+            if (flag(state, "claim_pending") || ClientClaimableRewards.contains(id)) dots.add(flag(state, "claim_ready") || ClientClaimableRewards.contains(id) ? 0xFFFFD24A : 0xFF92754B);
+            if (flag(state, "dialogue") && (!finished || flag(state, "choice_pending"))) dots.add(0xFFCEAAFF);
+            if (flag(state, "repeat")) dots.add(0xFF86BFFF);
+            // One short horizontal row anchored to the upper-right edge.
+            for (int i = 0; i < dots.size(); i++) dot(g, px + 25 - i * 4, py + 1, dots.get(i));
+        }
+        g.pose().popMatrix();
+    }
+    private static void dot(GuiGraphicsExtractor g, int x, int y, int color) {
+        g.fill(x, y, x + 4, y + 4, 0xFF232323); g.fill(x + 1, y + 1, x + 3, y + 3, color);
+    }
     public void extractRenderState(GuiGraphicsExtractor extractor, int originX, int originY, boolean showAll) {
-        if (isVisible(showAll)) {
-            AdvancementWidgetType widgetType = progress != null && progress.getPercent() >= 1.0F
-                    ? AdvancementWidgetType.OBTAINED
-                    : AdvancementWidgetType.UNOBTAINED;
-            extractor.blitSprite(RenderPipelines.GUI_TEXTURED, widgetType.frameSprite(display.getType()),
-                    originX + x + 3, originY + y, 26, 26);
-            extractor.fakeItem(icon, originX + x + 8, originY + y + 5);
-            // A compact gold corner marker is visible at all zooms without obscuring the item
-            // icon; the Rewards list will provide the detailed claim action.
-            if (ClientClaimableRewards.contains(node.holder().id())) {
-                int markerX = originX + x + 23;
-                int markerY = originY + y;
-                extractor.fill(markerX, markerY, markerX + 6, markerY + 6, 0xFF2D1A00);
-                extractor.fill(markerX + 1, markerY + 1, markerX + 5, markerY + 5, 0xFFFFC83D);
-            }
-        }
-        for (CodexAdvancementWidget child : children) {
-            child.extractRenderState(extractor, originX, originY, showAll);
-        }
+        if (isVisible(showAll) && !hovered) extractIcon(extractor, originX + x, originY + y);
+        for (CodexAdvancementWidget child : children) child.extractRenderState(extractor, originX, originY, showAll);
     }
 
     public void extractConnectivity(GuiGraphicsExtractor extractor, CodexAdvancementWidget parent, int originX, int originY, boolean shadow) {
-        int color = shadow ? 0xFF000000 : -1;
+        float unlock = QuestFeedback.pulse(node.holder().id(), "unlock");
+        int color = shadow ? 0xFF000000 : ClientQuests.locked(node.holder().id()) ? 0xFF656565 : unlock > 0 ? 0xFF9BEAC3 : -1;
         int parentCenterX = originX + parent.x + 13;
         int parentCenterY = originY + parent.y + 13;
         int centerX = originX + x + 13;
@@ -325,7 +385,9 @@ public final class CodexAdvancementWidget {
                 if (lootId.equals(generatedLootId)) {
                     continue;
                 }
-                chips.add(new RewardChip(new ItemStack(Items.PAPER), 0, Component.literal("Loot table: " + lootId)));
+                boolean treasure = lootId.contains(":codex_treasure/");
+                String label = treasure ? "Random treasure: " + lootId.substring(lootId.indexOf(":codex_treasure/") + ":codex_treasure/".length()).replace('_', ' ') : "Loot table: " + lootId;
+                chips.add(new RewardChip(new ItemStack(treasure ? Items.CHEST : Items.PAPER), 0, Component.literal(label)));
             }
         }
         if (rewards.has("function")) {
@@ -353,9 +415,9 @@ public final class CodexAdvancementWidget {
                 int remaining = Math.max(0, item.required() - item.submitted());
                 ItemStack stack = new ItemStack(itemType, Math.max(1, remaining));
                 chips.add(new RewardChip(stack, remaining, remaining > 0
-                        ? Component.literal("Click to submit " + stack.getHoverName().getString() + ": "
+                        ? Component.literal("Click to submit " + (item.label().isEmpty() ? stack.getHoverName().getString() : item.label()) + ": "
                         + item.submitted() + "/" + item.required())
-                        : Component.literal("Submitted " + stack.getHoverName().getString() + ": "
+                        : Component.literal("Submitted " + (item.label().isEmpty() ? stack.getHoverName().getString() : item.label()) + ": "
                         + item.submitted() + "/" + item.required())));
             }
         }
@@ -373,6 +435,12 @@ public final class CodexAdvancementWidget {
     private Layout computeLayout(Font font, int boxOriginX, int boxOriginY, int screenWidth, int windowContentBottom) {
         Style frameStyle = Style.EMPTY.withColor(display.getType().getChatColor());
         Component styledDescription = ComponentUtils.mergeStyles(display.getDescription(), frameStyle);
+        var description = styledDescription.copy();
+        for (String hint : rewardsOverride == null ? ClientQuests.hoverHints(node.holder().id()) : java.util.List.<String>of()) {
+            if (!description.getString().isBlank()) description.append("\n");
+            description.append(Component.literal(hint).withStyle(Style.EMPTY.withColor(0xBFCAC8)));
+        }
+        styledDescription = description;
 
         // Custom statistic thresholds are evaluated server-side and carry Minecraft's own unit
         // formatting (cm, m, h, decimals). Prefer that live value over the generic criterion
@@ -384,9 +452,7 @@ public final class CodexAdvancementWidget {
         // either room for the progress counter (its own width, a gap before it, and its own
         // trailing margin) or, when there's no counter, a flat padding so the title's last
         // character doesn't just sit on the box's own border.
-        int titleRightReserve = progressWidth > 0
-                ? progressWidth + PROGRESS_GAP + PROGRESS_RIGHT_MARGIN
-                : TITLE_RIGHT_PAD;
+        int titleRightReserve = progressWidth > 0 ? progressWidth + PROGRESS_GAP : 0;
 
         // Title text starts 32px in (after the icon); description starts 8px in (no icon there).
         // Wrapping each at a width that already reserves its own left padding (and, for the
@@ -394,11 +460,11 @@ public final class CodexAdvancementWidget {
         // never runs past the box's own right edge - the previous version wrapped both at the same
         // raw width and only reserved padding afterward, which could push the actual drawn text
         // past a box sized from the unpadded wrap width.
-        int titleWrapWidth = Math.max(20, TITLE_MAX_WIDTH - 32 - titleRightReserve);
+        int titleWrapWidth = Math.max(20, TITLE_MAX_WIDTH - 40 - titleRightReserve);
         int descWrapWidth = Math.max(20, TITLE_MAX_WIDTH - 16);
 
         List<FormattedCharSequence> titleLines = font.split(display.getTitle(), titleWrapWidth);
-        boolean hasDescription = !display.getDescription().getString().isBlank();
+        boolean hasDescription = !styledDescription.getString().isBlank();
         List<FormattedCharSequence> descLines = hasDescription
                 ? font.split(styledDescription, descWrapWidth) : List.of();
 
@@ -424,7 +490,7 @@ public final class CodexAdvancementWidget {
         int tableNaturalWidth = requiredChips.size() * REWARD_CHIP_SIZE + dividerSpace + rewardChips.size() * REWARD_CHIP_SIZE;
         int tableContentWidth = hasTable ? tableNaturalWidth + 16 : 0;
 
-        int titleContentWidth = maxTitleLineWidth + 32 + titleRightReserve;
+        int titleContentWidth = maxTitleLineWidth + 40 + titleRightReserve;
         int descContentWidth = maxDescLineWidth + 16;
         int boxWidth = Mth.clamp(Math.max(Math.max(titleContentWidth, descContentWidth), tableContentWidth), TITLE_MIN_WIDTH, TITLE_MAX_WIDTH);
 
@@ -453,13 +519,13 @@ public final class CodexAdvancementWidget {
         int tableRows = Math.max(requiredColumn.rows(), rewardColumn.rows());
 
         int titleBoxHeight = 9 * titleLines.size() + 9 + 8;
-        int descBoxHeight = hasDescription ? DESC_BOX_SLACK + 9 * descLines.size() : 0;
+        int descBoxHeight = hasDescription ? 14 + 9 * descLines.size() : 0;
         int tableBoxHeight = hasTable ? REWARD_ROW_TOP_PAD + tableRows * REWARD_CHIP_SIZE + REWARD_ROW_BOTTOM_PAD : 0;
 
         boolean flipX = boxOriginX + boxWidth + 26 >= screenWidth;
         boolean flipY = boxOriginY + titleBoxHeight + descBoxHeight + tableBoxHeight >= windowContentBottom;
 
-        float percent = progress != null ? progress.getPercent() : 0.0F;
+        float percent = percent();
         int filledWidth = Mth.floor(percent * boxWidth);
         AdvancementWidgetType leftType;
         AdvancementWidgetType rightType;
@@ -556,12 +622,32 @@ public final class CodexAdvancementWidget {
                     for (SubmissionTasksPayload.Task task : tasks) {
                         if (submissionIndex < task.items().size()) {
                             SubmissionTasksPayload.ItemProgress item = task.items().get(submissionIndex);
-                            return item.submitted() < item.required() ? new SubmissionHit(task, item.itemId()) : null;
+                            return item.submitted() < item.required() ? new SubmissionHit(task, item.key()) : null;
                         }
                         submissionIndex -= task.items().size();
                     }
                 }
                 itemIndex++;
+            }
+        }
+        return null;
+    }
+
+    public record HoverItem(ItemStack item, int x, int y) { }
+
+    /** Uses the rendered card geometry, including wrapped and flipped columns. */
+    public HoverItem hoverIngredientAt(Font font, int originX, int originY, int screenWidth, int bottom, int mouseX, int mouseY) {
+        Layout layout = computeLayout(font, originX, originY, screenWidth, bottom);
+        for (TableColumn column : List.of(layout.requiredColumn(), layout.rewardColumn())) {
+            for (int row = 0; row < column.rows(); row++) {
+                int start = row * column.chipsPerRow(), end = Math.min(column.chips().size(), start + column.chipsPerRow());
+                int rowX = column.x() + Math.max(0, (column.width() - (end - start) * REWARD_CHIP_SIZE) / 2);
+                int chipY = layout.tableY() + REWARD_ROW_TOP_PAD + row * REWARD_CHIP_SIZE;
+                for (int i = start; i < end; i++) {
+                    int chipX = rowX + (i - start) * REWARD_CHIP_SIZE;
+                    if (mouseX >= chipX && mouseX < chipX + 16 && mouseY >= chipY && mouseY < chipY + 16)
+                        return new HoverItem(column.chips().get(i).icon().copy(), chipX, chipY);
+                }
             }
         }
         return null;
@@ -621,28 +707,19 @@ public final class CodexAdvancementWidget {
         } else {
             extractor.blitSprite(RenderPipelines.GUI_TEXTURED, layout.leftType().boxSprite(), layout.boxX(), layout.titleY(), layout.boxWidth(), layout.titleBoxHeight());
         }
-        // Frame + icon always sit at the widget's own fixed screen position - only the background
-        // box (and the text within it) shift left when flipped, confirmed via bytecode (vanilla
-        // draws these from the un-flip-adjusted x/y, not the box's own possibly-flipped origin).
-        extractor.blitSprite(RenderPipelines.GUI_TEXTURED, layout.frameType().frameSprite(display.getType()), boxOriginX + 3, boxOriginY, 26, 26);
-        extractor.fakeItem(icon, boxOriginX + 8, boxOriginY + 5);
-        // Hover redraws the frame/icon in a later stratum, so redraw the claim marker here too.
-        if (ClientClaimableRewards.contains(node.holder().id())) {
-            int markerX = boxOriginX + 23;
-            int markerY = boxOriginY;
-            extractor.fill(markerX, markerY, markerX + 6, markerY + 6, 0xFF2D1A00);
-            extractor.fill(markerX + 1, markerY + 1, markerX + 5, markerY + 5, 0xFFFFC83D);
-        }
+        extractIcon(extractor, boxOriginX, boxOriginY);
 
         int titleTextX = layout.flipX() ? layout.boxX() + 8 : boxOriginX + 32;
         extractMultilineText(extractor, font, layout.titleLines(), titleTextX, layout.titleY() + 9, -1);
         if (layout.progressText() != null) {
-            extractor.text(font, layout.progressText(), layout.boxX() + layout.boxWidth() - layout.progressWidth() - PROGRESS_RIGHT_MARGIN, layout.titleY() + 9, -1);
+            // On a left-opening card the fixed icon occupies the right end of the header.
+            // Reserve its full32px column there, mirroring the title's left-side icon inset.
+            int progressRight = layout.boxX() + layout.boxWidth() - (layout.flipX() ? 32 : 8);
+            extractor.text(font, layout.progressText(), progressRight - layout.progressWidth(), layout.titleY() + 9, -1);
         }
         if (layout.hasDescription()) {
-            // The slack in descBoxHeight sits below the text normally (description is the box's
-            // last section) but needs to move above it when flipped (description becomes first).
-            int descTextY = layout.flipY() ? layout.descY() + DESC_BOX_SLACK : layout.descY();
+            // Equal breathing room above/below text, including upward-opening cards.
+            int descTextY = layout.descY() + 8;
             extractMultilineText(extractor, font, layout.descLines(), layout.boxX() + 8, descTextY, -1);
         }
         if (layout.hasTable()) {
@@ -698,7 +775,13 @@ public final class CodexAdvancementWidget {
             for (int i = rowStart; i < rowEnd; i++) {
                 RewardChip chip = chips.get(i);
                 int chipX = rowX + (i - rowStart) * REWARD_CHIP_SIZE;
+                float pulse = claimAdvancementId == null ? QuestFeedback.itemPulse(node.holder().id(), chip.icon()) : QuestFeedback.pulse(node.holder().id(), "claim");
+                if (pulse > 0) extractor.fill(chipX - 1, chipY - 1, chipX + 17, chipY + 17, ((int)(pulse * 80) << 24) | (claimAdvancementId == null ? 0x66E4BD : 0xFFE195));
+                extractor.pose().pushMatrix();
+                float bounce = (float)Math.sin(pulse * Math.PI) * 0.08F;
+                extractor.pose().translate(chipX + 8, chipY + 8); extractor.pose().scale(1 + bounce); extractor.pose().translate(-chipX - 8, -chipY - 8);
                 extractor.fakeItem(chip.icon(), chipX, chipY);
+                extractor.pose().popMatrix();
                 if (chip.tooltip() != null && chip.tooltip().getString().startsWith("Click to submit")) {
                     // Teal is distinct from the gold claim marker: this is a per-item submit
                     // action, and clicking this exact icon consumes only this requirement.
@@ -714,6 +797,8 @@ public final class CodexAdvancementWidget {
                 }
                 if (chip.tooltip() != null && mouseX >= chipX && mouseX < chipX + 16 && mouseY >= chipY && mouseY < chipY + 16) {
                     hoveredTooltip = chip.tooltip();
+                    if (!chip.icon().isEmpty() && dev.architectury.platform.Platform.isModLoaded("jei"))
+                        hoveredTooltip = hoveredTooltip.copy().append(Component.literal(" · JEI: recipe / uses keys"));
                 }
             }
         }

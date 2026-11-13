@@ -1,0 +1,17 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:bundle"
+    },
+    "title": "A Small Head Start",
+    "description": "Claim a few building supplies and a Camp Satchel. Hold the satchel and use it to discover its treasure. This starter gift is optional.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "arrive": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "parent": "codex_demo:camp_chronicle/root"
+}

@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " B ",
+    "ISI",
+    " P "
+  ],
+  "key": {
+    "B": "minecraft:bone_block",
+    "I": "spelunkery:invar_ingot",
+    "S": "minecraft:wither_skeleton_skull",
+    "P": "minecraft:ender_pearl"
+  },
+  "result": {
+    "id": "endrem:undead_eye",
+    "count": 1
+  }
+}

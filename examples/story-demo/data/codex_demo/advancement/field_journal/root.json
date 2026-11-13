@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:writable_book"
+    },
+    "title": "The Field Journal",
+    "description": "No kingdom to restore. No appointed hero. Only an empty journal and the question: what will you build here? Pick a direction and make the first page your own.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task",
+    "background": "minecraft:block/stone"
+  },
+  "criteria": {
+    "arrive": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}

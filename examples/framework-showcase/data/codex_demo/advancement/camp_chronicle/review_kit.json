@@ -1,0 +1,17 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:bundle"
+    },
+    "title": "A Small Head Start",
+    "description": "Claim logs, stone, a Camp Satchel, a fletching table and a bed. The latter two unlock the unchanged native Sagittary and Sleep Cycle tabs. Right-click the satchel in your hand to roll its treasure.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "arrive": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "parent": "codex_demo:camp_chronicle/root"
+}

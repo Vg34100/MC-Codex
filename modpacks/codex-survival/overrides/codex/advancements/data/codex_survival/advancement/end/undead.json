@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "endrem:undead_eye"
+    },
+    "title": "Undead Eye",
+    "description": "Craft it from a wither skeleton skull, bone blocks, invar and an Ender Pearl. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "endrem:undead_eye",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:end/root"
+}

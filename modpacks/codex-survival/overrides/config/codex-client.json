@@ -1,0 +1,10 @@
+{
+  "scale": 0,
+  "hud": true,
+  "animations": true,
+  "hold_accept": true,
+  "notices": true,
+  "sounds": true,
+  "hud_position": 0,
+  "pins": []
+}

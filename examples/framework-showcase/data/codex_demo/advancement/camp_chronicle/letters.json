@@ -1,0 +1,22 @@
+{
+  "parent": "codex_demo:camp_chronicle/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:writable_book"
+    },
+    "title": "Letters from the Road",
+    "description": "Optional correspondence. Return after your chosen chapter has something to report. Its dialogue options use visible quest-state conditions.",
+    "show_toast": false,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "open_journal": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "requirements": [
+    [
+      "open_journal"
+    ]
+  ]
+}

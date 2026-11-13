@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "farmersdelight:cooking_pot"
+    },
+    "title": "Food and Supplies",
+    "description": "Build a useful kitchen with Farmer's Delight. These goals are optional preparation; you do not need a checklist of meals to enter the End.",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "frame": "task",
+    "background": "minecraft:block/stone"
+  },
+  "criteria": {
+    "arrive": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:crafting_table"
+    },
+    "title": "A Place to Return To",
+    "description": "For the campkeeper: obtain a crafting table. Even a small shelter starts with somewhere to work.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "table": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:crafting_table"
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_demo:camp_chronicle/root"
+}

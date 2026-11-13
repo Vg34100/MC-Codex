@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "endrem:corrupted_eye"
+    },
+    "title": "Outposts",
+    "description": "Investigate pillager-outpost loot. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "endrem:corrupted_eye",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:end/root"
+}

@@ -1,0 +1,29 @@
+{
+  "parent": "minecraft:story/root",
+  "criteria": {
+    "get_stone": {
+      "conditions": {
+        "items": [
+          {
+            "items": "#minecraft:stone_tool_materials"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": "Stone remembers every strike. Find a suitable pickaxe and bring cobblestone into your inventory. Your first tools are the start of a much larger workshop.",
+    "icon": {
+      "id": "minecraft:wooden_pickaxe"
+    },
+    "title": "Stone in Your Hands"
+  },
+  "requirements": [
+    [
+      "get_stone"
+    ]
+  ],
+  "sends_telemetry_event": true,
+  "rewards": {}
+}

@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "spelunkery:invar_ingot"
+    },
+    "title": "Invar",
+    "description": "Produce four invar ingots. Some End-eye recipes now use the alloy.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "challenge"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "spelunkery:invar_ingot",
+            "count": {
+              "min": 4
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:workshop/foundry"
+}

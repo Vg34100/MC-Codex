@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "spelunkery:foundry"
+    },
+    "title": "Underground Workshop",
+    "description": "Find the Spelunker Update ores, build a foundry, and turn underground discoveries into expedition equipment. Check JEI for foundry and smithing recipes.",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "frame": "task",
+    "background": "minecraft:block/stone"
+  },
+  "criteria": {
+    "arrive": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}

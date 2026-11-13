@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:prismarine_crystals"
+    },
+    "title": "Elder Guardian",
+    "description": "Defeat an elder guardian. Look for a Guardian Eye among the drops.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "challenge"
+  },
+  "criteria": {
+    "kill": {
+      "trigger": "minecraft:player_killed_entity",
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type": "minecraft:elder_guardian"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:expeditions/monument"
+}

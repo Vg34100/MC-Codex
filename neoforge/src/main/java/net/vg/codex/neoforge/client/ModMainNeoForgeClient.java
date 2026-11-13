@@ -7,7 +7,11 @@ import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.vg.codex.ModMain;
 import net.vg.codex.client.AdvancementEditorClient;
 
+//? if <26.1 {
+/*@EventBusSubscriber(modid = ModMain.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+*///?} else {
 @EventBusSubscriber(modid = ModMain.MOD_ID, value = Dist.CLIENT)
+//?}
 public final class ModMainNeoForgeClient {
     private ModMainNeoForgeClient() {
     }

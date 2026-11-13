@@ -1,0 +1,17 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:leather_boots"
+    },
+    "title": "Stretch Your Legs",
+    "description": "Accept this repeatable trial and jump five times. Only jumps after acceptance count. Claim its reward, wait 15 seconds, then try another cycle.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "jump_five_times": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "codex_demo:camp_chronicle/root"
+}

@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:oak_log"
+    },
+    "title": "Something to Work With",
+    "description": "Obtain eight logs of any type. Set up wherever you want; there is no required base location.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "logs": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "#minecraft:logs",
+            "count": {
+              "min": 8
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:start/root"
+}

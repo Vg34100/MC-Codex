@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "spelunkery:nickel_ingot"
+    },
+    "title": "Nickel",
+    "description": "Find and smelt nickel. It is used in plating and alloys.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "spelunkery:nickel_ingot",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:workshop/root"
+}

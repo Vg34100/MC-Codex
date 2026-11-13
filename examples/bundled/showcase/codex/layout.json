@@ -1,0 +1,52 @@
+{
+  "positions": {
+    "codex_demo:camp_chronicle/root": {
+      "x": 0,
+      "y": 80
+    },
+    "codex_demo:camp_chronicle/review_kit": {
+      "x": 0,
+      "y": 0
+    },
+    "codex_demo:camp_chronicle/supply": {
+      "x": 90,
+      "y": 0
+    },
+    "codex_demo:camp_chronicle/builder": {
+      "x": 90,
+      "y": 60
+    },
+    "codex_demo:camp_chronicle/wanderer": {
+      "x": 90,
+      "y": 120
+    },
+    "codex_demo:camp_chronicle/timber": {
+      "x": 180,
+      "y": 60
+    },
+    "codex_demo:camp_chronicle/letters": {
+      "x": 180,
+      "y": 120
+    },
+    "codex_demo:camp_chronicle/heading": {
+      "x": 270,
+      "y": 90
+    },
+    "codex_demo:camp_chronicle/trail": {
+      "x": 90,
+      "y": 160
+    },
+    "codex_demo:camp_chronicle/daily": {
+      "x": 180,
+      "y": 160
+    },
+    "codex_demo:camp_chronicle/communal": {
+      "x": 270,
+      "y": 160
+    },
+    "codex_demo:camp_chronicle/everyone": {
+      "x": 360,
+      "y": 160
+    }
+  }
+}

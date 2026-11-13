@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "farmersdelight:cutting_board"
+    },
+    "title": "Cutting Board",
+    "description": "Obtain a cutting board. Check JEI for ingredients you can cut.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "farmersdelight:cutting_board",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:provisions/knife"
+}

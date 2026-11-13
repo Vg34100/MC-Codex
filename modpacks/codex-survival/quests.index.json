@@ -1,0 +1,562 @@
+[
+  {
+    "id": "codex_survival:start/root",
+    "group": "start",
+    "title": "Start Here",
+    "description": "A survival pack about useful preparation and expeditions. Collect twelve different End Remastered eyes, reach the End, defeat the dragon, and assemble the Survival Star. Other sections are open from the start.",
+    "parent": null
+  },
+  {
+    "id": "codex_survival:start/wood",
+    "group": "start",
+    "title": "Something to Work With",
+    "description": "Obtain eight logs of any type. Set up wherever you want; there is no required base location.",
+    "parent": "codex_survival:start/root"
+  },
+  {
+    "id": "codex_survival:start/table",
+    "group": "start",
+    "title": "A Working Surface",
+    "description": "Obtain a crafting table. JEI shows recipes, including the pack changes.",
+    "parent": "codex_survival:start/wood"
+  },
+  {
+    "id": "codex_survival:start/iron",
+    "group": "start",
+    "title": "First Iron",
+    "description": "Obtain four iron ingots for equipment and tools.",
+    "parent": "codex_survival:start/root"
+  },
+  {
+    "id": "codex_survival:start/bed",
+    "group": "start",
+    "title": "Somewhere to Return",
+    "description": "Obtain any bed and establish a respawn point before a long trip.",
+    "parent": "codex_survival:start/root"
+  },
+  {
+    "id": "codex_survival:start/shield",
+    "group": "start",
+    "title": "Bring a Shield",
+    "description": "Obtain a shield. Combo adds timed parries and stamina; its Mod Menu settings explain the controls. Practice blocking before your next expedition.",
+    "parent": "codex_survival:start/iron"
+  },
+  {
+    "id": "codex_survival:start/backpack",
+    "group": "start",
+    "title": "Pack for the Trip",
+    "description": "Obtain a Backpacked backpack. Its pack recipe uses leather, canvas and bronze; check JEI.",
+    "parent": "codex_survival:start/iron"
+  },
+  {
+    "id": "codex_survival:start/supplies",
+    "group": "start",
+    "title": "Spare Building Supplies",
+    "description": "Optional exchange: deliver 16 cobblestone and 8 oak logs for 8 coal. Your equipment progression does not depend on this contract.",
+    "parent": "codex_survival:start/root"
+  },
+  {
+    "id": "codex_survival:workshop/root",
+    "group": "workshop",
+    "title": "Underground Workshop",
+    "description": "Find the Spelunker Update ores, build a foundry, and turn underground discoveries into expedition equipment. Check JEI for foundry and smithing recipes.",
+    "parent": null
+  },
+  {
+    "id": "codex_survival:workshop/tin",
+    "group": "workshop",
+    "title": "Tin",
+    "description": "Smelt tin ore into an ingot. Keep some copper for bronze.",
+    "parent": "codex_survival:workshop/root"
+  },
+  {
+    "id": "codex_survival:workshop/nickel",
+    "group": "workshop",
+    "title": "Nickel",
+    "description": "Find and smelt nickel. It is used in plating and alloys.",
+    "parent": "codex_survival:workshop/root"
+  },
+  {
+    "id": "codex_survival:workshop/silver",
+    "group": "workshop",
+    "title": "Silver",
+    "description": "Find and smelt silver. It becomes useful for electrum.",
+    "parent": "codex_survival:workshop/root"
+  },
+  {
+    "id": "codex_survival:workshop/foundry",
+    "group": "workshop",
+    "title": "The Foundry",
+    "description": "Build a foundry. It processes the mod's alloys using ingredients and lava.",
+    "parent": "codex_survival:workshop/tin"
+  },
+  {
+    "id": "codex_survival:workshop/bronze",
+    "group": "workshop",
+    "title": "First Alloy",
+    "description": "Produce four bronze ingots. Check JEI for the foundry ingredients.",
+    "parent": "codex_survival:workshop/foundry"
+  },
+  {
+    "id": "codex_survival:workshop/bronze_pick",
+    "group": "workshop",
+    "title": "Put Bronze to Work",
+    "description": "Obtain a bronze pickaxe. Put it to work on your next mining trip.",
+    "parent": "codex_survival:workshop/bronze"
+  },
+  {
+    "id": "codex_survival:workshop/helmet",
+    "group": "workshop",
+    "title": "A Miner's Helmet",
+    "description": "Obtain a miner's helmet before your next deep expedition.",
+    "parent": "codex_survival:workshop/bronze"
+  },
+  {
+    "id": "codex_survival:workshop/plating",
+    "group": "workshop",
+    "title": "Nickel Plating",
+    "description": "Produce nickel plating and inspect the armor upgrades it enables.",
+    "parent": "codex_survival:workshop/nickel"
+  },
+  {
+    "id": "codex_survival:workshop/invar",
+    "group": "workshop",
+    "title": "Invar",
+    "description": "Produce four invar ingots. Some End-eye recipes now use the alloy.",
+    "parent": "codex_survival:workshop/foundry"
+  },
+  {
+    "id": "codex_survival:workshop/electrum",
+    "group": "workshop",
+    "title": "Electrum",
+    "description": "Produce four electrum ingots. It connects equipment, enchanting and eye crafting.",
+    "parent": "codex_survival:workshop/silver"
+  },
+  {
+    "id": "codex_survival:workshop/lens",
+    "group": "workshop",
+    "title": "Look More Closely",
+    "description": "Obtain a prospector lens and take it on a mining trip.",
+    "parent": "codex_survival:workshop/helmet"
+  },
+  {
+    "id": "codex_survival:fishing/root",
+    "group": "fishing",
+    "title": "Fishing",
+    "description": "Fishing Frenzy adds species, bait and equipment. Keep a few different catches: they contribute to the crafted Exotic Eye. Check bait and rod tooltips for the controls.",
+    "parent": null
+  },
+  {
+    "id": "codex_survival:fishing/rod",
+    "group": "fishing",
+    "title": "A Fishing Rod",
+    "description": "Obtain a fishing rod and find open water.",
+    "parent": "codex_survival:fishing/root"
+  },
+  {
+    "id": "codex_survival:fishing/bait",
+    "group": "fishing",
+    "title": "Bait",
+    "description": "Obtain worm bait. Use the rod and bait controls described by Fishing Frenzy.",
+    "parent": "codex_survival:fishing/rod"
+  },
+  {
+    "id": "codex_survival:fishing/catch",
+    "group": "fishing",
+    "title": "First Catch",
+    "description": "Reel in a fish or fishing loot with a rod.",
+    "parent": "codex_survival:fishing/rod"
+  },
+  {
+    "id": "codex_survival:fishing/carp",
+    "group": "fishing",
+    "title": "Carp",
+    "description": "Catch a carp and keep a few for crafting and supplies.",
+    "parent": "codex_survival:fishing/catch"
+  },
+  {
+    "id": "codex_survival:fishing/bream",
+    "group": "fishing",
+    "title": "Bream",
+    "description": "Catch or obtain a bream. Keep one for the Exotic Eye recipe.",
+    "parent": "codex_survival:fishing/catch"
+  },
+  {
+    "id": "codex_survival:fishing/deluxe_rod",
+    "group": "fishing",
+    "title": "Better Tackle",
+    "description": "Obtain the deluxe fishing rod. Its pack recipe uses bronze and string.",
+    "parent": "codex_survival:fishing/bait"
+  },
+  {
+    "id": "codex_survival:fishing/deluxe_bait",
+    "group": "fishing",
+    "title": "Better Bait",
+    "description": "Obtain deluxe bait. Check its tooltip before using it.",
+    "parent": "codex_survival:fishing/deluxe_rod"
+  },
+  {
+    "id": "codex_survival:fishing/shell",
+    "group": "fishing",
+    "title": "A Nautilus Shell",
+    "description": "Obtain a nautilus shell by fishing, trading or another legitimate source.",
+    "parent": "codex_survival:fishing/catch"
+  },
+  {
+    "id": "codex_survival:fishing/fish_exchange",
+    "group": "fishing",
+    "title": "Fish for Supplies",
+    "description": "Optional exchange: deliver 4 carp for 4 iron ingots. Keep your eye-crafting ingredients before submitting. This exchange is optional.",
+    "parent": "codex_survival:fishing/carp"
+  },
+  {
+    "id": "codex_survival:provisions/root",
+    "group": "provisions",
+    "title": "Food and Supplies",
+    "description": "Build a useful kitchen with Farmer's Delight. These goals are optional preparation; you do not need a checklist of meals to enter the End.",
+    "parent": null
+  },
+  {
+    "id": "codex_survival:provisions/knife",
+    "group": "provisions",
+    "title": "A Kitchen Knife",
+    "description": "Obtain a flint knife. Use it to prepare ingredients at a cutting board.",
+    "parent": "codex_survival:provisions/root"
+  },
+  {
+    "id": "codex_survival:provisions/board",
+    "group": "provisions",
+    "title": "Cutting Board",
+    "description": "Obtain a cutting board. Check JEI for ingredients you can cut.",
+    "parent": "codex_survival:provisions/knife"
+  },
+  {
+    "id": "codex_survival:provisions/crops",
+    "group": "provisions",
+    "title": "A More Varied Garden",
+    "description": "Obtain cabbage, tomato and rice. Grow them so expedition food is renewable.",
+    "parent": "codex_survival:provisions/root"
+  },
+  {
+    "id": "codex_survival:provisions/pot",
+    "group": "provisions",
+    "title": "Cooking Pot",
+    "description": "Obtain a cooking pot and set up its heat source.",
+    "parent": "codex_survival:provisions/board"
+  },
+  {
+    "id": "codex_survival:provisions/meal",
+    "group": "provisions",
+    "title": "A Proper Meal",
+    "description": "Eat Farmer's Delight beef stew. Consult JEI for the cooking-pot recipe.",
+    "parent": "codex_survival:provisions/pot"
+  },
+  {
+    "id": "codex_survival:provisions/fish_stew",
+    "group": "provisions",
+    "title": "Use the Catch",
+    "description": "Prepare or obtain fish stew. Check JEI for suitable fish.",
+    "parent": "codex_survival:provisions/pot"
+  },
+  {
+    "id": "codex_survival:provisions/meal_exchange",
+    "group": "provisions",
+    "title": "Meals for the Road",
+    "description": "Optional exchange: deliver 2 beef stews for 8 arrows and 4 coal. Finish equipping yourself before donating food.\n",
+    "parent": "codex_survival:provisions/meal"
+  },
+  {
+    "id": "codex_survival:equipment/root",
+    "group": "equipment",
+    "title": "Equipment",
+    "description": "Pick equipment that suits the expedition. Combo adds melee finishers, parries, stamina and dodging. Prepare for close fights and long journeys.",
+    "parent": null
+  },
+  {
+    "id": "codex_survival:equipment/hostiles",
+    "group": "equipment",
+    "title": "Know Your Opponents",
+    "description": "Defeat a zombie, skeleton and spider. Try Combo's timing and shield controls while fighting.",
+    "parent": "codex_survival:equipment/root"
+  },
+  {
+    "id": "codex_survival:equipment/quiver",
+    "group": "equipment",
+    "title": "Carry Ammunition",
+    "description": "Obtain a Sagittary quiver and check its tooltip for the controls.",
+    "parent": "codex_survival:equipment/root"
+  },
+  {
+    "id": "codex_survival:equipment/compound",
+    "group": "equipment",
+    "title": "A Ranged Upgrade",
+    "description": "Obtain a compound bow. Check JEI for its recipe.",
+    "parent": "codex_survival:equipment/quiver"
+  },
+  {
+    "id": "codex_survival:equipment/enchant",
+    "group": "equipment",
+    "title": "Enchanting Table",
+    "description": "Obtain an enchanting table. Books, lapis and experience support the next equipment tier.",
+    "parent": "codex_survival:equipment/root"
+  },
+  {
+    "id": "codex_survival:equipment/enchanted",
+    "group": "equipment",
+    "title": "First Enchantment",
+    "description": "Enchant an item at an enchanting table. Bring lapis lazuli and enough experience.",
+    "parent": "codex_survival:equipment/enchant"
+  },
+  {
+    "id": "codex_survival:equipment/diamond",
+    "group": "equipment",
+    "title": "Diamond Protection",
+    "description": "Obtain a diamond chestplate before choosing your hardest expedition.",
+    "parent": "codex_survival:equipment/root"
+  },
+  {
+    "id": "codex_survival:equipment/anvil",
+    "group": "equipment",
+    "title": "Maintain Your Equipment",
+    "description": "Obtain an anvil for repair, naming and book application.",
+    "parent": "codex_survival:equipment/enchant"
+  },
+  {
+    "id": "codex_survival:expeditions/root",
+    "group": "expeditions",
+    "title": "Overworld Expeditions",
+    "description": "Explore at your own pace. Look for dungeons, taverns and landmarks, and bring back supplies for your next trip.",
+    "parent": null
+  },
+  {
+    "id": "codex_survival:expeditions/map",
+    "group": "expeditions",
+    "title": "Take a Map",
+    "description": "Obtain a filled map. Keep track of useful places; there are no required fixed coordinates.",
+    "parent": "codex_survival:expeditions/root"
+  },
+  {
+    "id": "codex_survival:expeditions/pyramid",
+    "group": "expeditions",
+    "title": "Desert Pyramid",
+    "description": "Enter a desert pyramid. Check for traps before collecting its loot.",
+    "parent": "codex_survival:expeditions/root"
+  },
+  {
+    "id": "codex_survival:expeditions/shipwreck",
+    "group": "expeditions",
+    "title": "A Shipwreck",
+    "description": "Explore a shipwreck. Maps and ocean resources can start a longer trip.",
+    "parent": "codex_survival:expeditions/root"
+  },
+  {
+    "id": "codex_survival:expeditions/heart",
+    "group": "expeditions",
+    "title": "Buried Treasure",
+    "description": "Obtain a heart of the sea. Keep it for a conduit or your final star.",
+    "parent": "codex_survival:expeditions/shipwreck"
+  },
+  {
+    "id": "codex_survival:expeditions/monument",
+    "group": "expeditions",
+    "title": "Ocean Monument",
+    "description": "Enter an ocean monument. Plan breathing, visibility and an escape route.",
+    "parent": "codex_survival:expeditions/shipwreck"
+  },
+  {
+    "id": "codex_survival:expeditions/guardian",
+    "group": "expeditions",
+    "title": "Elder Guardian",
+    "description": "Defeat an elder guardian. Look for a Guardian Eye among the drops.",
+    "parent": "codex_survival:expeditions/monument"
+  },
+  {
+    "id": "codex_survival:expeditions/evoker",
+    "group": "expeditions",
+    "title": "An Evoker",
+    "description": "Defeat an evoker in a raid or woodland mansion. Either route counts.",
+    "parent": "codex_survival:expeditions/root"
+  },
+  {
+    "id": "codex_survival:nether/root",
+    "group": "nether",
+    "title": "Nether Expeditions",
+    "description": "Fortress and bastion trips supply brewing, equipment and eyes. A safe route home matters more than rushing the next marker.",
+    "parent": null
+  },
+  {
+    "id": "codex_survival:nether/enter",
+    "group": "nether",
+    "title": "Into the Nether",
+    "description": "Enter the Nether. Mark your portal before travelling far.",
+    "parent": "codex_survival:nether/root"
+  },
+  {
+    "id": "codex_survival:nether/fortress",
+    "group": "nether",
+    "title": "Nether Fortress",
+    "description": "Enter a Nether fortress. Watch for blazes and wither skeletons.",
+    "parent": "codex_survival:nether/enter"
+  },
+  {
+    "id": "codex_survival:nether/rods",
+    "group": "nether",
+    "title": "Brewing Materials",
+    "description": "Obtain six blaze rods. Save some for powder and a brewing stand.",
+    "parent": "codex_survival:nether/fortress"
+  },
+  {
+    "id": "codex_survival:nether/brewing",
+    "group": "nether",
+    "title": "Brewing Stand",
+    "description": "Obtain a brewing stand and grow nether wart for a renewable supply.",
+    "parent": "codex_survival:nether/rods"
+  },
+  {
+    "id": "codex_survival:nether/bastion",
+    "group": "nether",
+    "title": "Bastion",
+    "description": "Enter a bastion remnant. Bring gold armor and plan around piglin brutes.",
+    "parent": "codex_survival:nether/enter"
+  },
+  {
+    "id": "codex_survival:nether/netherite",
+    "group": "nether",
+    "title": "Ancient Debris to Netherite",
+    "description": "Obtain a netherite ingot. Use it at a smithing table to improve your equipment.",
+    "parent": "codex_survival:nether/bastion"
+  },
+  {
+    "id": "codex_survival:nether/wither",
+    "group": "nether",
+    "title": "The Wither",
+    "description": "Defeat the Wither. This is an optional eye route; its nether star also contributes to the final trophy.",
+    "parent": "codex_survival:nether/fortress"
+  },
+  {
+    "id": "codex_survival:end/root",
+    "group": "end",
+    "title": "The End",
+    "description": "Collect twelve DIFFERENT End Remastered eyes and use them in the stronghold portal. Four eye routes can be skipped. JEI shows the pack's deterministic recipes for Cryptic, Undead, Cold and Exotic Eyes. You can also find eyes through exploration, combat and trading.",
+    "parent": null
+  },
+  {
+    "id": "codex_survival:end/old",
+    "group": "end",
+    "title": "Desert Pyramids",
+    "description": "Search desert-pyramid loot. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/nether",
+    "group": "end",
+    "title": "Fortresses",
+    "description": "Search Nether-fortress loot. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/cold",
+    "group": "end",
+    "title": "Cold Eye",
+    "description": "Craft it from packed ice, tin and an Ender Pearl. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/rogue",
+    "group": "end",
+    "title": "Jungle Pyramids",
+    "description": "Search jungle-pyramid loot. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/black",
+    "group": "end",
+    "title": "Buried Treasure",
+    "description": "Search buried treasure chests. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/magical",
+    "group": "end",
+    "title": "Evokers",
+    "description": "Defeat evokers and look for a Magical Eye among the drops. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/lost",
+    "group": "end",
+    "title": "Mineshafts",
+    "description": "Explore mineshaft loot. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/corrupted",
+    "group": "end",
+    "title": "Outposts",
+    "description": "Investigate pillager-outpost loot. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/wither",
+    "group": "end",
+    "title": "Wither Eye",
+    "description": "Defeat the Wither and look for a Wither Eye among the drops. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/guardian",
+    "group": "end",
+    "title": "Guardian Eye",
+    "description": "Defeat elder guardians and look for a Guardian Eye among the drops. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/witch",
+    "group": "end",
+    "title": "Witch Eye",
+    "description": "Craft it using a Witch Pupil; check JEI for the recipe. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/cursed",
+    "group": "end",
+    "title": "Bastions",
+    "description": "Search bastion treasure. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/exotic",
+    "group": "end",
+    "title": "Exotic Eye",
+    "description": "Craft the pack recipe combining fishing catches, an aquatic shell and electrum. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/evil",
+    "group": "end",
+    "title": "Trading",
+    "description": "Trade with a master cleric and look for an Evil Eye. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/undead",
+    "group": "end",
+    "title": "Undead Eye",
+    "description": "Craft it from a wither skeleton skull, bone blocks, invar and an Ender Pearl. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/cryptic",
+    "group": "end",
+    "title": "Cryptic Eye",
+    "description": "Craft it from diamonds, lapis, a book, electrum and an Ender Pearl. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "parent": "codex_survival:end/root"
+  },
+  {
+    "id": "codex_survival:end/survival_star",
+    "group": "end",
+    "title": "Survival Star",
+    "description": "Defeat the dragon and obtain the crafted Survival Star. Its recipe combines bronze, invar, electrum, a deluxe rod, a compound bow, a heart of the sea, a nether star and dragon's breath. Assemble it to finish the pack.",
+    "parent": "codex_survival:end/root"
+  }
+]

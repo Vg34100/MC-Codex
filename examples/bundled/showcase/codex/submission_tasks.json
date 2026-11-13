@@ -1,0 +1,53 @@
+{
+  "codex_demo:camp_chronicle/supply#deliver": {
+    "items": [
+      {
+        "id": "minecraft:oak_log",
+        "count": 4
+      },
+      {
+        "id": "minecraft:cobblestone",
+        "count": 8
+      }
+    ]
+  },
+  "codex_demo:camp_chronicle/daily#deliver": {
+    "items": [
+      {
+        "id": "minecraft:stick",
+        "count": 2
+      }
+    ]
+  },
+  "codex_demo:camp_chronicle/communal#deliver": {
+    "items": [
+      {
+        "id": "minecraft:cobblestone",
+        "count": 8
+      }
+    ]
+  },
+  "codex_demo:camp_chronicle/timber#deliver": {
+    "items": [
+      {
+        "tag": "minecraft:logs",
+        "count": 4
+      },
+      {
+        "id": "minecraft:oak_log",
+        "components": {
+          "minecraft:custom_name": "Camp Timber"
+        },
+        "count": 1
+      }
+    ]
+  },
+  "codex_demo:camp_chronicle/everyone#deliver": {
+    "items": [
+      {
+        "id": "minecraft:stick",
+        "count": 4
+      }
+    ]
+  }
+}

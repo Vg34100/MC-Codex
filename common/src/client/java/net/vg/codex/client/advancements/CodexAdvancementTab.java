@@ -4,10 +4,9 @@ import com.google.gson.JsonObject;
 import net.minecraft.advancements.AdvancementNode;
 import net.minecraft.advancements.AdvancementProgress;
 import net.minecraft.advancements.DisplayInfo;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
-import net.minecraft.client.renderer.texture.TextureManager;
-import net.minecraft.core.ClientAsset;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
@@ -56,6 +55,7 @@ public final class CodexAdvancementTab {
     private DisplayInfo display;
     private ItemStack icon;
     private Component title;
+    private Identifier background;
     private final CodexAdvancementWidget root;
     // Keyed by Identifier, not AdvancementHolder - AdvancementHolder is a record over the full
     // Advancement (including its whole criteria map), so its equals/hashCode is only as reliable
@@ -80,6 +80,7 @@ public final class CodexAdvancementTab {
         this.display = display;
         this.icon = display.getIcon().create();
         this.title = display.getTitle();
+        this.background = resolveBackground(display);
         this.root = new CodexAdvancementWidget(rootNode, display);
         addWidget(root, rootNode.holder().id());
     }
@@ -114,6 +115,29 @@ public final class CodexAdvancementTab {
         this.display = display;
         this.icon = display.getIcon().create();
         this.title = display.getTitle();
+        this.background = resolveBackground(display);
+    }
+
+    private static Identifier resolveBackground(DisplayInfo display) {
+        var resources = Minecraft.getInstance().getResourceManager();
+        if (display.getBackground().isPresent()) {
+            var texture = display.getBackground().get();
+            //? if <26.1 {
+            /*if(texture.getPath().startsWith("textures/") && resources.getResource(texture).isPresent())return texture;
+            Identifier full=Identifier.fromNamespaceAndPath(texture.getNamespace(),"textures/"+texture.getPath()+".png");
+            if(resources.getResource(full).isPresent())return full;
+            *///?} else {
+            if (resources.getResource(texture.texturePath()).isPresent()) return texture.texturePath();
+            // Older mods may still supply a full textures/...png path. Render that resource
+            // without changing the source advancement's ID or its saved JSON.
+            if (texture.id().getPath().startsWith("textures/") && resources.getResource(texture.id()).isPresent()) return texture.id();
+            //?}
+        }
+        //? if <26.1 {
+        /*return Identifier.withDefaultNamespace("textures/block/stone.png");
+        *///?} else {
+        return Identifier.withDefaultNamespace("textures/gui/advancements/backgrounds/stone.png");
+        //?}
     }
 
     public CodexAdvancementWidget findById(Identifier id) {
@@ -247,8 +271,21 @@ public final class CodexAdvancementTab {
 
     /** Icon is a separate pass from the tab background (matching vanilla) so an adjacent tab's
      * background never gets drawn on top of this one's icon. */
-    public void extractIcon(GuiGraphicsExtractor extractor, int x, int y) {
-        extractor.fakeItem(icon, x + ICON_OFFSET_X, y + ICON_OFFSET_Y);
+    public void extractIcon(GuiGraphicsExtractor extractor, int x, int y, float scale) {
+        var pose = extractor.pose(); pose.pushMatrix();
+        pose.translate(x + ICON_OFFSET_X + 8, y + ICON_OFFSET_Y + 8);
+        pose.scale(scale, scale);
+        extractor.fakeItem(icon, -8, -8);
+        pose.popMatrix();
+    }
+
+    public void copyViewportFrom(CodexAdvancementTab other) {
+        scrollX=other.scrollX; scrollY=other.scrollY;
+        lastContentWidth=other.lastContentWidth; lastContentHeight=other.lastContentHeight;
+    }
+
+    public void animateHover(CodexAdvancementWidget hovered) {
+        for (var widget : widgets.values()) widget.hovered(widget == hovered);
     }
 
     public void extractContents(GuiGraphicsExtractor extractor, int contentX, int contentY, int contentWidth, int contentHeight, float zoom, boolean showAll) {
@@ -271,10 +308,6 @@ public final class CodexAdvancementTab {
         extractor.pose().pushMatrix();
         extractor.pose().translate((float) contentX, (float) contentY);
         extractor.pose().scale(zoom);
-
-        Identifier background = display.getBackground()
-                .map(ClientAsset.ResourceTexture::texturePath)
-                .orElse(TextureManager.INTENTIONAL_MISSING_TEXTURE);
 
         int offsetX = Mth.floor(scrollX);
         int offsetY = Mth.floor(scrollY);

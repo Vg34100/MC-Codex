@@ -1,0 +1,8 @@
+{
+  "codex_demo:field_journal/supplies": {
+    "experience": 10,
+    "loot": [
+      "codex_demo:codex_treasure/field_provisions"
+    ]
+  }
+}

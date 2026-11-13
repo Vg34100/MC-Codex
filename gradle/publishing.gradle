@@ -1,0 +1,146 @@
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+import java.security.MessageDigest
+
+// The wrapper derives this public manifest from the matrix and verified jars.
+// No token is written to a manifest or passed as a Gradle property.
+def manifestFile = rootProject.file(providers.gradleProperty('publish_manifest').get())
+def manifest = new JsonSlurper().parse(manifestFile)
+def row = manifest.entries.find { it.target == project.name }
+if (!row) throw new GradleException("No publication entry for ${project.path}")
+def artifact = rootProject.file(row.artifact)
+def real = providers.gradleProperty('publish_confirm').getOrElse('false') == 'true'
+def platform = providers.gradleProperty('publish_platform').getOrElse('modrinth')
+if (!(platform in ['modrinth', 'curseforge'])) throw new GradleException('Unknown publishing platform')
+def verifyArtifact = { File upload ->
+    if (upload.canonicalFile != artifact.canonicalFile) {
+        throw new GradleException('Uploader must select exactly the verified installable artifact')
+    }
+    def sha = MessageDigest.getInstance('SHA-256').digest(upload.bytes).encodeHex().toString()
+    if (sha != row.sha256 || upload.length() != row.size) {
+        throw new GradleException("Verified release artifact changed: ${artifact}")
+    }
+    [target: project.name, path: upload.canonicalPath, sha256: sha, size: upload.length()]
+}
+def recordUpload = { String id, String url ->
+    if (!id) throw new GradleException('Upload did not return a remote ID')
+    def receipt = [platform: platform, target: project.name, mod_version: manifest.mod_version,
+            project_id: platform == 'modrinth' ? manifest.project_id : manifest.curseforge_project_id,
+            id: id, url: url, artifact: artifact.name, sha256: row.sha256, size: row.size]
+    // Public API receipts survive partial failure and CurseForge scan/index delays.
+    def journal = rootProject.file("build/publishing/${manifest.mod_version}-uploads.jsonl")
+    journal.append(JsonOutput.toJson(receipt) + '\n', 'UTF-8')
+    logger.lifecycle('PUBLISH RESULT ' + JsonOutput.toJson(receipt))
+}
+
+if (!rootProject.tasks.findByName('verifyPublishArtifacts')) {
+    rootProject.tasks.register('verifyPublishArtifacts', Exec) {
+        group = 'verification'
+        description = 'Verify all exact publication jars and, for real uploads, reject existing versions.'
+        workingDir rootProject.projectDir
+        commandLine([providers.gradleProperty('publish_python').get(),
+                     rootProject.file('scripts/publish-release.py').absolutePath,
+                     'check', manifestFile.absolutePath] + (real ? ['--real', platform] : []))
+    }
+}
+
+modrinth {
+    // Default and all dry-runs are non-mutating, even when a token exists.
+    debugMode = !real
+    token = real ? providers.environmentVariable('MODRINTH_TOKEN').getOrElse('') : ''
+    projectId = manifest.project_id
+    versionName = row.version_name
+    versionNumber = row.version_number
+    versionType = row.version_type
+    gameVersions = [row.minecraft]
+    loaders = [row.loader]
+    detectLoaders = false
+    uploadFile = artifact // Never let Minotaur infer jar vs legacy remapJar.
+    additionalFiles = []
+    changelog = manifest.changelog
+    failSilently = false
+    autoAddDependsOn = false
+    dependencies {
+        row.dependencies.each { dependency ->
+            if (dependency.dependency_type == 'required') required.project(dependency.project_id)
+            else if (dependency.dependency_type == 'optional') optional.project(dependency.project_id)
+            else throw new GradleException("Unsupported publication dependency: ${dependency}")
+        }
+    }
+}
+
+tasks.named('modrinth') {
+    enabled = platform == 'modrinth'
+    // Already packaged and verified: do not rebuild/assemble sources or raw jars.
+    setDependsOn([rootProject.tasks.named('verifyPublishArtifacts')])
+    def previous = manifest.entries.takeWhile { it.target != project.name }
+    if (previous) mustRunAfter(":${previous.last().target}:modrinth")
+    doFirst {
+        if (real && !providers.environmentVariable('MODRINTH_TOKEN').getOrElse('')) {
+            throw new GradleException('Real Modrinth publication requires MODRINTH_TOKEN')
+        }
+        def upload = modrinth.file.get().asFile.canonicalFile
+        if (upload != artifact.canonicalFile || modrinth.additionalFiles.get()
+                || modrinth.additionalFileDsl.namedAdditionalFilesAsList) {
+            throw new GradleException('Minotaur must upload exactly the verified installable artifact')
+        }
+        if (modrinth.debugMode.get() != !real) {
+            throw new GradleException('Minotaur debug/real mode differs from the explicit confirmation gate')
+        }
+        def evidence = verifyArtifact(upload)
+        logger.lifecycle("PUBLISH CONFIG ${project.name}: ${row.version_number}; ${artifact.name}; SHA-256 ${evidence.sha256}; debugMode=${!real}")
+        // Minotaur omits its transient file map from the debug request JSON.
+        // Report the actual resolved extension input, not an inferred task name.
+        logger.lifecycle('PUBLISH FILE ' + JsonOutput.toJson(evidence))
+    }
+    doLast {
+        if (real) {
+            def id = newVersion?.id
+            recordUpload(id, "https://modrinth.com/mod/${manifest.project_slug}/version/${id}")
+        }
+    }
+}
+
+tasks.named('curseforge') {
+    group = 'publishing'
+    description = 'Upload exactly one verified target JAR (debug mode unless explicitly confirmed).'
+    enabled = platform == 'curseforge'
+    debugMode = !real
+    apiEndpoint = 'https://minecraft.curseforge.com'
+    apiToken = real ? providers.environmentVariable('CURSEFORGE_TOKEN').getOrElse('') : ''
+    disableVersionDetection()
+    def release = upload(manifest.curseforge_project_id, artifact)
+    release.displayName = row.version_name
+    release.releaseType = row.version_type
+    release.changelog = manifest.changelog
+    release.changelogType = 'markdown'
+    release.addGameVersion(row.minecraft)
+    release.addModLoader([fabric: 'Fabric', forge: 'Forge', neoforge: 'NeoForge'][row.loader])
+    release.addJavaVersion("Java ${row.java}".toString())
+    release.addEnvironment(*row.environments)
+    row.dependencies.each { dependency ->
+        if (dependency.dependency_type == 'required') release.addRequirement(dependency.curseforge_slug)
+        else release.addOptional(dependency.curseforge_slug)
+    }
+    setDependsOn([rootProject.tasks.named('verifyPublishArtifacts')])
+    def previous = manifest.entries.takeWhile { it.target != project.name }
+    if (previous) mustRunAfter(":${previous.last().target}:curseforge")
+    doFirst {
+        if (real && !providers.environmentVariable('CURSEFORGE_TOKEN').getOrElse('')) {
+            throw new GradleException('Real CurseForge publication requires CURSEFORGE_TOKEN')
+        }
+        if (debugMode != !real || uploadArtifacts.size() != 1 || release.additionalArtifacts) {
+            throw new GradleException('CurseForge mode/file set differs from the confirmed release plan')
+        }
+        def evidence = verifyArtifact(release.artifact.singleFile)
+        logger.lifecycle('CURSEFORGE FILE ' + JsonOutput.toJson(evidence))
+    }
+    doLast {
+        if (real) {
+            def id = release.curseFileId?.toString()
+            recordUpload(id, "https://www.curseforge.com/minecraft/mc-mods/${manifest.curseforge_project_slug}/files/${id}")
+        }
+    }
+}
+// Project-description synchronization is deliberately unavailable in this pipeline.
+tasks.named('modrinthSyncBody') { enabled = false }

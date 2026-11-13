@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "codex_tests",
+  "version": "1",
+  "name": "Codex isolated server scenarios",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.vg.codex.validation.FabricScenarios"
+    ],
+    "client": [
+      "net.vg.codex.validation.FabricTransportClient"
+    ]
+  },
+  "depends": {
+    "codex": "*"
+  }
+}

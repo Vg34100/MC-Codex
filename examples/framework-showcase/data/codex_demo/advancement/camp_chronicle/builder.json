@@ -1,0 +1,24 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:crafting_table"
+    },
+    "title": "A Place to Return To",
+    "description": "The campkeeper branch: obtain a crafting table. This remains an ordinary inventory_changed advancement; your story choice gates acceptance and the optional claim.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "table": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:crafting_table"
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_demo:camp_chronicle/root"
+}

@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "endrem:nether_eye"
+    },
+    "title": "Fortresses",
+    "description": "Search Nether-fortress loot. Obtain this eye; duplicates do not replace a different eye at the portal.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "endrem:nether_eye",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:end/root"
+}

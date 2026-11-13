@@ -1,0 +1,26 @@
+{
+  "criteria": {
+    "entered_nether": {
+      "conditions": {
+        "to": "minecraft:the_nether"
+      },
+      "trigger": "minecraft:changed_dimension"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "background": "minecraft:gui/advancements/backgrounds/nether",
+    "description": "A new dimension is a place to explore, not an itinerary. Find your footing and choose your next curiosity.",
+    "icon": {
+      "id": "minecraft:red_nether_bricks"
+    },
+    "show_toast": false,
+    "title": "An Unfamiliar Sky"
+  },
+  "requirements": [
+    [
+      "entered_nether"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

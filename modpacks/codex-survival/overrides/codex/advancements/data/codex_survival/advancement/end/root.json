@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "endrem:old_eye"
+    },
+    "title": "The End",
+    "description": "Collect twelve DIFFERENT End Remastered eyes and use them in the stronghold portal. Four eye routes can be skipped. JEI shows the pack's deterministic recipes for Cryptic, Undead, Cold and Exotic Eyes. You can also find eyes through exploration, combat and trading.",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "frame": "task",
+    "background": "minecraft:block/stone"
+  },
+  "criteria": {
+    "arrive": {
+      "trigger": "minecraft:tick"
+    }
+  }
+}

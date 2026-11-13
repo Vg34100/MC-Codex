@@ -151,11 +151,7 @@ public final class AdvancementPackIO {
      */
     public static void patchRawFields(Path packDir, ResourceProvider resources, Identifier id, JsonObject edited) {
         JsonObject json = readBaseJson(packDir, resources, id);
-        for (String key : List.of("display", "criteria", "requirements", "rewards", "parent")) {
-            if (edited.has(key)) {
-                json.add(key, edited.get(key));
-            }
-        }
+        json = AdvancementDocument.patch(json, edited);
         writeJson(fileFor(packDir, id), json);
     }
 
@@ -170,7 +166,7 @@ public final class AdvancementPackIO {
         writeJson(fileFor(packDir, id), json);
     }
 
-    private static JsonObject readBaseJson(Path packDir, ResourceProvider resources, Identifier id) {
+    public static JsonObject readBaseJson(Path packDir, ResourceProvider resources, Identifier id) {
         Path localFile = fileFor(packDir, id);
         try {
             if (Files.exists(localFile)) {
@@ -185,12 +181,7 @@ public final class AdvancementPackIO {
     }
 
     private static void writeJson(Path file, JsonObject json) {
-        try {
-            Files.createDirectories(file.getParent());
-            Files.writeString(file, GSON.toJson(json), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
+        AtomicJson.write(file, json);
     }
 
     private static Identifier resourceLocationFor(Identifier id) {
@@ -264,7 +255,18 @@ public final class AdvancementPackIO {
     }
 
     private static Path fileFor(Path packDir, Identifier id) {
-        return packDir.resolve("data").resolve(id.getNamespace()).resolve(ADVANCEMENT_DIR).resolve(id.getPath() + SUFFIX);
+        return safeResourceFile(packDir, id, ADVANCEMENT_DIR);
+    }
+
+    public static Path safeResourceFile(Path packDir, Identifier id, String kind) {
+        if (id.getNamespace().equals(".") || id.getNamespace().equals("..")) throw new IllegalArgumentException("Unsafe resource namespace");
+        for (String segment : id.getPath().split("/", -1)) {
+            if (segment.isEmpty() || segment.equals(".") || segment.equals("..")) throw new IllegalArgumentException("Unsafe resource path");
+        }
+        Path root = packDir.resolve("data").resolve(id.getNamespace()).resolve(kind).toAbsolutePath().normalize();
+        Path file = root.resolve(id.getPath() + SUFFIX).normalize();
+        if (!file.startsWith(root)) throw new IllegalArgumentException("Resource escapes pack");
+        return file;
     }
 
     /**
@@ -279,6 +281,7 @@ public final class AdvancementPackIO {
      * its first - showing every alternative would misleadingly read as "all of these required".
      */
     public static Optional<Identifier> extractCriterionItemId(JsonObject criterion) {
+        criterion=CriterionFormats.authoringView(criterion);
         if (!criterion.has("trigger") || !criterion.has("conditions") || !criterion.get("conditions").isJsonObject()) {
             return Optional.empty();
         }
@@ -323,7 +326,7 @@ public final class AdvancementPackIO {
     }
 
     private static Path lootTableFileFor(Path packDir, Identifier lootTableId) {
-        return packDir.resolve("data").resolve(lootTableId.getNamespace()).resolve(LOOT_TABLE_DIR).resolve(lootTableId.getPath() + SUFFIX);
+        return safeResourceFile(packDir, lootTableId, LOOT_TABLE_DIR);
     }
 
     /**
@@ -349,6 +352,10 @@ public final class AdvancementPackIO {
                 JsonArray functions = new JsonArray();
                 functions.add(setCount);
                 entry.add("functions", functions);
+            }
+            if (item.has("components")) {
+                JsonArray functions = entry.has("functions") ? entry.getAsJsonArray("functions") : new JsonArray();
+                JsonObject components = new JsonObject(); components.addProperty("function", "minecraft:set_components"); components.add("components", item.get("components").deepCopy()); functions.add(components); entry.add("functions", functions);
             }
             JsonArray entries = new JsonArray();
             entries.add(entry);
@@ -406,6 +413,18 @@ public final class AdvancementPackIO {
                     JsonObject reward = new JsonObject();
                     reward.addProperty("id", entry.get("name").getAsString());
                     reward.addProperty("count", count);
+                    if (entry.has("functions")) for (JsonElement fn : entry.getAsJsonArray("functions")) {
+                        JsonObject f = fn.getAsJsonObject();
+                        if (f.has("function") && f.get("function").getAsString().equals("minecraft:set_components") && f.has("components")) reward.add("components", f.get("components").deepCopy());
+                    }
+                    if (reward.has("components")) {
+                        JsonObject components = reward.getAsJsonObject("components");
+                        if (components.has("minecraft:custom_data") && components.getAsJsonObject("minecraft:custom_data").has("codex_pool")) {
+                            reward.add("bag_pool", components.getAsJsonObject("minecraft:custom_data").get("codex_pool"));
+                            if (components.has("minecraft:custom_name") && components.get("minecraft:custom_name").isJsonObject() && components.getAsJsonObject("minecraft:custom_name").has("text")) reward.add("bag_name", components.getAsJsonObject("minecraft:custom_name").get("text"));
+                            if (components.has("minecraft:item_model")) reward.add("bag_model", components.get("minecraft:item_model"));
+                        }
+                    }
                     result.add(reward);
                 }
             }

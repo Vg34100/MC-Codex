@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "LCL",
+    "LBL",
+    "LLL"
+  ],
+  "key": {
+    "L": "minecraft:leather",
+    "C": "farmersdelight:canvas",
+    "B": "spelunkery:bronze_ingot"
+  },
+  "result": {
+    "id": "backpacked:backpack",
+    "count": 1
+  }
+}

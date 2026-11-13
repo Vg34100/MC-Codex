@@ -1,0 +1,88 @@
+{
+  "codex_survival:start/root": {
+    "dialogue": {
+      "intro": "A survival pack about useful preparation and expeditions. Collect twelve different End Remastered eyes, reach the End, defeat the dragon, and assemble the Survival Star. Other sections are open from the start.\n\nPin a goal to track it, and look for a reward dot when there is something to claim."
+    },
+    "quest_tab": true
+  },
+  "codex_survival:start/supplies": {
+    "acceptance": true,
+    "repeat": {
+      "enabled": true,
+      "cooldown_seconds": 300,
+      "scope": "personal"
+    },
+    "dialogue": {
+      "intro": "Optional exchange: deliver 16 cobblestone and 8 oak logs for 8 coal. Your equipment progression does not depend on this contract.\n\nAccept before submitting. Partial deliveries count and the receipt lists what was consumed. Another delivery is available five minutes after claiming."
+    }
+  },
+  "codex_survival:workshop/root": {
+    "dialogue": {
+      "intro": "Find the Spelunker Update ores, build a foundry, and turn underground discoveries into expedition equipment. Check JEI for foundry and smithing recipes.\n\nPin a goal to track it, and look for a reward dot when there is something to claim."
+    },
+    "quest_tab": true
+  },
+  "codex_survival:fishing/root": {
+    "dialogue": {
+      "intro": "Fishing Frenzy adds species, bait and equipment. Keep a few different catches: they contribute to the crafted Exotic Eye. Check bait and rod tooltips for the controls.\n\nPin a goal to track it, and look for a reward dot when there is something to claim."
+    },
+    "quest_tab": true
+  },
+  "codex_survival:fishing/fish_exchange": {
+    "acceptance": true,
+    "repeat": {
+      "enabled": true,
+      "cooldown_seconds": 300,
+      "scope": "personal"
+    },
+    "dialogue": {
+      "intro": "Optional exchange: deliver 4 carp for 4 iron ingots. Keep your eye-crafting ingredients before submitting. This exchange is optional.\n\nAccept before submitting. Partial deliveries count and the receipt lists what was consumed. Another delivery is available five minutes after claiming."
+    }
+  },
+  "codex_survival:provisions/root": {
+    "dialogue": {
+      "intro": "Build a useful kitchen with Farmer's Delight. These goals are optional preparation; you do not need a checklist of meals to enter the End.\n\nPin a goal to track it, and look for a reward dot when there is something to claim."
+    },
+    "quest_tab": true
+  },
+  "codex_survival:provisions/meal_exchange": {
+    "acceptance": true,
+    "repeat": {
+      "enabled": true,
+      "cooldown_seconds": 300,
+      "scope": "personal"
+    },
+    "dialogue": {
+      "intro": "Optional exchange: deliver 2 beef stews for 8 arrows and 4 coal. Finish equipping yourself before donating food.\n\n\nAccept before submitting. Partial deliveries count and the receipt lists what was consumed. Another delivery is available five minutes after claiming."
+    }
+  },
+  "codex_survival:equipment/root": {
+    "dialogue": {
+      "intro": "Pick equipment that suits the expedition. Combo adds melee finishers, parries, stamina and dodging. Prepare for close fights and long journeys.\n\nPin a goal to track it, and look for a reward dot when there is something to claim."
+    },
+    "quest_tab": true
+  },
+  "codex_survival:expeditions/root": {
+    "dialogue": {
+      "intro": "Explore at your own pace. Look for dungeons, taverns and landmarks, and bring back supplies for your next trip.\n\nPin a goal to track it, and look for a reward dot when there is something to claim."
+    },
+    "quest_tab": true
+  },
+  "codex_survival:nether/root": {
+    "dialogue": {
+      "intro": "Fortress and bastion trips supply brewing, equipment and eyes. A safe route home matters more than rushing the next marker.\n\nPin a goal to track it, and look for a reward dot when there is something to claim."
+    },
+    "quest_tab": true
+  },
+  "codex_survival:end/root": {
+    "dialogue": {
+      "intro": "Collect twelve DIFFERENT End Remastered eyes and use them in the stronghold portal. Four eye routes can be skipped. JEI shows the pack's deterministic recipes for Cryptic, Undead, Cold and Exotic Eyes. You can also find eyes through exploration, combat and trading.\n\nPin a goal to track it, and look for a reward dot when there is something to claim."
+    },
+    "quest_tab": true
+  },
+  "codex_survival:end/survival_star": {
+    "dialogue": {
+      "intro": "Most of this recipe is prepared before the End. Bring bottles to the dragon fight to collect its breath. Finish the star after the fight; the remaining eye routes and projects are optional."
+    }
+  }
+}

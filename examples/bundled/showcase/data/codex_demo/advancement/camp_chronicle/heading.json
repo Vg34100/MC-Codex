@@ -1,0 +1,29 @@
+{
+  "parent": "codex_demo:camp_chronicle/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:compass"
+    },
+    "title": "A Heading of Your Own",
+    "description": "Obtain a compass. Keep a way home while you discover somewhere new.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "compass": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:compass"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "compass"
+    ]
+  ]
+}

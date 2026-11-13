@@ -1,0 +1,31 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:oak_boat"
+    },
+    "title": "A Shipwreck",
+    "description": "Explore a shipwreck. Maps and ocean resources can start a longer trip.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "visit": {
+      "trigger": "minecraft:location",
+      "conditions": {
+        "player": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "location": {
+                "structures": "minecraft:shipwreck"
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:expeditions/root"
+}

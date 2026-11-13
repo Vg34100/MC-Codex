@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "farmersdelight:fish_stew"
+    },
+    "title": "Use the Catch",
+    "description": "Prepare or obtain fish stew. Check JEI for suitable fish.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "farmersdelight:fish_stew",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:provisions/pot"
+}

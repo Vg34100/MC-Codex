@@ -87,17 +87,24 @@ public final class AdvancementEditorNetworking {
             return;
         }
         MinecraftServer server = player.level().getServer();
-        RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, server.registryAccess());
+        RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, net.vg.codex.advancement.AdvancementValidation.registries(server));
         Path packDir = AdvancementPackSync.externalPackDir();
         Map<Identifier, AdvancementPackIO.NodePosition> layout = AdvancementPackIO.readLayout(packDir);
         Map<Identifier, JsonObject> claimableRewards = CodexQuestIO.readClaimableRewards(packDir);
         Map<String, JsonObject> submissionTasks = CodexQuestIO.readSubmissionTasks(packDir);
         Map<String, JsonObject> statisticTasks = CodexQuestIO.readStatisticTasks(packDir);
+        TreasureNetworking.send(player, "");
+        String migrationRulesHash = net.vg.codex.advancement.MigrationFingerprint.hash(packDir.resolve("codex/quests.json"));
+        String migrationRewardsHash = net.vg.codex.advancement.MigrationFingerprint.hash(packDir.resolve("codex/claimable_rewards.json"));
         List<RawAdvancement> raw = new ArrayList<>();
         for (AdvancementHolder holder : server.getAdvancements().getAllAdvancements()) {
             try {
-                JsonElement json = Advancement.CODEC.encodeStart(ops, holder.value()).getOrThrow();
+                JsonElement json = AdvancementPackIO.exists(packDir, server.getResourceManager(), holder.id())
+                        ? AdvancementPackIO.readBaseJson(packDir, server.getResourceManager(), holder.id())
+                        : Advancement.CODEC.encodeStart(ops, holder.value()).getOrThrow();
                 JsonObject obj = json.getAsJsonObject();
+                JsonObject quest = net.vg.codex.advancement.QuestDefinitions.get(holder.id());
+                if (!quest.isEmpty()) obj.add("codex_quest", quest);
                 // Advancement.CODEC only round-trips real vanilla fields, so item rewards (not a
                 // vanilla concept) can't survive this encode - reattached here, wire-only, from the
                 // generated loot table the editor itself wrote last time (see AdvancementPackIO).
@@ -158,6 +165,8 @@ public final class AdvancementEditorNetworking {
                     // Wire-only metadata; never written into the vanilla advancement document.
                     obj.add("codex_layout", layoutJson);
                 }
+                if (obj.has("rewards")) obj.add("rewards", net.vg.codex.advancement.QuestRewardIdentity.attach(holder.id(), obj.getAsJsonObject("rewards")));
+                obj.add("codex_migration", net.vg.codex.advancement.MigrationFingerprint.snapshot(packDir, server.getResourceManager(), holder.id(), migrationRulesHash, migrationRewardsHash, obj));
                 raw.add(new RawAdvancement(holder.id(), GSON.toJson(obj)));
             } catch (RuntimeException e) {
                 LOGGER.error("Failed to encode advancement {} for the editor snapshot", holder.id(), e);
@@ -184,7 +193,7 @@ public final class AdvancementEditorNetworking {
                 return;
             }
             MinecraftServer server = player.level().getServer();
-            HolderLookup.Provider registries = server.registryAccess();
+            HolderLookup.Provider registries = net.vg.codex.advancement.AdvancementValidation.registries(server);
             ResourceProvider resources = server.getResourceManager();
             Path packDir = AdvancementPackSync.externalPackDir();
             Map<Identifier, AdvancementPackIO.NodePosition> layout = new HashMap<>(AdvancementPackIO.readLayout(packDir));
@@ -197,9 +206,29 @@ public final class AdvancementEditorNetworking {
             boolean statisticsChanged = false;
             int written = 0;
             int failed = 0;
+            Map<Identifier, RawAdvancement> batch = new HashMap<>();
+            for (RawAdvancement raw : payload.advancements()) batch.put(raw.id(), raw);
+            java.util.function.Function<Identifier, JsonObject> lookup = id -> {
+                JsonObject base = null;
+                if (AdvancementPackIO.exists(packDir, resources, id)) base = AdvancementPackIO.readBaseJson(packDir, resources, id);
+                else {
+                    var loaded = server.getAdvancements().get(id);
+                    if (loaded != null) base = Advancement.CODEC.encodeStart(RegistryOps.create(JsonOps.INSTANCE, registries), loaded.value()).getOrThrow().getAsJsonObject();
+                }
+                RawAdvancement pending = batch.get(id);
+                if (pending == null) return base;
+                JsonObject edits = JsonParser.parseString(pending.json()).getAsJsonObject();
+                return base == null ? edits : net.vg.codex.advancement.AdvancementDocument.patch(base, edits);
+            };
             for (RawAdvancement raw : payload.advancements()) {
                 try {
+                    AdvancementPackIO.safeResourceFile(packDir, raw.id(), "advancement");
                     var json = JsonParser.parseString(raw.json()).getAsJsonObject();
+                    json.remove("codex_migration");
+                    if (AdvancementPackIO.exists(packDir, resources, raw.id())) json = net.vg.codex.advancement.AdvancementDocument.patch(AdvancementPackIO.readBaseJson(packDir, resources, raw.id()), json);
+                    net.vg.codex.advancement.AdvancementValidation.validate(json, registries);
+                    if (json.has("codex_quest")) net.vg.codex.advancement.QuestDefinitions.validateAdvancement(json.getAsJsonObject("codex_quest"), json);
+                    net.vg.codex.advancement.AdvancementValidation.validateParents(raw.id(), json, lookup);
                     if (json.has("codex_layout")) {
                         if (json.get("codex_layout").isJsonObject()) {
                             JsonObject point = json.getAsJsonObject("codex_layout");
@@ -230,6 +259,29 @@ public final class AdvancementEditorNetworking {
                                 statisticsChanged = true;
                             }
                         }
+                    }
+                    if (json.has("rewards") && json.getAsJsonObject("rewards").has("codex_ids")) {
+                        JsonObject editedRewards = json.getAsJsonObject("rewards");
+                        net.vg.codex.advancement.QuestRewardIdentity.validate(editedRewards, raw.id());
+                        JsonArray rewardIds = editedRewards.remove("codex_ids").getAsJsonArray();
+                        if (!rewardIds.isEmpty()) {
+                            JsonObject metadata = json.has("codex_quest") ? json.getAsJsonObject("codex_quest") : net.vg.codex.advancement.QuestDefinitions.get(raw.id());
+                            if (!metadata.has("reward_ids_legacy")) {
+                                JsonObject previous = claimableRewards.get(raw.id());
+                                if (previous == null && AdvancementPackIO.exists(packDir, resources, raw.id())) {
+                                    JsonObject original = AdvancementPackIO.readBaseJson(packDir, resources, raw.id());
+                                    previous = original.has("rewards") ? original.getAsJsonObject("rewards") : new JsonObject();
+                                }
+                                if (previous == null) previous = new JsonObject();
+                                previous = net.vg.codex.advancement.QuestTransactions.completeRewards(packDir, raw.id(), previous);
+                                metadata.add("reward_ids_legacy", net.vg.codex.advancement.QuestRewardIdentity.attach(raw.id(), previous).getAsJsonArray("codex_ids"));
+                            }
+                            metadata.add("reward_ids", rewardIds); json.add("codex_quest", metadata);
+                        }
+                    }
+                    if (json.has("codex_quest")) {
+                        net.vg.codex.advancement.QuestDefinitions.save(raw.id(), json.getAsJsonObject("codex_quest"));
+                        json.remove("codex_quest");
                     }
                     applyItemRewards(packDir, raw.id(), json);
                     if (json.has("codex_claimable")) {
@@ -340,191 +392,70 @@ public final class AdvancementEditorNetworking {
             // client had loaded - a stale client-side tree previously left orphaned children behind
             // (parent gone, child file still present), which only ever surfaced as a silent
             // "Couldn't load advancements" warning rather than actually being cleaned up.
-            var deleted = AdvancementPackIO.deleteWithDescendants(packDir, payload.ids());
-            Map<Identifier, AdvancementPackIO.NodePosition> layout = AdvancementPackIO.readLayout(packDir);
-            if (layout.keySet().removeAll(deleted)) {
-                AdvancementPackIO.writeLayout(packDir, layout);
+            try {
+                for (Identifier id : payload.ids()) AdvancementPackIO.safeResourceFile(packDir, id, "advancement");
+                var deleted = AdvancementPackIO.deleteWithDescendants(packDir, payload.ids());
+                for (Identifier id : deleted) net.vg.codex.advancement.QuestDefinitions.save(id, new JsonObject());
+                Map<Identifier, AdvancementPackIO.NodePosition> layout = AdvancementPackIO.readLayout(packDir);
+                if (layout.keySet().removeAll(deleted)) {
+                    AdvancementPackIO.writeLayout(packDir, layout);
+                }
+                Map<Identifier, JsonObject> claimableRewards = CodexQuestIO.readClaimableRewards(packDir);
+                if (claimableRewards.keySet().removeAll(deleted)) {
+                    CodexQuestIO.writeClaimableRewards(packDir, claimableRewards);
+                }
+                var submissions = CodexQuestIO.readSubmissionTasks(packDir);
+                var statistics = CodexQuestIO.readStatisticTasks(packDir);
+                submissions.keySet().removeIf(key -> deleted.stream().anyMatch(id -> key.startsWith(id + "#")));
+                statistics.keySet().removeIf(key -> deleted.stream().anyMatch(id -> key.startsWith(id + "#")));
+                CodexQuestIO.writeSubmissionTasks(packDir, submissions);
+                CodexQuestIO.writeStatisticTasks(packDir, statistics);
+                AdvancementPackSync.onServerStarting(server);
+                player.sendSystemMessage(Component.literal("Codex: deleted " + deleted.size() + " advancement(s)."));
+            } catch (RuntimeException invalid) {
+                LOGGER.warn("Rejected advancement deletion from {}: {}", player.getScoreboardName(), invalid.getMessage());
+                player.sendSystemMessage(Component.literal("Codex: delete rejected; see server log."));
             }
-            Map<Identifier, JsonObject> claimableRewards = CodexQuestIO.readClaimableRewards(packDir);
-            if (claimableRewards.keySet().removeAll(deleted)) {
-                CodexQuestIO.writeClaimableRewards(packDir, claimableRewards);
-            }
-            AdvancementPackSync.onServerStarting(server);
-            player.sendSystemMessage(Component.literal("Codex: deleted " + deleted.size() + " advancement(s)."));
         });
     }
 
     private static void handleClaim(ClaimAdvancementRewardPayload payload, NetworkManager.PacketContext context) {
         context.queue(() -> {
             if (!(context.getPlayer() instanceof ServerPlayer player)) return;
-            if (claim(player, payload.advancementId(), payload.rewardIndex()) == 0) {
-                player.sendSystemMessage(Component.literal("Codex: that reward was already claimed."));
-            }
+            QuestNetworking.act(player, payload.advancementId(), "claim", "", java.util.Optional.empty(), payload.rewardIndex());
         });
     }
 
     private static void handleClaimAll(ClaimAllAdvancementRewardsPayload payload, NetworkManager.PacketContext context) {
         context.queue(() -> {
             if (!(context.getPlayer() instanceof ServerPlayer player)) return;
+            try (net.vg.codex.advancement.QuestReadScope scope = net.vg.codex.advancement.QuestReadScope.open()) {
             int claimed = 0;
+            int quests = 0;
             for (Identifier id : CodexQuestIO.readClaimableRewards(AdvancementPackSync.externalPackDir()).keySet()) {
-                claimed += claim(player, id, -1);
+                int count = net.vg.codex.advancement.QuestTransactions.claim(player, id, -1);
+                claimed += count;
+                if (count > 0) quests++;
             }
             AdvancementPackSync.sendClaimableRewardsTo(player);
-            player.sendSystemMessage(Component.literal(claimed > 0
-                    ? "Codex: claimed " + claimed + " reward(s)."
-                    : "Codex: no rewards are available to claim."));
+            JsonObject result = new JsonObject(); result.addProperty("action", "claim_all");
+            result.addProperty("success", claimed > 0); result.addProperty("title", "Rewards");
+            result.addProperty("message", claimed > 0 ? "Claimed " + claimed + (claimed == 1 ? " reward from " : " rewards from ") + quests + (quests == 1 ? " quest" : " quests") : "No rewards available to claim");
+            JsonObject response = new JsonObject(); response.add("result", result);
+            NetworkManager.sendToPlayer(player, new QuestInfoPayload(Identifier.parse("codex:reward_claims"), response.toString()));
+            QuestNetworking.refresh(player);
+            }
         });
     }
 
-    /** Returns false for every intentionally non-claimable state; never grants twice. */
-    private static int claim(ServerPlayer player, Identifier id, int requestedIndex) {
-        MinecraftServer server = player.level().getServer();
-        AdvancementHolder holder = server.getAdvancements().get(id);
-        if (holder == null || !player.getAdvancements().getOrStartProgress(holder).isDone()) return 0;
-        Path packDir = AdvancementPackSync.externalPackDir();
-        Map<Identifier, JsonObject> rewards = CodexQuestIO.readClaimableRewards(packDir);
-        JsonObject rewardJson = rewards.get(id);
-        var claims = CodexQuestIO.readClaimIndexes(packDir, player.getUUID());
-        if (rewardJson == null) return 0;
-        Set<Integer> claimed = new HashSet<>(claims.getOrDefault(id, Set.of()));
-        if (claimed.contains(-1)) return 0;
-        try {
-            int awarded = 0;
-            int count = rewardCount(packDir, id, rewardJson);
-            int first = requestedIndex < 0 ? 0 : requestedIndex;
-            int last = requestedIndex < 0 ? count : requestedIndex + 1;
-            for (int index = first; index < last; index++) {
-                if (index < 0 || index >= count || claimed.contains(index)) continue;
-                grantRewardEntry(player, packDir, id, rewardJson, index);
-                claimed.add(index);
-                awarded++;
-            }
-            if (awarded == 0) return 0;
-            claims.put(id, claimed);
-            CodexQuestIO.writeClaimIndexes(packDir, player.getUUID(), claims);
-            AdvancementPackSync.sendClaimableRewardsTo(player);
-            return awarded;
-        } catch (RuntimeException e) {
-            LOGGER.error("Failed to claim {} for {}", id, player.getScoreboardName(), e);
-            player.sendSystemMessage(Component.literal("Codex: reward could not be claimed; see server log."));
-            return 0;
-        }
-    }
-
-    /** The order exactly matches CodexAdvancementWidget's reward-chip order. */
     public static int rewardCount(Path packDir, Identifier id, JsonObject rewards) {
-        int count = rewards.has("experience") && rewards.get("experience").getAsInt() > 0 ? 1 : 0;
-        JsonArray items = rewardItems(packDir, id, rewards);
-        count += items.size();
-        if (rewards.has("recipes") && rewards.get("recipes").isJsonArray()) count += rewards.getAsJsonArray("recipes").size();
-        if (rewards.has("loot") && rewards.get("loot").isJsonArray()) {
-            String generated = AdvancementPackIO.generatedLootTableId(id).toString();
-            for (JsonElement loot : rewards.getAsJsonArray("loot")) if (!generated.equals(loot.getAsString())) count++;
-        }
-        return count + (rewards.has("function") ? 1 : 0);
-    }
-
-    private static void grantRewardEntry(ServerPlayer player, Path packDir, Identifier id, JsonObject rewards, int index) {
-        int cursor = 0;
-        if (rewards.has("experience") && rewards.get("experience").getAsInt() > 0) {
-            if (index == cursor) { player.giveExperiencePoints(rewards.get("experience").getAsInt()); return; }
-            cursor++;
-        }
-        JsonArray items = rewardItems(packDir, id, rewards);
-        for (JsonElement element : items) {
-            if (index == cursor) {
-                JsonObject item = element.getAsJsonObject();
-                ItemStack stack = new ItemStack(BuiltInRegistries.ITEM.getValue(Identifier.parse(item.get("id").getAsString())),
-                        item.has("count") ? item.get("count").getAsInt() : 1);
-                if (!player.getInventory().add(stack)) player.drop(stack, false);
-                return;
-            }
-            cursor++;
-        }
-        JsonArray recipes = rewards.has("recipes") && rewards.get("recipes").isJsonArray() ? rewards.getAsJsonArray("recipes") : new JsonArray();
-        for (JsonElement recipe : recipes) {
-            if (index == cursor) { grantVanillaSlice(player, "recipes", recipe); return; }
-            cursor++;
-        }
-        JsonArray loot = rewards.has("loot") && rewards.get("loot").isJsonArray() ? rewards.getAsJsonArray("loot") : new JsonArray();
-        String generated = AdvancementPackIO.generatedLootTableId(id).toString();
-        for (JsonElement entry : loot) {
-            if (generated.equals(entry.getAsString())) continue;
-            if (index == cursor) { grantVanillaSlice(player, "loot", entry); return; }
-            cursor++;
-        }
-        if (rewards.has("function") && index == cursor) grantVanillaFunction(player, rewards.get("function").getAsString());
-    }
-
-    private static JsonArray rewardItems(Path packDir, Identifier id, JsonObject rewards) {
-        return rewards.has("codex_items") && rewards.get("codex_items").isJsonArray()
-                ? rewards.getAsJsonArray("codex_items") : AdvancementPackIO.readGeneratedItemRewards(packDir, id);
-    }
-
-    private static void grantVanillaSlice(ServerPlayer player, String key, JsonElement value) {
-        JsonObject json = new JsonObject(); JsonArray values = new JsonArray(); values.add(value); json.add(key, values);
-        AdvancementRewards.CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, player.level().getServer().registryAccess()), json).getOrThrow().grant(player);
-    }
-
-    private static void grantVanillaFunction(ServerPlayer player, String function) {
-        JsonObject json = new JsonObject(); json.addProperty("function", function);
-        AdvancementRewards.CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, player.level().getServer().registryAccess()), json).getOrThrow().grant(player);
+        return net.vg.codex.advancement.QuestTransactions.rewardCount(packDir, id, rewards);
     }
 
     private static void handleSubmit(SubmitAdvancementItemsPayload payload, NetworkManager.PacketContext context) {
         context.queue(() -> {
             if (!(context.getPlayer() instanceof ServerPlayer player)) return;
-            Path packDir = AdvancementPackSync.externalPackDir();
-            String key = CodexQuestIO.taskKey(payload.advancementId(), payload.criterion());
-            JsonObject task = CodexQuestIO.readSubmissionTasks(packDir).get(key);
-            AdvancementHolder holder = player.level().getServer().getAdvancements().get(payload.advancementId());
-            if (task == null || holder == null) {
-                player.sendSystemMessage(Component.literal("Codex: that submission task no longer exists."));
-                return;
-            }
-            UUID progressOwner = CodexPartyService.progressOwner(player.level().getServer(), player.getUUID());
-            Map<String, Map<Identifier, Integer>> allProgress = CodexQuestIO.readSubmissionProgress(packDir, progressOwner);
-            Map<Identifier, Integer> progress = allProgress.computeIfAbsent(key, ignored -> new HashMap<>());
-            int removed = 0;
-            try {
-                for (JsonElement element : task.getAsJsonArray("items")) {
-                    JsonObject requirement = element.getAsJsonObject();
-                    Identifier itemId = Identifier.parse(requirement.get("id").getAsString());
-                    if (payload.itemId().isPresent() && !payload.itemId().get().equals(itemId)) continue;
-                    int needed = requirement.get("count").getAsInt() - progress.getOrDefault(itemId, 0);
-                    if (needed <= 0) continue;
-                    for (int slot = 0; slot < player.getInventory().getContainerSize() && needed > 0; slot++) {
-                        ItemStack stack = player.getInventory().getItem(slot);
-                        if (stack.isEmpty() || !BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(itemId)) continue;
-                        int take = Math.min(needed, stack.getCount());
-                        stack.shrink(take);
-                        progress.merge(itemId, take, Integer::sum);
-                        needed -= take;
-                        removed += take;
-                    }
-                }
-                CodexQuestIO.writeSubmissionProgress(packDir, progressOwner, allProgress);
-                boolean complete = true;
-                for (JsonElement element : task.getAsJsonArray("items")) {
-                    JsonObject requirement = element.getAsJsonObject();
-                    Identifier itemId = Identifier.parse(requirement.get("id").getAsString());
-                    if (progress.getOrDefault(itemId, 0) < requirement.get("count").getAsInt()) complete = false;
-                }
-                if (complete) player.getAdvancements().award(holder, payload.criterion());
-                UUID party = CodexPartyService.progressOwner(player.level().getServer(), player.getUUID());
-                for (ServerPlayer online : player.level().getServer().getPlayerList().getPlayers()) {
-                    if (CodexPartyService.progressOwner(player.level().getServer(), online.getUUID()).equals(party)) {
-                        AdvancementPackSync.sendSubmissionTasksTo(online);
-                    }
-                }
-                player.sendSystemMessage(Component.literal(complete
-                        ? "Codex: submission complete."
-                        : "Codex: submitted " + removed + " item(s)."));
-            } catch (RuntimeException e) {
-                LOGGER.error("Failed submission {} for {}", key, player.getScoreboardName(), e);
-                player.sendSystemMessage(Component.literal("Codex: submission failed; no further items were removed."));
-            }
+            QuestNetworking.act(player, payload.advancementId(), "submit", payload.criterion(), payload.itemId(), -1);
         });
     }
 }

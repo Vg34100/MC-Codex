@@ -1,0 +1,122 @@
+{
+  "codex_demo:camp_chronicle/review_kit": {
+    "codex_items": [
+      {
+        "id": "minecraft:oak_log",
+        "count": 16
+      },
+      {
+        "id": "minecraft:cobblestone",
+        "count": 32
+      },
+      {
+        "id": "codex:treasure_bag",
+        "count": 1,
+        "components": {
+          "minecraft:custom_data": {
+            "codex_pool": "codex_demo:codex_treasure/field_provisions"
+          },
+          "minecraft:custom_name": {
+            "text": "Camp Satchel"
+          }
+        },
+        "bag_pool": "codex_demo:codex_treasure/field_provisions",
+        "bag_name": "Camp Satchel"
+      },
+      {
+        "id": "minecraft:fletching_table",
+        "count": 1
+      },
+      {
+        "id": "minecraft:black_bed",
+        "count": 1
+      }
+    ]
+  },
+  "codex_demo:camp_chronicle/supply": {
+    "experience": 5,
+    "codex_items": [
+      {
+        "id": "codex:treasure_bag",
+        "count": 1,
+        "components": {
+          "minecraft:custom_data": {
+            "codex_pool": "codex_demo:codex_treasure/field_provisions"
+          },
+          "minecraft:custom_name": {
+            "text": "Camp Satchel"
+          }
+        },
+        "bag_pool": "codex_demo:codex_treasure/field_provisions",
+        "bag_name": "Camp Satchel"
+      }
+    ],
+    "loot": [
+      "codex_demo:codex_treasure/field_provisions"
+    ]
+  },
+  "codex_demo:camp_chronicle/trail": {
+    "codex_items": [
+      {
+        "id": "minecraft:torch",
+        "count": 4
+      }
+    ]
+  },
+  "codex_demo:camp_chronicle/builder": {
+    "experience": 10,
+    "codex_items": [
+      {
+        "id": "minecraft:bread",
+        "count": 3
+      }
+    ]
+  },
+  "codex_demo:camp_chronicle/wanderer": {
+    "experience": 10,
+    "codex_items": [
+      {
+        "id": "minecraft:apple",
+        "count": 3
+      }
+    ]
+  },
+  "codex_demo:camp_chronicle/daily": {
+    "experience": 2,
+    "codex_items": [
+      {
+        "id": "minecraft:bread",
+        "count": 1
+      }
+    ]
+  },
+  "codex_demo:camp_chronicle/communal": {
+    "codex_items": [
+      {
+        "id": "minecraft:bread",
+        "count": 4
+      },
+      {
+        "id": "minecraft:torch",
+        "count": 8
+      }
+    ]
+  },
+  "codex_demo:camp_chronicle/timber": {
+    "codex_items": [
+      {
+        "id": "minecraft:apple",
+        "count": 2
+      }
+    ],
+    "experience": 3
+  },
+  "codex_demo:camp_chronicle/everyone": {
+    "codex_items": [
+      {
+        "id": "minecraft:apple",
+        "count": 1
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "parent": "minecraft:story/mine_diamond",
+  "criteria": {
+    "enchanted_item": {
+      "trigger": "minecraft:enchanted_item"
+    }
+  },
+  "display": {
+    "description": "A workshop can hold books as well as tools. Enchant an item using the ordinary vanilla table.",
+    "icon": {
+      "id": "minecraft:enchanted_book"
+    },
+    "title": "Words That Hold Power"
+  },
+  "requirements": [
+    [
+      "enchanted_item"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

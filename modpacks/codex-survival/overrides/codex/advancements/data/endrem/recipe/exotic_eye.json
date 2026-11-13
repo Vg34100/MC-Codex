@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " CE",
+    "SPS",
+    "EB "
+  ],
+  "key": {
+    "C": "fishingfrenzy:carp",
+    "B": "fishingfrenzy:bream",
+    "S": "minecraft:nautilus_shell",
+    "P": "minecraft:ender_pearl",
+    "E": "spelunkery:electrum_ingot"
+  },
+  "result": {
+    "id": "endrem:exotic_eye",
+    "count": 1
+  }
+}

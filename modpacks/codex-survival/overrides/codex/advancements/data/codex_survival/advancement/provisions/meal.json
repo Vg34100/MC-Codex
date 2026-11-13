@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "id": "farmersdelight:beef_stew"
+    },
+    "title": "A Proper Meal",
+    "description": "Eat Farmer's Delight beef stew. Consult JEI for the cooking-pot recipe.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "eat": {
+      "trigger": "minecraft:consume_item",
+      "conditions": {
+        "item": {
+          "items": "farmersdelight:beef_stew"
+        }
+      }
+    }
+  },
+  "parent": "codex_survival:provisions/pot"
+}

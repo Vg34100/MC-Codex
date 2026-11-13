@@ -3,13 +3,16 @@
   "id": "codex",
   "version": "${version}",
   "name": "Codex",
-  "description": "Starter Architectury mod template for Minecraft 26.1.2.",
+  "description": "Minecraft-native advancement and quest authoring, party progression, and claimable rewards.",
   "authors": [
-    "Replace Me"
+    "Vg34100"
   ],
   "license": "MIT",
   "environment": "*",
   "entrypoints": {
+    "jei_mod_plugin": [
+      "net.vg.codex.client.compat.jei.CodexJeiPlugin"
+    ],
     "main": [
       "net.vg.codex.fabric.ModMainFabric"
     ],
@@ -17,11 +20,14 @@
       "net.vg.codex.fabric.client.ModMainFabricClient"
     ]
   },
+  "mixins": [
+    "codex.mixins.json"
+  ],
   "depends": {
-    "fabricloader": ">=0.19.3",
-    "minecraft": "26.1.2",
-    "java": ">=25",
-    "architectury": ">=20.0.0",
+    "fabricloader": ">=${fabric_loader_version}",
+    "minecraft": "${minecraft_version}",
+    "java": ">=${java_version}",
+    "architectury": ">=${architectury_api_version}",
     "fabric-api": "*"
   }
 }

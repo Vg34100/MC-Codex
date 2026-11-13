@@ -1,0 +1,71 @@
+[
+  {
+    "advancement": "sagittary:arsenal",
+    "source_jar": "sagittary-fabric-26.1.2-2.0.1.jar",
+    "criterion_keys": [
+      "unique_1",
+      "unique_2",
+      "unique_3",
+      "unique_4",
+      "unique_5",
+      "unique_6",
+      "unique_7",
+      "unique_8",
+      "unique_9",
+      "unique_10",
+      "unique_11",
+      "unique_12",
+      "unique_13",
+      "unique_14",
+      "unique_15",
+      "unique_16"
+    ],
+    "native_json_sha256": "492ec64cf4b31e2f194d47e3dde1d69c74ed3edec941f60f6a420cbd059176a7",
+    "codex_override": "dialogue sidecar only; no replacement advancement JSON"
+  },
+  {
+    "advancement": "sagittary:bamboo",
+    "source_jar": "sagittary-fabric-26.1.2-2.0.1.jar",
+    "criterion_keys": [
+      "bamboo"
+    ],
+    "native_json_sha256": "b93c23d9e319d75194a920d7cad767d6d587c1d5195db79c77bef74ba1de2c3a",
+    "codex_override": "dialogue sidecar only; no replacement advancement JSON"
+  },
+  {
+    "advancement": "sagittary:compound_bow",
+    "source_jar": "sagittary-fabric-26.1.2-2.0.1.jar",
+    "criterion_keys": [
+      "compound_bow"
+    ],
+    "native_json_sha256": "739fdb52e68b72521eefebea912859d54a791f286e3cf5d6fbffefd0b882180a",
+    "codex_override": "dialogue sidecar only; no replacement advancement JSON"
+  },
+  {
+    "advancement": "sleepcycle:root",
+    "source_jar": "sleepcycle-fabric-26.1.2-1.0.5.jar",
+    "criterion_keys": [
+      "has_bed"
+    ],
+    "native_json_sha256": "e3a2b81ff75eff17df3438ca902ba12985b266af307e4de6ab84c335f29ad506",
+    "codex_override": "dialogue sidecar only; no replacement advancement JSON"
+  },
+  {
+    "advancement": "sleepcycle:tired",
+    "source_jar": "sleepcycle-fabric-26.1.2-1.0.5.jar",
+    "criterion_keys": [
+      "tired"
+    ],
+    "native_json_sha256": "909e7d7a4e8d5acf0c0f0843c8edd6d542fdf09d4e0343e26cffce3cdf31ad55",
+    "codex_override": "dialogue sidecar only; no replacement advancement JSON"
+  },
+  {
+    "advancement": "sleepcycle:well_rested",
+    "source_jar": "sleepcycle-fabric-26.1.2-1.0.5.jar",
+    "criterion_keys": [
+      "well_rested"
+    ],
+    "native_json_sha256": "9d3f0454a05d9e39c557268fbcd368e6a6183ce3f82f14aaf90c1f891c1248ef",
+    "codex_override": "dialogue sidecar only; no replacement advancement JSON"
+  }
+]

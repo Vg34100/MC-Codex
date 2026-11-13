@@ -1,0 +1,324 @@
+{
+  "positions": {
+    "codex_survival:start/root": {
+      "x": 0,
+      "y": 75
+    },
+    "codex_survival:start/wood": {
+      "x": 80,
+      "y": 10
+    },
+    "codex_survival:start/table": {
+      "x": 80,
+      "y": 60
+    },
+    "codex_survival:start/iron": {
+      "x": 80,
+      "y": 110
+    },
+    "codex_survival:start/bed": {
+      "x": 80,
+      "y": 160
+    },
+    "codex_survival:start/shield": {
+      "x": 160,
+      "y": 10
+    },
+    "codex_survival:start/backpack": {
+      "x": 160,
+      "y": 60
+    },
+    "codex_survival:start/supplies": {
+      "x": 160,
+      "y": 110
+    },
+    "codex_survival:workshop/root": {
+      "x": 0,
+      "y": 75
+    },
+    "codex_survival:workshop/tin": {
+      "x": 80,
+      "y": 10
+    },
+    "codex_survival:workshop/nickel": {
+      "x": 80,
+      "y": 60
+    },
+    "codex_survival:workshop/silver": {
+      "x": 80,
+      "y": 110
+    },
+    "codex_survival:workshop/foundry": {
+      "x": 80,
+      "y": 160
+    },
+    "codex_survival:workshop/bronze": {
+      "x": 160,
+      "y": 10
+    },
+    "codex_survival:workshop/bronze_pick": {
+      "x": 160,
+      "y": 60
+    },
+    "codex_survival:workshop/helmet": {
+      "x": 160,
+      "y": 110
+    },
+    "codex_survival:workshop/plating": {
+      "x": 160,
+      "y": 160
+    },
+    "codex_survival:workshop/invar": {
+      "x": 240,
+      "y": 10
+    },
+    "codex_survival:workshop/electrum": {
+      "x": 240,
+      "y": 60
+    },
+    "codex_survival:workshop/lens": {
+      "x": 240,
+      "y": 110
+    },
+    "codex_survival:fishing/root": {
+      "x": 0,
+      "y": 75
+    },
+    "codex_survival:fishing/rod": {
+      "x": 80,
+      "y": 10
+    },
+    "codex_survival:fishing/bait": {
+      "x": 80,
+      "y": 60
+    },
+    "codex_survival:fishing/catch": {
+      "x": 80,
+      "y": 110
+    },
+    "codex_survival:fishing/carp": {
+      "x": 80,
+      "y": 160
+    },
+    "codex_survival:fishing/bream": {
+      "x": 160,
+      "y": 10
+    },
+    "codex_survival:fishing/deluxe_rod": {
+      "x": 160,
+      "y": 60
+    },
+    "codex_survival:fishing/deluxe_bait": {
+      "x": 160,
+      "y": 110
+    },
+    "codex_survival:fishing/shell": {
+      "x": 160,
+      "y": 160
+    },
+    "codex_survival:fishing/fish_exchange": {
+      "x": 240,
+      "y": 10
+    },
+    "codex_survival:provisions/root": {
+      "x": 0,
+      "y": 75
+    },
+    "codex_survival:provisions/knife": {
+      "x": 80,
+      "y": 10
+    },
+    "codex_survival:provisions/board": {
+      "x": 80,
+      "y": 60
+    },
+    "codex_survival:provisions/crops": {
+      "x": 80,
+      "y": 110
+    },
+    "codex_survival:provisions/pot": {
+      "x": 80,
+      "y": 160
+    },
+    "codex_survival:provisions/meal": {
+      "x": 160,
+      "y": 10
+    },
+    "codex_survival:provisions/fish_stew": {
+      "x": 160,
+      "y": 60
+    },
+    "codex_survival:provisions/meal_exchange": {
+      "x": 160,
+      "y": 110
+    },
+    "codex_survival:equipment/root": {
+      "x": 0,
+      "y": 75
+    },
+    "codex_survival:equipment/hostiles": {
+      "x": 80,
+      "y": 10
+    },
+    "codex_survival:equipment/quiver": {
+      "x": 80,
+      "y": 60
+    },
+    "codex_survival:equipment/compound": {
+      "x": 80,
+      "y": 110
+    },
+    "codex_survival:equipment/enchant": {
+      "x": 80,
+      "y": 160
+    },
+    "codex_survival:equipment/enchanted": {
+      "x": 160,
+      "y": 10
+    },
+    "codex_survival:equipment/diamond": {
+      "x": 160,
+      "y": 60
+    },
+    "codex_survival:equipment/anvil": {
+      "x": 160,
+      "y": 110
+    },
+    "codex_survival:expeditions/root": {
+      "x": 0,
+      "y": 75
+    },
+    "codex_survival:expeditions/map": {
+      "x": 80,
+      "y": 10
+    },
+    "codex_survival:expeditions/pyramid": {
+      "x": 80,
+      "y": 60
+    },
+    "codex_survival:expeditions/shipwreck": {
+      "x": 80,
+      "y": 110
+    },
+    "codex_survival:expeditions/heart": {
+      "x": 80,
+      "y": 160
+    },
+    "codex_survival:expeditions/monument": {
+      "x": 160,
+      "y": 10
+    },
+    "codex_survival:expeditions/guardian": {
+      "x": 160,
+      "y": 60
+    },
+    "codex_survival:expeditions/evoker": {
+      "x": 160,
+      "y": 110
+    },
+    "codex_survival:nether/root": {
+      "x": 0,
+      "y": 75
+    },
+    "codex_survival:nether/enter": {
+      "x": 80,
+      "y": 10
+    },
+    "codex_survival:nether/fortress": {
+      "x": 80,
+      "y": 60
+    },
+    "codex_survival:nether/rods": {
+      "x": 80,
+      "y": 110
+    },
+    "codex_survival:nether/brewing": {
+      "x": 80,
+      "y": 160
+    },
+    "codex_survival:nether/bastion": {
+      "x": 160,
+      "y": 10
+    },
+    "codex_survival:nether/netherite": {
+      "x": 160,
+      "y": 60
+    },
+    "codex_survival:nether/wither": {
+      "x": 160,
+      "y": 110
+    },
+    "codex_survival:end/root": {
+      "x": 0,
+      "y": 75
+    },
+    "codex_survival:end/old": {
+      "x": 80,
+      "y": 10
+    },
+    "codex_survival:end/nether": {
+      "x": 80,
+      "y": 60
+    },
+    "codex_survival:end/cold": {
+      "x": 80,
+      "y": 110
+    },
+    "codex_survival:end/rogue": {
+      "x": 80,
+      "y": 160
+    },
+    "codex_survival:end/black": {
+      "x": 160,
+      "y": 10
+    },
+    "codex_survival:end/magical": {
+      "x": 160,
+      "y": 60
+    },
+    "codex_survival:end/lost": {
+      "x": 160,
+      "y": 110
+    },
+    "codex_survival:end/corrupted": {
+      "x": 160,
+      "y": 160
+    },
+    "codex_survival:end/wither": {
+      "x": 240,
+      "y": 10
+    },
+    "codex_survival:end/guardian": {
+      "x": 240,
+      "y": 60
+    },
+    "codex_survival:end/witch": {
+      "x": 240,
+      "y": 110
+    },
+    "codex_survival:end/cursed": {
+      "x": 240,
+      "y": 160
+    },
+    "codex_survival:end/exotic": {
+      "x": 320,
+      "y": 10
+    },
+    "codex_survival:end/evil": {
+      "x": 320,
+      "y": 60
+    },
+    "codex_survival:end/undead": {
+      "x": 320,
+      "y": 110
+    },
+    "codex_survival:end/cryptic": {
+      "x": 320,
+      "y": 160
+    },
+    "codex_survival:end/survival_star": {
+      "x": 400,
+      "y": 10
+    }
+  }
+}

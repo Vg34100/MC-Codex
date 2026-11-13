@@ -1,0 +1,12 @@
+{
+  "criteria": {
+    "arrive": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "rewards": {
+    "recipes": [
+      "backpacked:backpack"
+    ]
+  }
+}

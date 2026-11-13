@@ -37,9 +37,9 @@ public final class CodexQuestIO {
         Path file = packDir.resolve(REWARDS_FILE);
         if (Files.notExists(file)) return result;
         try {
-            JsonObject root = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
+            JsonObject root = QuestReadScope.read(file);
             for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
-                if (entry.getValue().isJsonObject()) result.put(Identifier.parse(entry.getKey()), entry.getValue().getAsJsonObject());
+                if (entry.getValue().isJsonObject()) result.put(Identifier.parse(entry.getKey()), entry.getValue().getAsJsonObject().deepCopy());
             }
         } catch (IOException | RuntimeException ignored) {
             // A malformed hand-edited sidecar should not prevent the server from starting.
@@ -89,7 +89,9 @@ public final class CodexQuestIO {
                     result.put(Identifier.parse(entry.getKey()), indexes);
                 }
             }
-        } catch (IOException | RuntimeException ignored) { }
+        } catch (IOException | RuntimeException error) {
+            throw new IllegalStateException("Cannot read claim ledger; restore its .bak before claiming", error);
+        }
         return result;
     }
 
@@ -125,16 +127,19 @@ public final class CodexQuestIO {
         Path file = packDir.resolve(SUBMISSIONS_DIR).resolve(playerId + ".json");
         if (Files.notExists(file)) return result;
         try {
-            JsonObject root = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
+            JsonObject root = QuestReadScope.read(file);
             for (Map.Entry<String, JsonElement> task : root.entrySet()) {
                 if (!task.getValue().isJsonObject()) continue;
                 Map<Identifier, Integer> values = new HashMap<>();
                 for (Map.Entry<String, JsonElement> amount : task.getValue().getAsJsonObject().entrySet()) {
-                    values.put(Identifier.parse(amount.getKey()), amount.getValue().getAsInt());
+                    int count = amount.getValue().getAsBigDecimal().intValueExact();
+                    if (count < 0) throw new IllegalArgumentException("Negative delivery progress");
+                    values.put(Identifier.parse(amount.getKey()), count);
                 }
                 result.put(task.getKey(), values);
             }
-        } catch (IOException | RuntimeException ignored) {
+        } catch (IOException | RuntimeException error) {
+            throw new IllegalStateException("Cannot read submission progress; operator recovery is required", error);
         }
         return result;
     }
@@ -153,9 +158,9 @@ public final class CodexQuestIO {
         Map<String, JsonObject> result = new HashMap<>();
         if (Files.notExists(file)) return result;
         try {
-            JsonObject root = JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8)).getAsJsonObject();
+            JsonObject root = QuestReadScope.read(file);
             for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
-                if (entry.getValue().isJsonObject()) result.put(entry.getKey(), entry.getValue().getAsJsonObject());
+                if (entry.getValue().isJsonObject()) result.put(entry.getKey(), entry.getValue().getAsJsonObject().deepCopy());
             }
         } catch (IOException | RuntimeException ignored) {
         }
@@ -169,11 +174,6 @@ public final class CodexQuestIO {
     }
 
     private static void write(Path file, JsonElement json) {
-        try {
-            Files.createDirectories(file.getParent());
-            Files.writeString(file, GSON.toJson(json), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new IllegalStateException("Could not write Codex quest state", e);
-        }
+        AtomicJson.write(file, json);
     }
 }

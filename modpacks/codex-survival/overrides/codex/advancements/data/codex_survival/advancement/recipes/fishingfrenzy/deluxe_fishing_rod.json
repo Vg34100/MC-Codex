@@ -1,0 +1,12 @@
+{
+  "criteria": {
+    "arrive": {
+      "trigger": "minecraft:tick"
+    }
+  },
+  "rewards": {
+    "recipes": [
+      "fishingfrenzy:deluxe_fishing_rod"
+    ]
+  }
+}

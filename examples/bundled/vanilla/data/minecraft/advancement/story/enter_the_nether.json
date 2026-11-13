@@ -1,0 +1,24 @@
+{
+  "parent": "minecraft:story/form_obsidian",
+  "criteria": {
+    "entered_nether": {
+      "conditions": {
+        "to": "minecraft:the_nether"
+      },
+      "trigger": "minecraft:changed_dimension"
+    }
+  },
+  "display": {
+    "description": "Build a doorway and step through when you are ready. Pack supplies; this chapter has no prescribed route.",
+    "icon": {
+      "id": "minecraft:flint_and_steel"
+    },
+    "title": "The Other Side of the Flame"
+  },
+  "requirements": [
+    [
+      "entered_nether"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

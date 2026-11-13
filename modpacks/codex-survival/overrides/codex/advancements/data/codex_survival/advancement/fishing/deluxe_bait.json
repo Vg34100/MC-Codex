@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "fishingfrenzy:deluxe_bait"
+    },
+    "title": "Better Bait",
+    "description": "Obtain deluxe bait. Check its tooltip before using it.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "fishingfrenzy:deluxe_bait",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:fishing/deluxe_rod"
+}

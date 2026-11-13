@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "fishingfrenzy:carp"
+    },
+    "title": "Fish for Supplies",
+    "description": "Optional exchange: deliver 4 carp for 4 iron ingots. Keep your eye-crafting ingredients before submitting. This exchange is optional.",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "deliver": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "codex_survival:fishing/carp"
+}

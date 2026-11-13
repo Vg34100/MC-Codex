@@ -1,0 +1,34 @@
+{
+  "parent": "minecraft:story/obtain_armor",
+  "criteria": {
+    "deflected_projectile": {
+      "conditions": {
+        "damage": {
+          "type": {
+            "tags": [
+              {
+                "expected": true,
+                "id": "minecraft:is_projectile"
+              }
+            ]
+          },
+          "blocked": true
+        }
+      },
+      "trigger": "minecraft:entity_hurt_player"
+    }
+  },
+  "display": {
+    "description": "You do not have to win every fight by rushing forward. Raise a shield when an arrow finds you.",
+    "icon": {
+      "id": "minecraft:shield"
+    },
+    "title": "A Moment to Breathe"
+  },
+  "requirements": [
+    [
+      "deflected_projectile"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

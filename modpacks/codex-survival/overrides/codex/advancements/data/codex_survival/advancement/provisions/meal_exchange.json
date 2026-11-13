@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "farmersdelight:beef_stew"
+    },
+    "title": "Meals for the Road",
+    "description": "Optional exchange: deliver 2 beef stews for 8 arrows and 4 coal. Finish equipping yourself before donating food.\n",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "deliver": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "codex_survival:provisions/meal"
+}

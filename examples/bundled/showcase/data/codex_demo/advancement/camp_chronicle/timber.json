@@ -1,0 +1,22 @@
+{
+  "parent": "codex_demo:camp_chronicle/builder",
+  "display": {
+    "icon": {
+      "id": "minecraft:oak_log"
+    },
+    "title": "Timber with a Story",
+    "description": "Accept the contract, deliver four logs of any type and one oak log named Camp Timber. Each log is consumed once, even when requirements overlap.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "deliver": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "deliver"
+    ]
+  ]
+}

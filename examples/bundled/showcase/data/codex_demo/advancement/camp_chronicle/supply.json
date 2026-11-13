@@ -1,0 +1,17 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:chest"
+    },
+    "title": "Keeping the Camp Supplied",
+    "description": "Accept, then deliver 4 oak logs and 8 cobblestone. Partial deliveries count. Claim your provisions; another contract becomes available after 30 seconds.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "deliver": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "codex_demo:camp_chronicle/root"
+}

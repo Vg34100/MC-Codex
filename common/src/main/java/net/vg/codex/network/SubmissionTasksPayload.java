@@ -21,9 +21,12 @@ public record SubmissionTasksPayload(List<Task> tasks) implements CustomPacketPa
                 ItemProgress.STREAM_CODEC.apply(ByteBufCodecs.list()), Task::items,
                 Task::new);
     }
-    public record ItemProgress(Identifier itemId, int required, int submitted) {
+    public record ItemProgress(Identifier itemId, Identifier key, String label, int required, int submitted) {
+        public ItemProgress(Identifier itemId, int required, int submitted) { this(itemId, itemId, "", required, submitted); }
         public static final StreamCodec<RegistryFriendlyByteBuf, ItemProgress> STREAM_CODEC = StreamCodec.composite(
                 Identifier.STREAM_CODEC, ItemProgress::itemId,
+                Identifier.STREAM_CODEC, ItemProgress::key,
+                ByteBufCodecs.stringUtf8(512), ItemProgress::label,
                 ByteBufCodecs.VAR_INT, ItemProgress::required,
                 ByteBufCodecs.VAR_INT, ItemProgress::submitted,
                 ItemProgress::new);

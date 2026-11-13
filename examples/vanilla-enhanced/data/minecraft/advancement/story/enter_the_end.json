@@ -1,0 +1,24 @@
+{
+  "parent": "minecraft:story/follow_ender_eye",
+  "criteria": {
+    "entered_end": {
+      "conditions": {
+        "to": "minecraft:the_end"
+      },
+      "trigger": "minecraft:changed_dimension"
+    }
+  },
+  "display": {
+    "description": "Prepare on your own terms, then enter the End. This keeps the vanilla dimension objective and its place in the tree.",
+    "icon": {
+      "id": "minecraft:end_stone"
+    },
+    "title": "Past the Last Familiar Door"
+  },
+  "requirements": [
+    [
+      "entered_end"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

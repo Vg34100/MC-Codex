@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:end/root",
+  "criteria": {
+    "killed_dragon": {
+      "conditions": {
+        "entity": [
+          {
+            "condition": "minecraft:entity_properties",
+            "entity": "this",
+            "predicate": {
+              "type": "minecraft:ender_dragon"
+            }
+          }
+        ]
+      },
+      "trigger": "minecraft:player_killed_entity"
+    }
+  },
+  "display": {
+    "description": "Defeat the Ender Dragon. Keep the vanilla challenge and rewards while giving this milestone its own closing page.",
+    "icon": {
+      "id": "minecraft:dragon_head"
+    },
+    "title": "Room for Another Story"
+  },
+  "requirements": [
+    [
+      "killed_dragon"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

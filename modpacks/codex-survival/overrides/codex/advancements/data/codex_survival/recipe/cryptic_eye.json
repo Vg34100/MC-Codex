@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "ELE",
+    "DBD",
+    "EPE"
+  ],
+  "key": {
+    "E": "spelunkery:electrum_ingot",
+    "L": "minecraft:lapis_block",
+    "D": "minecraft:diamond",
+    "B": "minecraft:book",
+    "P": "minecraft:ender_pearl"
+  },
+  "result": {
+    "id": "endrem:cryptic_eye",
+    "count": 1
+  }
+}

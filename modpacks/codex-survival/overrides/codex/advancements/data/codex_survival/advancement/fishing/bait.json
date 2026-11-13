@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "fishingfrenzy:worm_bait"
+    },
+    "title": "Bait",
+    "description": "Obtain worm bait. Use the rod and bait controls described by Fishing Frenzy.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "fishingfrenzy:worm_bait",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:fishing/rod"
+}

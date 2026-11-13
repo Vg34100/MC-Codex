@@ -60,3 +60,9 @@ fabricApi {
         client = true
     }
 }
+
+apply from: rootProject.file('gradle/development.gradle')
+
+if (providers.gradleProperty('codex_tests').isPresent()) {
+    apply from: rootProject.file('gradle/validation.gradle')
+}

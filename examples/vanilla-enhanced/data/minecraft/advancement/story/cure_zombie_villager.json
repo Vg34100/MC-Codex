@@ -1,0 +1,22 @@
+{
+  "parent": "minecraft:story/enter_the_nether",
+  "criteria": {
+    "cured_zombie": {
+      "trigger": "minecraft:cured_zombie_villager"
+    }
+  },
+  "display": {
+    "description": "Some encounters offer more than a fight. Cure a zombie villager whenever your travels bring the opportunity.",
+    "frame": "goal",
+    "icon": {
+      "id": "minecraft:golden_apple"
+    },
+    "title": "A Second Morning"
+  },
+  "requirements": [
+    [
+      "cured_zombie"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

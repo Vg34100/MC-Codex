@@ -1,0 +1,17 @@
+{
+  "parent": "codex_demo:camp_chronicle/root",
+  "display": {
+    "icon": {
+      "id": "minecraft:campfire"
+    },
+    "title": "For Everyone at Camp",
+    "description": "One party contract: accept and deliver 8 cobblestone together. Party members at acceptance share progress and ONE reward set. Any participant may claim it for the group. Solo players can try it too.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "deliver": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

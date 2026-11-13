@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "package": "net.vg.codex.mixin",
+  "compatibilityLevel": "JAVA_${java_version}",
+  "client": [
+    "client.QuestHudMixin",
+    "client.QuestProgressMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "ServerPlayerReceiptMixin",
+    "AdvancementResetMixin",
+    "AdvancementBranchMixin"
+  ]
+}

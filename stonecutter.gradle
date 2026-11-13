@@ -1,0 +1,28 @@
+plugins {
+    id 'dev.kikugie.stonecutter'
+}
+
+stonecutter.active '26.1.2-fabric'
+
+def matrixFiles = fileTree('gradle/matrix') { include '*.properties' }.files.sort { it.name }
+def matrixTargets = matrixFiles.collect { it.name - '.properties' }
+
+tasks.register('compileMatrix') {
+    group = 'verification'
+    description = 'Compile every registered Minecraft/loader target.'
+    dependsOn matrixTargets.collect { ":${it}:compileJava" }
+}
+tasks.register('packageMatrix') {
+    group = 'build'
+    description = 'Build installable release artifacts for every target.'
+    dependsOn matrixTargets.collect { ":${it}:packageTarget" }
+}
+tasks.register('verifyServerLaunchSetup') {
+    group = 'verification'
+    description = 'Prepare and verify dedicated-server launch configurations.'
+    dependsOn matrixTargets.collect { ":${it}:verifyLaunchSetup" }
+}
+tasks.register('verifyMatrix') {
+    group = 'verification'
+    dependsOn 'compileMatrix', 'packageMatrix', 'verifyServerLaunchSetup'
+}

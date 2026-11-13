@@ -1,0 +1,26 @@
+{
+  "criteria": {
+    "entered_end": {
+      "conditions": {
+        "to": "minecraft:the_end"
+      },
+      "trigger": "minecraft:changed_dimension"
+    }
+  },
+  "display": {
+    "announce_to_chat": false,
+    "background": "minecraft:gui/advancements/backgrounds/end",
+    "description": "Arrive in the End. Take your time; a milestone does not prescribe the order of everything that follows.",
+    "icon": {
+      "id": "minecraft:end_stone"
+    },
+    "show_toast": false,
+    "title": "A Different Kind of Quiet"
+  },
+  "requirements": [
+    [
+      "entered_end"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

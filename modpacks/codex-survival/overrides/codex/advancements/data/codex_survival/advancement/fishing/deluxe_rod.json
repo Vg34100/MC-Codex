@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "fishingfrenzy:deluxe_fishing_rod"
+    },
+    "title": "Better Tackle",
+    "description": "Obtain the deluxe fishing rod. Its pack recipe uses bronze and string.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "fishingfrenzy:deluxe_fishing_rod",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:fishing/bait"
+}

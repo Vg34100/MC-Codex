@@ -1,0 +1,6 @@
+{
+  "codex_demo:camp_chronicle/trail#jump_five_times": {
+    "id": "custom|minecraft:jump",
+    "target": 5
+  }
+}

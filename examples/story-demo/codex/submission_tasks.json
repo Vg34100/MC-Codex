@@ -1,0 +1,14 @@
+{
+  "codex_demo:field_journal/supplies#deliver": {
+    "items": [
+      {
+        "id": "minecraft:oak_log",
+        "count": 8
+      },
+      {
+        "id": "minecraft:cobblestone",
+        "count": 16
+      }
+    ]
+  }
+}

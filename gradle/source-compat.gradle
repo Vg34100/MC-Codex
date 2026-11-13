@@ -1,0 +1,118 @@
+// Fixed mapped-symbol changes only. Lifecycle differences remain in canonical Java guards.
+stonecutter.replacements.string(stonecutter.eval(stonecutter.current.version, '>=26.2')) {
+    replace('net.minecraft.advancements.criterion.ItemPredicate', 'net.minecraft.advancements.predicates.ItemPredicate')
+    replace('net.minecraft.advancements.CriteriaTriggers', 'net.minecraft.advancements.triggers.CriteriaTriggers')
+    ['minecraft','mc','Minecraft.getInstance()'].each { receiver ->
+        replace(receiver+'.screen', receiver+'.gui.screen()')
+        replace(receiver+'.setScreen(', receiver+'.gui.setScreen(')
+    }
+    replace('mc.options.hideGui', 'mc.gui.hud.isHidden()')
+    replace('@Mixin(Gui.class)', '@Mixin(net.minecraft.client.gui.Hud.class)')
+}
+
+stonecutter.replacements.string(stonecutter.eval(stonecutter.current.version, '>=26.3')) {
+    replace('getConnection().getAdvancements().getTree()', 'getConnection().getAdvancements().tree()')
+    replace('tree.getTree()', 'tree.tree()')
+    ['display','currentDisplay','sourceDisplay','old','display().get()','display().orElseThrow()','display()'].each { receiver ->
+        ['getTitle':'title','getDescription':'description','getIcon':'icon','getBackground':'background','getType':'type','shouldShowToast':'showToast','shouldAnnounceChat':'announceToChat','isHidden':'hidden'].each { before, after ->
+            replace(receiver+'.'+before+'()',receiver+'.'+after+'()')
+        }
+    }
+    replace('progress.serializeToNetwork(buf)', 'AdvancementProgress.STREAM_CODEC.encode(buf, progress)')
+    replace('AdvancementProgress::fromNetwork', 'buf -> AdvancementProgress.STREAM_CODEC.decode(buf)')
+    replace('requirements.write(buf)', 'AdvancementRequirements.STREAM_CODEC.encode(buf, requirements)')
+    replace('AdvancementRequirements::new', 'buf -> AdvancementRequirements.STREAM_CODEC.decode(buf)')
+    replace('packet.getRemoved()', 'packet.removed()')
+    replace('packet.getProgress()', 'packet.progress()')
+}
+
+// Legacy rules are registered only on legacy nodes: no reverse replacement on modern code.
+if (stonecutter.eval(stonecutter.current.version, '<26.1')) {
+    stonecutter.replacements.string(true) {
+        replace('ResourceLocationSelectionScreen', 'IdentifierSelectionScreen')
+        replace('.setId(KEY)', '/* Registered through the native registry. */')
+        replace('.getInventory().getSelectedSlot()', '.getInventory().selected')
+        replace('Commands.hasPermission(', 'net.vg.codex.compat.LegacyPermissions.required(')
+        replace('Commands.LEVEL_GAMEMASTERS.check(this.minecraft.player.permissions())', 'this.minecraft.player.hasPermissions(Commands.LEVEL_GAMEMASTERS)')
+        replace('.listElementIds()', '.listElements().map(net.minecraft.core.Holder.Reference::key)')
+        replace('recipe.id().identifier()', 'recipe.id()')
+        replace('recipe.assemble(input)', 'recipe.assemble(input,server.registryAccess())')
+        replace('r.assemble(in)', 'r.assemble(in,server.registryAccess())')
+        replace('.getInventory().setSelectedSlot(0)', '.getInventory().selected = 0')
+        replace('.nameAndId()', '.getGameProfile()')
+        replace('.identifier()', '.location()')
+        ['display','display()','display().get()'].each { receiver -> replace(receiver+'.getIcon().create()',receiver+'.getIcon().copy()') }
+        replace('.getProfile().name()', '.getProfile().getName()')
+        replace('.getGameProfile().name()', '.getGameProfile().getName()')
+        replace('CycleButton.builder(', 'net.vg.codex.client.compat.LegacyWidgets.cycle(')
+        replace('MultiLineEditBox.builder()', 'net.vg.codex.client.compat.LegacyWidgets.multiline()')
+        replace('minecraft.resizeGui()', 'minecraft.resizeDisplay()')
+        replace('getTags().map(tag -> tag.key().location())', 'getTagNames().map(net.minecraft.tags.TagKey::location)')
+        ['BIOME','STRUCTURE'].each { registry ->
+            replace('registryAccess().lookupOrThrow(Registries.'+registry+').keySet()', 'registryAccess().lookupOrThrow(Registries.'+registry+').listElements().map(holder -> holder.key().location()).collect(java.util.stream.Collectors.toSet())')
+        }
+        replace('ComponentUtils.mergeStyles(display.getDescription(), frameStyle)', 'ComponentUtils.mergeStyles(display.getDescription().copy(), frameStyle)')
+        replace('net.minecraft.advancements.criterion.ItemPredicate', 'net.minecraft.advancements.critereon.ItemPredicate')
+        replace('import net.minecraft.server.packs.metadata.pack.PackFormat;', '/* Legacy packs use their native integer format. */')
+        replace('import net.minecraft.world.item.ItemStackTemplate;', '/* Legacy display icons are ItemStacks. */')
+        replace('new ItemStackTemplate(', 'new ItemStack(')
+        replace('LevelResource.PLAYER_DATA_DIR.id()', 'LevelResource.PLAYER_DATA_DIR.getId()')
+        replace('player.getAdvancements().flushDirty(player, true)', 'player.getAdvancements().flushDirty(player)')
+        replace('p.level().getOverworldClockTime()', 'p.level().getDayTime()')
+        replace('BuiltInRegistries.ITEM.listTagIds()', 'BuiltInRegistries.ITEM.getTagNames()')
+        replace('BuiltInRegistries.ITEM.get(tag)', 'BuiltInRegistries.ITEM.getTag(tag)')
+        replace('BuiltInRegistries.ITEM.getValue(', 'BuiltInRegistries.ITEM.get(')
+        ['ITEM','BLOCK','ENTITY_TYPE','CUSTOM_STAT','SOUND_EVENT'].each { registry ->
+            replace('BuiltInRegistries.'+registry+'.getValue(', 'BuiltInRegistries.'+registry+'.get(')
+            replace('BuiltInRegistries.'+registry+'.get(id).orElseThrow().value()', 'java.util.Objects.requireNonNull(BuiltInRegistries.'+registry+'.get(id))')
+        }
+        replace('BuiltInRegistries.ITEM.get(TagKey.create(', 'BuiltInRegistries.ITEM.getTag(TagKey.create(')
+        replace('new net.minecraft.world.level.storage.loot.LootParams.Builder(player.level())', 'new net.minecraft.world.level.storage.loot.LootParams.Builder(player.serverLevel())')
+        replace('net.minecraft.world.level.storage.ValueInput', 'net.minecraft.nbt.CompoundTag')
+        replace('net.minecraft.world.level.storage.ValueOutput', 'net.minecraft.nbt.CompoundTag')
+        replace('ValueInput input', 'net.minecraft.nbt.CompoundTag input')
+        replace('ValueOutput output', 'net.minecraft.nbt.CompoundTag output')
+        replace('.getStringOr("codex_transaction", "")', '.getString("codex_transaction")')
+        replace('.getStringOr("codex_pool", "")', '.getString("codex_pool")')
+        replace('import net.minecraft.client.input.InputWithModifiers;', '/* Legacy button input is dispatched by its native widget. */')
+        replace('net.minecraft.client.input.MouseButtonEvent', 'net.vg.codex.client.compat.MouseButtonEvent')
+        replace('net.minecraft.client.input.KeyEvent', 'net.vg.codex.client.compat.KeyEvent')
+        replace('onPress(InputWithModifiers input)', 'onPress()')
+        replace('extractRenderState', 'render')
+        replace('extractContents', 'renderWidget')
+        replace('net.minecraft.client.renderer.RenderPipelines', 'net.vg.codex.client.compat.RenderPipelines')
+        ['g','graphics','extractor'].each { receiver ->
+            replace(receiver+'.text(', receiver+'.drawString(')
+            replace(receiver+'.centeredText(', receiver+'.drawCenteredString(')
+            replace(receiver+'.fakeItem(', receiver+'.renderFakeItem(')
+            replace(receiver+'.itemDecorations(', receiver+'.renderItemDecorations(')
+            replace(receiver+'.horizontalLine(', receiver+'.hLine(')
+            replace(receiver+'.verticalLine(', receiver+'.vLine(')
+            replace(receiver+'.setComponentTooltipForNextFrame(', receiver+'.renderComponentTooltip(')
+            replace(receiver+'.setTooltipForNextFrame(', receiver+'.renderTooltip(')
+            replace(receiver+'.pose()', 'net.vg.codex.client.compat.LegacyDraw.pose('+receiver+')')
+            replace(receiver+'.blitSprite(', 'net.vg.codex.client.compat.LegacyDraw.blitSprite('+receiver+', ')
+            replace(receiver+'.blit(RenderPipelines.', 'net.vg.codex.client.compat.LegacyDraw.blit('+receiver+', RenderPipelines.')
+            replace(receiver+'.nextStratum()', receiver+'.flush()')
+        }
+        replace('extractor.blurBeforeThisStratum()', 'net.minecraft.client.Minecraft.getInstance().gameRenderer.processBlurEffect(0)')
+    }
+}
+
+if (stonecutter.eval(stonecutter.current.version, '<1.21')) {
+    stonecutter.replacements.string(true) {
+        replace('net.minecraft.network.RegistryFriendlyByteBuf', 'net.minecraft.network.FriendlyByteBuf')
+        replace('RegistryFriendlyByteBuf', 'FriendlyByteBuf')
+        replace('net.minecraft.network.codec.StreamCodec', 'net.vg.codex.compat.v120.StreamCodec')
+        replace('net.minecraft.network.codec.ByteBufCodecs', 'net.vg.codex.compat.v120.ByteBufCodecs')
+        replace('net.minecraft.network.codec.*', 'net.vg.codex.compat.v120.*')
+        replace('net.minecraft.network.protocol.common.custom.CustomPacketPayload', 'net.vg.codex.compat.v120.CustomPacketPayload')
+        replace('import dev.architectury.networking.NetworkManager;', 'import net.vg.codex.compat.v120.NetworkManager;')
+        replace('ResourceLocation.STREAM_CODEC', 'net.vg.codex.compat.v120.ByteBufCodecs.ID')
+        replace('Identifier.STREAM_CODEC', 'net.vg.codex.compat.v120.ByteBufCodecs.ID')
+        replace('ResourceLocation.parse(', 'new ResourceLocation(')
+        replace('ResourceLocation.fromNamespaceAndPath(', 'new ResourceLocation(')
+        replace('ResourceLocation.withDefaultNamespace(', 'new ResourceLocation(')
+        replace('.getOrThrow()', '.getOrThrow(false, message -> {})')
+    }
+}

@@ -63,6 +63,7 @@ public final class AdvancementPackSync {
     }
 
     public static void onServerStarting(MinecraftServer server) {
+        QuestState.initialize(server);
         reload(server, () -> { });
     }
 
@@ -166,15 +167,16 @@ public final class AdvancementPackSync {
 
     /** Refreshes after login, advancement completion, and a successful claim. */
     public static void sendClaimableRewardsTo(ServerPlayer player) {
+        try (QuestReadScope scope = QuestReadScope.open()) {
         Path packDir = externalPackDir();
         var rewardDefinitions = CodexQuestIO.readClaimableRewards(packDir);
-        var claimed = CodexQuestIO.readClaimIndexes(packDir, player.getUUID());
+        var claimed = CodexQuestIO.readClaimIndexes(QuestState.directory(player.level().getServer()), player.getUUID());
         List<ClaimableRewardsPayload.Claimable> available = new ArrayList<>();
         for (var definition : rewardDefinitions.entrySet()) {
             Identifier id = definition.getKey();
             AdvancementHolder holder = player.level().getServer().getAdvancements().get(id);
-            if (holder != null && player.getAdvancements().getOrStartProgress(holder).isDone()) {
-                java.util.Set<Integer> alreadyClaimed = claimed.getOrDefault(id, java.util.Set.of());
+            if (holder != null && QuestRuntime.ready(player, id)) {
+                java.util.Set<Integer> alreadyClaimed = QuestRewardIdentity.indexes(player, id, QuestTransactions.completeRewards(packDir, id, definition.getValue()));
                 if (alreadyClaimed.contains(-1)) continue;
                 int count = net.vg.codex.network.AdvancementEditorNetworking.rewardCount(packDir, id, definition.getValue());
                 List<Integer> indexes = new ArrayList<>();
@@ -183,12 +185,25 @@ public final class AdvancementPackSync {
             }
         }
         NetworkManager.sendToPlayer(player, new ClaimableRewardsPayload(available));
+        }
+    }
+
+    private static final java.util.Set<java.util.UUID> PENDING_REWARDS = new java.util.HashSet<>();
+    public static void queueClaimableRewardsTo(ServerPlayer player, AdvancementHolder ignored) { PENDING_REWARDS.add(player.getUUID()); }
+    public static void clearQueuedRewards() { PENDING_REWARDS.clear(); }
+    public static void flushQueuedRewardsTo(ServerPlayer player) { if(PENDING_REWARDS.remove(player.getUUID()))sendClaimableRewardsTo(player); }
+    public static void flushQueuedRewards(MinecraftServer server) {
+        var players = java.util.Set.copyOf(PENDING_REWARDS); PENDING_REWARDS.clear();
+        for (var id : players) { var player=server.getPlayerList().getPlayer(id); if(player!=null)sendClaimableRewardsTo(player); }
     }
 
     public static void sendSubmissionTasksTo(ServerPlayer player) {
+        NetworkManager.sendToPlayer(player, new SubmissionTasksPayload(submissionTasksFor(player)));
+    }
+    public static List<SubmissionTasksPayload.Task> submissionTasksFor(ServerPlayer player) {
         Path packDir = externalPackDir();
         Map<String, JsonObject> definitions = CodexQuestIO.readSubmissionTasks(packDir);
-        Map<String, Map<Identifier, Integer>> progress = CodexQuestIO.readSubmissionProgress(packDir,
+        Map<String, Map<Identifier, Integer>> progress = CodexQuestIO.readSubmissionProgress(QuestState.directory(player.level().getServer()),
                 CodexPartyService.progressOwner(player.level().getServer(), player.getUUID()));
         List<SubmissionTasksPayload.Task> tasks = new ArrayList<>();
         for (var entry : definitions.entrySet()) {
@@ -197,16 +212,18 @@ public final class AdvancementPackSync {
             try {
                 Identifier id = Identifier.parse(entry.getKey().substring(0, split));
                 List<SubmissionTasksPayload.ItemProgress> items = new ArrayList<>();
-                for (JsonElement element : entry.getValue().getAsJsonArray("items")) {
-                    JsonObject item = element.getAsJsonObject();
-                    Identifier itemId = Identifier.parse(item.get("id").getAsString());
-                    items.add(new SubmissionTasksPayload.ItemProgress(itemId, item.get("count").getAsInt(),
-                            progress.getOrDefault(entry.getKey(), Map.of()).getOrDefault(itemId, 0)));
+                String criterion = entry.getKey().substring(split + 1);
+                JsonObject cycle = QuestDefinitions.repeat(QuestDefinitions.get(id)) ? QuestRuntime.state(player, id) : null;
+                JsonObject counts = cycle != null && cycle.has("delivered") && cycle.getAsJsonObject("delivered").has(criterion) ? cycle.getAsJsonObject("delivered").getAsJsonObject(criterion) : new JsonObject();
+                for (var requirement : SubmissionPlan.resolve(entry.getValue(), player.registryAccess())) {
+                    Identifier key = requirement.key();
+                    items.add(new SubmissionTasksPayload.ItemProgress(requirement.icon(), key, requirement.label(), requirement.count(),
+                            cycle != null ? (counts.has(key.toString()) ? counts.get(key.toString()).getAsInt() : 0) : progress.getOrDefault(entry.getKey(), Map.of()).getOrDefault(key, 0)));
                 }
                 tasks.add(new SubmissionTasksPayload.Task(id, entry.getKey().substring(split + 1), items));
             } catch (RuntimeException ignored) { }
         }
-        NetworkManager.sendToPlayer(player, new SubmissionTasksPayload(tasks));
+        return tasks;
     }
 
     /** Recipes are server data, so the client editor receives ids explicitly instead of guessing
@@ -226,7 +243,7 @@ public final class AdvancementPackSync {
     }
 
     private static AdvancementRewardsPayload buildRewardsPayload(MinecraftServer server) {
-        RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, server.registryAccess());
+        RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, AdvancementValidation.registries(server));
         Path packDir = externalPackDir();
         Map<Identifier, JsonObject> claimableDefinitions = CodexQuestIO.readClaimableRewards(packDir);
         List<AdvancementRewardsPayload.AdvancementReward> rewards = new ArrayList<>();
@@ -309,7 +326,7 @@ public final class AdvancementPackSync {
     }
 
     private static AdvancementRequiredItemsPayload buildRequiredItemsPayload(MinecraftServer server) {
-        RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, server.registryAccess());
+        RegistryOps<JsonElement> ops = RegistryOps.create(JsonOps.INSTANCE, AdvancementValidation.registries(server));
         List<AdvancementRequiredItemsPayload.AdvancementRequired> required = new ArrayList<>();
         for (AdvancementHolder holder : server.getAdvancements().getAllAdvancements()) {
             try {
@@ -324,7 +341,7 @@ public final class AdvancementPackSync {
                     if (!entry.getValue().isJsonObject()) {
                         continue;
                     }
-                    JsonObject criterion = entry.getValue().getAsJsonObject();
+                    JsonObject criterion = CriterionFormats.authoringView(entry.getValue().getAsJsonObject());
                     AdvancementPackIO.extractCriterionItemId(criterion).ifPresent(itemIds::add);
                     if (criterion.has("trigger")
                             && "minecraft:recipe_unlocked".equals(criterion.get("trigger").getAsString())
@@ -354,6 +371,13 @@ public final class AdvancementPackSync {
         // rather than a hand-written pack_format integer - this MC version requires min_format/
         // max_format once the format number is past a threshold, and hand-writing that schema
         // risks going stale again on a future MC update the same way pack_format alone did.
+        //? if <26.1 {
+        /*JsonObject pack = new JsonObject();
+        pack.addProperty("pack_format", SharedConstants.getCurrentVersion().getPackVersion(PackType.SERVER_DATA));
+        pack.addProperty("description", "Codex custom advancements");
+        JsonObject root = new JsonObject(); root.add("pack", pack);
+        Files.writeString(dir.resolve("pack.mcmeta"), GSON.toJson(root), StandardCharsets.UTF_8);
+        *///?} else {
         var sectionType = PackMetadataSection.forPackType(PackType.SERVER_DATA);
         PackFormat format = PackFormat.of(SharedConstants.DATA_PACK_FORMAT_MAJOR, SharedConstants.DATA_PACK_FORMAT_MINOR);
         PackMetadataSection section = new PackMetadataSection(
@@ -364,6 +388,7 @@ public final class AdvancementPackSync {
         JsonObject root = new JsonObject();
         root.add(sectionType.name(), sectionJson);
         Files.writeString(dir.resolve("pack.mcmeta"), GSON.toJson(root), StandardCharsets.UTF_8);
+        //?}
     }
 
     private static void copyTree(Path source, Path target) throws IOException {

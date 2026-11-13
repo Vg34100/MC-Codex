@@ -1,0 +1,22 @@
+{
+  "parent": "codex_demo:camp_chronicle/communal",
+  "display": {
+    "icon": {
+      "id": "minecraft:apple"
+    },
+    "title": "A Share for Everyone",
+    "description": "A shared optional contract: deliver four sticks together. Each participant at acceptance can claim one apple. Offline members keep their share; leaving forfeits it.",
+    "show_toast": true,
+    "announce_to_chat": false
+  },
+  "criteria": {
+    "deliver": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "requirements": [
+    [
+      "deliver"
+    ]
+  ]
+}

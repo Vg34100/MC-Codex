@@ -1,0 +1,54 @@
+{
+  "display": {
+    "icon": {
+      "id": "farmersdelight:cabbage"
+    },
+    "title": "A More Varied Garden",
+    "description": "Obtain cabbage, tomato and rice. Grow them so expedition food is renewable.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "cabbage": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "farmersdelight:cabbage",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    },
+    "tomato": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "farmersdelight:tomato",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    },
+    "rice": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "farmersdelight:rice",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:provisions/root"
+}

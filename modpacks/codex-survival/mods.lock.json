@@ -1,0 +1,1426 @@
+{
+  "minecraft": "26.1.2",
+  "loader": "fabric",
+  "loader_version": "0.19.5",
+  "mods": [
+    {
+      "file": "endrem-fabric-26.1-6.2.0.jar",
+      "sha512": "f264089404b27c045acaf6dbe13bae310036ea940ad4c4aa68f8b63c3c0b310ebc9bad0d7a5493ad60ffe28a23355a3b402f261d0baa0696a4b0e25ee541ca4c",
+      "source": "modrinth:ZJTGwAND",
+      "url": "https://cdn.modrinth.com/data/ZJTGwAND/versions/XdJ5l8XO/endrem-fabric-26.1-6.2.0.jar",
+      "version": "6.2.0",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "endrem",
+        "version": "6.2.0",
+        "name": "End Remastered",
+        "description": "End Remastered makes your Minecraft experience more challenging by emphasizing the adventurous side of the game. \nExploration is the main focus of End Remastered, and to reach the End and beat the Ender Dragon, you will have to find the 16 custom eyes by exploring vanilla structures and fighting vanilla bosses.",
+        "authors": [
+          "Jack Bagel"
+        ],
+        "contact": {
+          "homepage": "https://fabricmc.net/",
+          "sources": "https://github.com/FabricMC/fabric-example-mod"
+        },
+        "license": "GNU LGPLv3",
+        "icon": "assets/endrem/endrem.png",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "com.teamremastered.endrem.EndRemasteredFabric"
+          ],
+          "client": [
+            "com.teamremastered.endrem.EndRemasteredFabricClient"
+          ]
+        },
+        "mixins": [
+          "endrem.mixins.json"
+        ],
+        "depends": {
+          "fabricloader": ">=0.19.2",
+          "fabric-api": "*",
+          "minecraft": "~26.1",
+          "java": ">=25"
+        },
+        "suggests": {
+          "another-mod": "*"
+        }
+      }
+    },
+    {
+      "file": "fabric-api-0.155.3+26.1.2.jar",
+      "sha512": "fa0308b42e9cd0dc3ff946f246d199d74547e0c946d7e3c9780a2537155307baf25129f69bd1349273babf879ffb4608b7e4af0740938f9c0f7b371b1c67d6ca",
+      "source": "modrinth:P7dR8mSH",
+      "url": "https://cdn.modrinth.com/data/P7dR8mSH/versions/3dM0X6ou/fabric-api-0.155.3%2B26.1.2.jar",
+      "version": "0.155.3+26.1.2",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "fabric-api",
+        "name": "Fabric API",
+        "version": "0.155.3+26.1.2",
+        "environment": "*",
+        "license": "Apache-2.0",
+        "icon": "assets/fabric/icon.png",
+        "contact": {
+          "homepage": "https://fabricmc.net",
+          "irc": "irc://irc.esper.net:6667/fabric",
+          "issues": "https://github.com/FabricMC/fabric/issues",
+          "sources": "https://github.com/FabricMC/fabric"
+        },
+        "authors": [
+          "FabricMC"
+        ],
+        "depends": {
+          "fabricloader": ">=0.18.4",
+          "java": ">=25",
+          "minecraft": "~26.1-"
+        },
+        "description": "Core API module providing key hooks and intercompatibility features.",
+        "jars": [
+          {
+            "file": "META-INF/jars/fabric-api-base-2.0.3+ece063234c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-api-lookup-api-v1-2.0.12+d5a053b64c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-biome-api-v1-18.0.5+2fa62b4e4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-block-api-v1-3.0.2+ec56b6014c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-block-getter-api-v2-2.0.6+ec56b6014c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-command-api-v2-3.0.5+e2bdee784c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-content-registries-v0-11.3.1+af8a297c4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-convention-tags-v2-4.6.2+4f11f7994c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-crash-report-info-v1-1.0.3+9f78a5a84c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-creative-tab-api-v1-5.0.12+a981f2874c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-data-attachment-api-v1-2.2.10+44a0bd1d4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-data-generation-api-v1-24.3.4+cda368334c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-debug-api-v1-1.0.1+c792624d4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-dimensions-v1-5.1.7+ad343a8d4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-entity-events-v1-5.0.2+e2bdee784c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-events-interaction-v0-5.2.3+07b380be4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-game-rule-api-v1-4.0.5+d871b99e4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-item-api-v1-14.3.0+6d1aaa724c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-key-mapping-api-v1-2.0.4+e2bdee784c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-lifecycle-events-v1-4.1.1+df84eb3d4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-loot-api-v3-3.0.12+00a1fba64c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-menu-api-v1-2.0.15+d871b99e4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-message-api-v1-7.0.5+dae8ce3e4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-model-loading-api-v1-8.0.11+c80601bb4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-networking-api-v1-6.3.2+a217cccf4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-object-builder-api-v1-23.1.1+abb459f14c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-particles-v1-5.0.16+b61fef434c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-permission-api-v1-1.0.3+5730ecca4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-recipe-api-v1-9.0.17+be4b75ae4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-registry-sync-v0-7.1.1+2fa62b4e4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-renderer-api-v1-13.0.8+c80601bb4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-renderer-indigo-8.1.5+1403e82c4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-rendering-fluids-v1-6.0.1+d871b99e4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-rendering-v1-23.3.1+e9207d814c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-resource-conditions-api-v1-6.1.0+83dd0ba34c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-resource-loader-v0-3.3.17+4fc5413f4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-resource-loader-v1-2.0.10+7c44c7324c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-screen-api-v1-5.1.0+981dd9b24c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-serialization-api-v1-2.0.3+11a26f314c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-sound-api-v1-2.0.4+11a26f314c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-tag-api-v1-2.1.1+371cf5db4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-transfer-api-v1-8.0.6+357ea7334c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-transitive-access-wideners-v1-8.1.3+3ff549fb4c.jar"
+          }
+        ]
+      }
+    },
+    {
+      "file": "FarmersDelight-26.1-3.6.30+refabricated.jar",
+      "sha512": "9d1143a53c8950b8ea57119c2d9d88a9a19089ef5a24869d4fcdba5275fb9c910205b9468de33cb6cc968ba8d3913783d72205a5079db30f61b0de8bcb54e782",
+      "source": "modrinth:7vxePowz",
+      "url": "https://cdn.modrinth.com/data/7vxePowz/versions/3s3vr72P/FarmersDelight-26.1-3.6.30%2Brefabricated.jar",
+      "version": "26.1-3.6.30",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "farmersdelight",
+        "version": "26.1-3.6.30+refabricated",
+        "name": "Farmer's Delight",
+        "description": "A cozy expansion to farming and cooking!",
+        "authors": [
+          "MehVahdJukaar, ChrysanthCow, cassiancc"
+        ],
+        "contributors": [
+          "vectorwing, drexhd"
+        ],
+        "contact": {
+          "homepage": "https://www.curseforge.com/minecraft/mc-mods/farmers-delight-refabricated",
+          "sources": "https://github.com/MehVahdJukaar/FarmersDelightRefabricated",
+          "issues": "https://github.com/MehVahdJukaar/FarmersDelightRefabricated/issues"
+        },
+        "license": "MIT License",
+        "icon": "icon.png",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "vectorwing.farmersdelight.FarmersDelight"
+          ],
+          "client": [
+            "vectorwing.farmersdelight.client.FarmersDelightClient"
+          ],
+          "fabric-datagen": [
+            "vectorwing.farmersdelight.data.DataGenerators"
+          ],
+          "jei_mod_plugin": [
+            "vectorwing.farmersdelight.integration.jei.JEIPlugin"
+          ],
+          "rei_client": [
+            "vectorwing.farmersdelight.integration.rei.client.ClientREIPlugin"
+          ],
+          "rei_common": [
+            "vectorwing.farmersdelight.integration.rei.CommonREIPlugin"
+          ],
+          "modmenu": [
+            "vectorwing.farmersdelight.integration.modmenu.ModMenuCompat"
+          ],
+          "rrv_client": [
+            "vectorwing.farmersdelight.integration.rrv.RRVPlugin"
+          ]
+        },
+        "mixins": [
+          "farmersdelight.mixins.json"
+        ],
+        "accessWidener": "farmersdelight.classtweaker",
+        "depends": {
+          "fabricloader": ">=0.19.5",
+          "fabric-api": "*",
+          "minecraft": "~26.1"
+        },
+        "conflicts": {
+          "rrv": "<8.0.0"
+        },
+        "custom": {
+          "launchpad:compatible": true
+        }
+      }
+    },
+    {
+      "file": "dungeons-and-taverns-5.2.0.jar",
+      "sha512": "fc189a68b4953d3d333b07b8bfa53fe949958c479ac1f0e28b30861d2311d8875368e52d910e03a8701f38d4415becbdd5e58ea5ea8af818e74eee6cba1ca040",
+      "source": "modrinth:tpehi7ww",
+      "url": "https://cdn.modrinth.com/data/tpehi7ww/versions/Su1qplQ7/dungeons-and-taverns-5.2.0.jar",
+      "version": "5.2.0+mod",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "mr_dungeons_andtaverns",
+        "version": "5.2.0",
+        "name": "Dungeons and Taverns",
+        "description": "A Structure Datapack adding dungeons, taverns and other structures to find while you explore the world.",
+        "authors": [
+          "Konci",
+          "NovaWostra",
+          "Whity",
+          "MiziraGamez"
+        ],
+        "contact": {
+          "homepage": "https://modrinth.com/datapack/dungeons-and-taverns"
+        },
+        "license": "LicenseRef-All-Rights-Reserved",
+        "icon": "dungeons-and-taverns_pack.png",
+        "environment": "*",
+        "depends": {
+          "fabric-resource-loader-v0": "*"
+        }
+      }
+    },
+    {
+      "file": "jei-26.1.2-fabric-29.47.0.110.jar",
+      "sha512": "a5c6d16956b0df0d9ac12c73215e8901ea1c4c71a2f8f5d5b7d60f31877b6ab19afaec9b8bee589f89a307e1809c43352b32319ab42c108d3a3c207bb8d38e0a",
+      "source": "modrinth:u6dRKJwZ",
+      "url": "https://cdn.modrinth.com/data/u6dRKJwZ/versions/T8wS82jn/jei-26.1.2-fabric-29.47.0.110.jar",
+      "version": "29.47.0.110",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "jei",
+        "version": "29.47.0.110",
+        "name": "Just Enough Items",
+        "description": "JEI is an item and recipe viewing mod for Minecraft, built from the ground up for stability and performance.",
+        "authors": [
+          "mezz"
+        ],
+        "contact": {
+          "homepage": "https://www.curseforge.com/minecraft/mc-mods/jei",
+          "sources": "https://github.com/mezz/JustEnoughItems"
+        },
+        "license": "The MIT License (MIT)",
+        "icon": "jei-icon.png",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "mezz.jei.fabric.JustEnoughItems"
+          ],
+          "client": [
+            "mezz.jei.fabric.JustEnoughItemsClient"
+          ],
+          "jei_mod_plugin": [
+            "mezz.jei.library.plugins.vanilla.VanillaPlugin",
+            "mezz.jei.library.plugins.jei.JeiInternalPlugin",
+            "mezz.jei.fabric.plugins.fabric.FabricGuiPlugin",
+            "mezz.jei.gui.plugins.JeiGuiPlugin"
+          ],
+          "mezz_config_gui_plugin": [
+            "mezz.jei.gui.config.JeiConfigGuiPlugin"
+          ]
+        },
+        "mixins": [
+          "jei.mixins.json"
+        ],
+        "accessWidener": "jei.accesswidener",
+        "depends": {
+          "mezz_config": ">=0.6.3 <1.0.0",
+          "fabricloader": ">=0.17.0",
+          "fabric-api": ">=0.155.0+26.1.2",
+          "java": ">=25"
+        },
+        "suggests": {
+          "mezz_config_gui": ">=0.5.10",
+          "amecs_key_modifiers": ">=1.0.2"
+        },
+        "breaks": {
+          "mezz_config_gui": "<0.5.10"
+        },
+        "jars": [
+          {
+            "file": "META-INF/jars/mezz_config-26.1.2-fabric-0.6.6.jar"
+          }
+        ]
+      }
+    },
+    {
+      "file": "mezz_config-26.1.2-fabric-0.6.10.jar",
+      "sha512": "8a718a8c73b9917a95736a24c43dc963633c266a5c5089b86b7fc01452a9ed9749b8b61ec391e9aa23cc7aad9a1f19800a017bb3c92db1f5129bcdd09abb62af",
+      "source": "modrinth:7tEfOcA7",
+      "url": "https://cdn.modrinth.com/data/7tEfOcA7/versions/JpwQcdyO/mezz_config-26.1.2-fabric-0.6.10.jar",
+      "version": "0.6.10",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "mezz_config",
+        "version": "0.6.10",
+        "name": "MezzConfig",
+        "description": "Lightweight client and server-authoritative config support for Minecraft mods.",
+        "authors": [
+          "mezz"
+        ],
+        "contact": {
+          "sources": "https://github.com/mezz/MezzConfig"
+        },
+        "license": "The MIT License (MIT)",
+        "icon": "mezz_config-icon.png",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "net.mezzdev.config.fabric.ConfigFabric"
+          ],
+          "client": [
+            "net.mezzdev.config.fabric.ConfigFabricClient"
+          ]
+        },
+        "depends": {
+          "fabricloader": ">=0.17.0",
+          "fabric-api": ">=0.155.0+26.1.2",
+          "minecraft": "26.1.2",
+          "java": ">=25"
+        }
+      }
+    },
+    {
+      "file": "Jade-mc26.1-Fabric-26.1.9.jar",
+      "sha512": "6b38ad22b3888057c619aeb89eaa78ade68c03dbba8d3758c65b32ad34471378cf222dc1b9108c3107d9739eeeb385476e760c14ccd68afde754660f63cedcce",
+      "source": "modrinth:nvQzSEkH",
+      "url": "https://cdn.modrinth.com/data/nvQzSEkH/versions/fW2xykin/Jade-mc26.1-Fabric-26.1.9.jar",
+      "version": "26.1.9+fabric",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "jade",
+        "version": "26.1.9+fabric",
+        "name": "Jade",
+        "description": "Minecraft mod shows what you are looking at. (Hwyla fork)",
+        "authors": [
+          "Snownee"
+        ],
+        "contributors": [
+          "TehNut",
+          "ProfMobius",
+          "kalkafox"
+        ],
+        "icon": "icon.png",
+        "contact": {
+          "homepage": "https://www.curseforge.com/minecraft/mc-mods/jade",
+          "sources": "https://github.com/Snownee/Jade",
+          "issues": "https://github.com/Snownee/Jade/issues"
+        },
+        "license": "CC-BY-NC-SA-4.0",
+        "entrypoints": {
+          "main": [
+            "snownee.jade.util.CommonProxy"
+          ],
+          "client": [
+            "snownee.jade.util.ClientProxy"
+          ],
+          "jade": [
+            "snownee.jade.addon.core.CorePlugin",
+            "snownee.jade.addon.vanilla.VanillaPlugin",
+            "snownee.jade.addon.universal.UniversalPlugin",
+            "snownee.jade.addon.access.AccessibilityPlugin",
+            "snownee.jade.addon.debug.DebugPlugin"
+          ],
+          "modmenu": [
+            "snownee.jade.compat.ModMenuCompat"
+          ],
+          "jei_mod_plugin": [
+            "snownee.jade.compat.JEICompat"
+          ]
+        },
+        "mixins": [
+          "jade.mixins.json"
+        ],
+        "accessWidener": "jade.classtweaker",
+        "depends": {
+          "fabric-api": ">=0.144",
+          "minecraft": ">=26.1"
+        },
+        "custom": {
+          "modmenu": {
+            "links": {
+              "modmenu.discord": "https://discord.gg/KzGQW7a",
+              "modmenu.donate": "https://ko-fi.com/snownee"
+            }
+          }
+        }
+      }
+    },
+    {
+      "file": "sodium-fabric-0.9.2+mc26.1.2.jar",
+      "sha512": "9a3cbc8111979fb2cada74d4df24867f4a8a76053b28d76796f0d1c9156cfc96c4f7d88b07072aea8d9574d46b5bc3ebf3b4d23c09c501f0089ee37681743475",
+      "source": "modrinth:AANobbMI",
+      "url": "https://cdn.modrinth.com/data/AANobbMI/versions/tZQ3jqnf/sodium-fabric-0.9.2%2Bmc26.1.2.jar",
+      "version": "mc26.1.2-0.9.2-fabric",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "sodium",
+        "version": "0.9.2+mc26.1.2",
+        "name": "Sodium",
+        "description": "Sodium is a powerful rendering engine for Minecraft which greatly improves frame rates and micro-stutter, while fixing many graphical issues",
+        "authors": [
+          {
+            "name": "JellySquid (jellysquid3)",
+            "contact": {
+              "email": "jellysquid@pm.me",
+              "homepage": "https://jellysquid.me"
+            }
+          }
+        ],
+        "contributors": [
+          "IMS212",
+          "bytzo",
+          "PepperCode1",
+          "FlashyReese",
+          "altrisi",
+          "Grayray75",
+          "Madis0",
+          "Johni0702",
+          "comp500",
+          "coderbot16",
+          "Moulberry",
+          "MCRcortex",
+          "Altirix",
+          "embeddedt",
+          "pajicadvance",
+          "Kroppeb",
+          "douira",
+          "burgerindividual",
+          "TwistedZero",
+          "Leo40Git",
+          "haykam821",
+          "muzikbike"
+        ],
+        "contact": {
+          "homepage": "https://github.com/CaffeineMC/sodium",
+          "sources": "https://github.com/CaffeineMC/sodium",
+          "issues": "https://github.com/CaffeineMC/sodium/issues"
+        },
+        "license": "Polyform-Shield-1.0.0",
+        "icon": "sodium-icon.png",
+        "environment": "client",
+        "entrypoints": {
+          "client": [
+            "net.caffeinemc.mods.sodium.fabric.SodiumFabricMod"
+          ],
+          "preLaunch": [
+            "net.caffeinemc.mods.sodium.fabric.SodiumPreLaunch"
+          ]
+        },
+        "custom": {
+          "fabric-renderer-api-v1:contains_renderer": true,
+          "modmenu": {
+            "links": {
+              "modmenu.donate": "https://caffeinemc.net/donate",
+              "modmenu.discord": "https://caffeinemc.net/discord",
+              "modmenu.github_releases": "https://github.com/CaffeineMC/sodium/releases",
+              "modmenu.kofi": "https://caffeinemc.net/donate",
+              "modmenu.modrinth": "https://modrinth.com/mod/sodium"
+            }
+          }
+        },
+        "accessWidener": "sodium-fabric.accesswidener",
+        "mixins": [
+          "sodium-common.mixins.json",
+          "sodium-frapi.mixins.json",
+          "sodium-fabric.mixins.json"
+        ],
+        "depends": {
+          "minecraft": "26.1.2",
+          "fabricloader": ">=0.16.0",
+          "fabric-block-getter-api-v2": "*",
+          "fabric-rendering-fluids-v1": ">=2.0.0",
+          "fabric-resource-loader-v0": "*"
+        },
+        "breaks": {
+          "embeddium": "*",
+          "optifabric": "*",
+          "canvas": "*",
+          "vulkanmod": "*",
+          "optimalaim": "<2.0.0",
+          "sodium-blendingregistry": "*",
+          "ocrenderfix_sodium": "*",
+          "betterfpsdist": "<=1.21-4.5",
+          "bobby": "<5.2.4",
+          "chunksfadein": "<2.0.2-1.21.2",
+          "cull-less-leaves": "<=1.3.0",
+          "cullleaves": "<=3.4.0-fabric",
+          "custom_hud": "<3.4.2",
+          "farsight": "<=1.21-4.3",
+          "iceberg": "<1.2.7",
+          "iris": "<=1.11.3",
+          "movingelevators": "<=1.4.7",
+          "notenoughcrashes": "<4.4.8",
+          "noxesium": "<2.3.3",
+          "reeses-sodium-options": "<2.0.2",
+          "fabric-api": "<0.145.1",
+          "sodium-extra": "<0.8.0",
+          "audio_engine_tweaks": "<1.2.12",
+          "sspb": "<6.0.0",
+          "moreculling": "<1.6.0-beta.2",
+          "simply-no-shading": "<7.6.2",
+          "betterend": "<=21.0.11",
+          "enchanteds_sodium_options": "<1.0.1",
+          "betterblockentities": "<1.3.5",
+          "fullscreenfix": "<=2.4.1"
+        },
+        "provides": [
+          "indium"
+        ],
+        "jars": [
+          {
+            "file": "META-INF/jars/fabric-api-base-2.0.3+ece063234c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-block-getter-api-v2-2.0.6+ec56b6014c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-lifecycle-events-v1-4.1.0+6d50a0854c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-renderer-api-v1-13.0.3+c80601bb4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-rendering-fluids-v1-6.0.1+d871b99e4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-rendering-v1-23.1.0+1403e82c4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-resource-loader-v0-3.3.16+4fc5413f4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-resource-loader-v1-2.0.9+d871b99e4c.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-transitive-access-wideners-v1-8.1.0+acd9108d4c.jar"
+          }
+        ]
+      }
+    },
+    {
+      "file": "lithium-fabric-0.24.7+mc26.1.2.jar",
+      "sha512": "37240bdbf93c19fdc6aa632d89223639f0ef9d923ee1793b33d624946b0482cc972834049ed07d71db3494e16c9de68e755937aac7c4ac5d7291bd38c1425899",
+      "source": "modrinth:gvQqBUqZ",
+      "url": "https://cdn.modrinth.com/data/gvQqBUqZ/versions/Oqq8TOAV/lithium-fabric-0.24.7%2Bmc26.1.2.jar",
+      "version": "mc26.1.2-0.24.7-fabric",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "lithium",
+        "version": "0.24.7+mc26.1.2",
+        "name": "Lithium",
+        "description": "Lithium is a free and open-source optimization mod for Minecraft which makes a wide range of performance improvements to the game.",
+        "authors": [
+          "JellySquid",
+          "2No2Name"
+        ],
+        "contact": {
+          "homepage": "https://jellysquid.me/projects/",
+          "sources": "https://github.com/CaffeineMC/lithium-fabric",
+          "issues": "https://github.com/CaffeineMC/lithium-fabric/issues"
+        },
+        "license": "LGPL-3.0-only",
+        "icon": "assets/lithium/lithium-icon.png",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "net.caffeinemc.mods.lithium.fabric.LithiumFabricMod"
+          ]
+        },
+        "mixins": [
+          "lithium.mixins.json",
+          "lithium-fabric.mixins.json"
+        ],
+        "accessWidener": "lithium.accesswidener",
+        "depends": {
+          "fabricloader": ">=0.15.1",
+          "minecraft": "~26.1"
+        },
+        "breaks": {
+          "optifabric": "*"
+        }
+      }
+    },
+    {
+      "file": "ferritecore-9.0.0-fabric.jar",
+      "sha512": "d81fa97e11784c19d42f89c2f433831d007603dd7193cee45fa177e4a6a9c52b384b198586e04a0f7f63cd996fed713322578bde9a8db57e1188854ae5cbe584",
+      "source": "modrinth:uXXizFIs",
+      "url": "https://cdn.modrinth.com/data/uXXizFIs/versions/d5ddUdiB/ferritecore-9.0.0-fabric.jar",
+      "version": "9.0.0-fabric",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "ferritecore",
+        "version": "9.0.0",
+        "name": "FerriteCore",
+        "description": "Reduces memory usage",
+        "icon": "logo.png",
+        "authors": [
+          "malte0811"
+        ],
+        "contact": {
+          "issues": "https://github.com/malte0811/FerriteCore/issues",
+          "source": "https://github.com/malte0811/FerriteCore",
+          "homepage": "https://www.curseforge.com/minecraft/mc-mods/ferritecore-fabric"
+        },
+        "license": "MIT",
+        "environment": "*",
+        "depends": {
+          "fabricloader": ">=0.14.21",
+          "minecraft": ">=26.1 <27"
+        },
+        "breaks": {
+          "hydrogen": "<=0.3"
+        },
+        "mixins": [
+          "ferritecore.accessors.mixin.json",
+          "ferritecore.blockstatecache.mixin.json",
+          "ferritecore.fastmap.mixin.json",
+          "ferritecore.datacomponents.mixin.json",
+          "ferritecore.threaddetec.mixin.json"
+        ]
+      }
+    },
+    {
+      "file": "modmenu-18.0.2.jar",
+      "sha512": "37393e1d4a23a548463e92eb0687af69034ee7c308bd1d2d27d78df0292f124c4463f19d4b53128b59cda4e02d01d7ae09f06456d10abde19b6e450163e50e97",
+      "source": "modrinth:mOgUt4GM",
+      "url": "https://cdn.modrinth.com/data/mOgUt4GM/versions/ZJ6YTrMY/modmenu-18.0.2.jar",
+      "version": "18.0.2",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "modmenu",
+        "name": "Mod Menu",
+        "version": "18.0.2",
+        "environment": "client",
+        "license": "MIT",
+        "icon": "assets/modmenu/icon.png",
+        "entrypoints": {
+          "client": [
+            "com.terraformersmc.modmenu.ModMenu"
+          ],
+          "modmenu": [
+            "com.terraformersmc.modmenu.ModMenuModMenuCompat"
+          ]
+        },
+        "contact": {
+          "homepage": "https://modrinth.com/mod/modmenu",
+          "sources": "https://github.com/TerraformersMC/ModMenu",
+          "issues": "https://github.com/TerraformersMC/ModMenu/issues"
+        },
+        "depends": {
+          "fabric-resource-loader-v1": "*",
+          "fabric-screen-api-v1": "*",
+          "fabric-key-mapping-api-v1": "*",
+          "fabric-lifecycle-events-v1": "*",
+          "fabricloader": ">=0.17.2",
+          "minecraft": ">1.26-"
+        },
+        "authors": [
+          "Prospector",
+          "haykam821",
+          "gniftygnome",
+          "TerraformersMC"
+        ],
+        "contributors": [
+          "shedaniel",
+          "Draylar",
+          "Mordna",
+          "Madis0",
+          "Yanis48",
+          "LemmaEOF",
+          "fewizz",
+          "XuyuEre",
+          "geniiii",
+          "thiagokenis",
+          "Juuxel",
+          "Chloe Dawn",
+          "modmuss50",
+          "Patbox",
+          "Lykrast",
+          "Pyrofab",
+          "UpcraftLP",
+          "swordglowsblue",
+          "hinataaki",
+          "LeonXu98",
+          "magneticflux",
+          "vanja-san",
+          "AlexIIL",
+          "masoncook16",
+          "el97",
+          "Hephaestus-Dev",
+          "zabi94",
+          "dexman545",
+          "dhouck",
+          "Hambaka",
+          "po-stulate",
+          "FlashyReese",
+          "egeesin",
+          "TheGlitch76",
+          "ludg1e",
+          "williambl",
+          "PepperCode1",
+          "ThatTrollzer",
+          "ToffeeMax",
+          "kalucky0",
+          "Maaster",
+          "MartrixX",
+          "NotSteven",
+          "Dolphin 2.1",
+          "ENDERZOMBI102",
+          "anatom3000",
+          "OroArmor",
+          "jackassmc",
+          "Vaerian",
+          "RDKRACZ",
+          "Hulenkius",
+          "XfedeX",
+          "spnda",
+          "Jab125",
+          "SolidBlock",
+          "Tkain",
+          "nfitzen",
+          "DenaryDev",
+          "legenden",
+          "NaiNonTH",
+          "MagnusHJensen",
+          "Benjamin-Norton",
+          "triphora",
+          "Pyrrha",
+          "sakura-ryoko",
+          "lowercasebtw",
+          "tnoctua",
+          "litetex",
+          "Starmoe(Celestia)"
+        ],
+        "description": "Adds a mod menu to view the list of mods you have installed.",
+        "mixins": [
+          "mixins.modmenu.json"
+        ],
+        "custom": {
+          "modmenu": {
+            "links": {
+              "modmenu.discord": "https://discord.gg/jEGF5fb"
+            }
+          }
+        },
+        "jars": [
+          {
+            "file": "META-INF/jars/fabric-api-base-2.0.3+ece0632359.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-key-mapping-api-v1-2.0.4+e2bdee7859.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-lifecycle-events-v1-4.0.6+a9b9c17659.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-resource-loader-v1-2.0.9+d871b99e59.jar"
+          },
+          {
+            "file": "META-INF/jars/fabric-screen-api-v1-5.0.1+d871b99e59.jar"
+          },
+          {
+            "file": "META-INF/jars/placeholder-api-3.0.0+26.1.jar"
+          }
+        ]
+      }
+    },
+    {
+      "file": "placeholder-api-3.0.0+26.1.jar",
+      "sha512": "b559da0f13fef17967f2aff1d06b00995c7db21d9d5b7b580ab6eafdf2365e4ac86a7d094c2b481160a942f291bc2595f2cb8c91ce5e169f1c2f461782ecd2a8",
+      "source": "modrinth:eXts2L7r",
+      "url": "https://cdn.modrinth.com/data/eXts2L7r/versions/b3IPAHgB/placeholder-api-3.0.0%2B26.1.jar",
+      "version": "3.0.0+26.1",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "placeholder-api",
+        "version": "3.0.0+26.1",
+        "name": "Placeholder API",
+        "description": "Simple api for mods allowing for user friendly formatting and universal placeholders!",
+        "authors": [
+          "Patbox"
+        ],
+        "contact": {
+          "homepage": "https://pb4.eu",
+          "sources": "https://github.com/Patbox/TextPlaceholderAPI"
+        },
+        "license": "LGPLv3",
+        "icon": "assets/icon.png",
+        "environment": "*",
+        "depends": {
+          "fabricloader": ">=0.18.4",
+          "minecraft": ">=26.1-"
+        },
+        "custom": {
+          "modmenu": {
+            "badges": [
+              "library"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "file": "appleskin-fabric-mc26.1.2-3.0.10.jar",
+      "sha512": "eacb134cc9e03a4fd870c3e75fedd3fba6ef9bf1611dcff5b89f0d35b22bda5709f085436ac071c018cf7d3e5a54c9783477c4f091d4ded74deb5292f25f5644",
+      "source": "modrinth:EsAfCjCV",
+      "url": "https://cdn.modrinth.com/data/EsAfCjCV/versions/zLlqqiTA/appleskin-fabric-mc26.1.2-3.0.10.jar",
+      "version": "3.0.10+mc26.1.2",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "appleskin",
+        "version": "3.0.10+mc26.1.2",
+        "name": "AppleSkin",
+        "description": "Adds various food-related HUD improvements",
+        "authors": [
+          "squeek502"
+        ],
+        "contact": {
+          "sources": "https://github.com/squeek502/AppleSkin",
+          "homepage": "https://modrinth.com/mod/appleskin",
+          "issues": "https://github.com/squeek502/AppleSkin/issues"
+        },
+        "license": "Unlicense",
+        "icon": "assets/appleskin/appleskin.png",
+        "environment": "*",
+        "entrypoints": {
+          "client": [
+            "squeek.appleskin.AppleSkin"
+          ],
+          "main": [
+            "squeek.appleskin.AppleSkinCommon"
+          ],
+          "modmenu": [
+            "squeek.appleskin.gui.ModMenuIntegration"
+          ],
+          "rei_client": [
+            "squeek.appleskin.client.REITooltipPlugin"
+          ]
+        },
+        "mixins": [
+          "appleskin.mixins.json",
+          {
+            "config": "appleskin.jei.mixins.json",
+            "environment": "client"
+          }
+        ],
+        "depends": {
+          "fabricloader": ">=0.15.10",
+          "fabric-api": "*"
+        },
+        "breaks": {
+          "roughlyenoughitems": "<6.0.306-alpha"
+        },
+        "custom": {
+          "configured": {
+            "providers": [
+              "squeek.appleskin.gui.ConfiguredConfigProvider"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "file": "cloth-config-26.1.154.jar",
+      "sha512": "8bfb75f2cac0a9910316c6a368a228c0f8f1261ac6f03dec5fba594e1619ac04334a3df4fb29778d61d0b8290d55949371a523d722b35501bf9a2902956d3b17",
+      "source": "modrinth:9s6osm5g",
+      "url": "https://cdn.modrinth.com/data/9s6osm5g/versions/GFM8zh9J/cloth-config-26.1.154.jar",
+      "version": "26.1.154+fabric",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "cloth-config",
+        "name": "Cloth Config v26.1",
+        "description": "An API for config screens.",
+        "version": "26.1.154",
+        "authors": [
+          "shedaniel"
+        ],
+        "contact": {
+          "homepage": "https://minecraft.curseforge.com/projects/cloth-config",
+          "sources": "https://github.com/shedaniel/ClothConfig",
+          "issues": "https://github.com/shedaniel/ClothConfig/issues"
+        },
+        "license": "GNU LGPLv3",
+        "icon": "icon.png",
+        "entrypoints": {
+          "client": [
+            "me.shedaniel.autoconfig.example.ExampleInits::exampleCommonInit"
+          ],
+          "modmenu": [
+            "me.shedaniel.clothconfig2.fabric.ClothConfigModMenuDemo"
+          ]
+        },
+        "provides": [
+          "cloth-config2"
+        ],
+        "depends": {
+          "fabricloader": ">=0.14.0",
+          "minecraft": ">=26.1-"
+        },
+        "accessWidener": "cloth-config.accessWidener",
+        "custom": {
+          "modmenu": {
+            "badges": [
+              "library"
+            ]
+          },
+          "catalogue": {
+            "configFactory": "me.shedaniel.clothconfig2.fabric.ClothConfigCatalogueDemo"
+          }
+        },
+        "jars": [
+          {
+            "file": "META-INF/jars/basic-math-0.6.1.jar"
+          }
+        ]
+      }
+    },
+    {
+      "file": "backpacked-fabric-3.0.4+26.1.2-signed.jar",
+      "sha512": "e7d88a95b6e26aa5acab95f4266bac166e9ef171edb3df7ae102926ea5565c604fb06c7097a0c445a9cd592a143bf1ddb0d7bd9c2fb51db0bfcd6462258309fb",
+      "source": "github:MrCrayfish/Backpacked",
+      "url": "https://github.com/MrCrayfish/Backpacked/releases/download/v3.0.4%2B26.1.2/backpacked-fabric-3.0.4%2B26.1.2-signed.jar",
+      "version": "3.0.4+26.1.2",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "backpacked",
+        "version": "3.0.4",
+        "name": "Backpacked",
+        "description": "A vanilla-friendly backpack mod, featuring an unlock-based progression system, special augments that can be applied to backpacks to enhance gameplay, and a data-driven cosmetic system to unlock new backpack styles.",
+        "authors": [
+          "MrCrayfish"
+        ],
+        "contact": {
+          "homepage": "https://mrcrayfish.com/mods?id=backpacked",
+          "sources": "https://github.com/MrCrayfish/Backpacked",
+          "issues": "https://github.com/MrCrayfish/Backpacked/issues"
+        },
+        "license": "GNU Lesser General Public License v2.1",
+        "icon": "assets/backpacked/icon.png",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "com.mrcrayfish.backpacked.Backpacked"
+          ],
+          "client": [
+            "com.mrcrayfish.backpacked.client.ClientHandler"
+          ],
+          "fabric-datagen": [
+            "com.mrcrayfish.backpacked.datagen.DataGeneration"
+          ],
+          "jei_mod_plugin": [
+            "com.mrcrayfish.backpacked.integrations.jei.Plugin"
+          ]
+        },
+        "mixins": [
+          "backpacked.fabric.mixins.json",
+          "backpacked.common.mixins.json"
+        ],
+        "depends": {
+          "fabricloader": ">=0.18.6",
+          "fabric-api": ">=0.145.4+26.1.2",
+          "minecraft": "~26.1-",
+          "java": ">=25",
+          "framework": ">=0.13.22"
+        },
+        "recommends": {
+          "yigd": ">=2.4.18"
+        },
+        "accessWidener": "backpacked.accesswidener",
+        "custom": {
+          "framework": {
+            "containers": [
+              "com.mrcrayfish.backpacked.core",
+              "com.mrcrayfish.backpacked.network"
+            ],
+            "configs": [
+              "com.mrcrayfish.backpacked.Config"
+            ]
+          },
+          "configured": {
+            "background": "minecraft:textures/block/dirt.png"
+          },
+          "catalogue": {
+            "banner": "assets/backpacked/banner.png",
+            "background": "assets/backpacked/background.png"
+          }
+        }
+      }
+    },
+    {
+      "file": "framework-fabric-0.13.23+26.1.2-signed.jar",
+      "sha512": "4d511543e9af7528632c5d8b4ae1cf42b709e2a04146f3a06e10458c909f743627b85d146314953687b0de32a0ffde7911e6c54ff3a8690d82b84a298bc69385",
+      "source": "github:MrCrayfish/Framework",
+      "url": "https://github.com/MrCrayfish/Framework/releases/download/v0.13.23%2B26.1.2/framework-fabric-0.13.23%2B26.1.2-signed.jar",
+      "version": "0.13.23+26.1.2",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "framework",
+        "version": "0.13.23",
+        "name": "Framework",
+        "description": "A library providing powerful utilities for developers",
+        "authors": [
+          "MrCrayfish"
+        ],
+        "contact": {
+          "homepage": "https://mrcrayfish.com/mods?id=framework",
+          "sources": "https://github.com/MrCrayfish/Framework"
+        },
+        "license": "LGPLv2.1",
+        "icon": "assets/framework/icon.png",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "com.mrcrayfish.framework.FrameworkFabric",
+            "com.mrcrayfish.framework.event.FabricEvents"
+          ],
+          "client": [
+            "com.mrcrayfish.framework.client.ClientFrameworkFabric",
+            "com.mrcrayfish.framework.client.FabricClientEvents"
+          ]
+        },
+        "mixins": [
+          "framework.common.mixins.json",
+          "framework.fabric.mixins.json"
+        ],
+        "depends": {
+          "fabricloader": ">=0.18.6",
+          "fabric-api": ">=0.145.4+26.1.2",
+          "minecraft": "~26.1-",
+          "java": ">=25"
+        },
+        "accessWidener": "framework.accesswidener",
+        "custom": {
+          "framework": {
+            "containers": [
+              "com.mrcrayfish.framework.network"
+            ]
+          }
+        },
+        "jars": [
+          {
+            "file": "META-INF/jars/core-3.8.3.jar"
+          },
+          {
+            "file": "META-INF/jars/javassist-3.30.2-GA.jar"
+          },
+          {
+            "file": "META-INF/jars/reflections-0.10.2.jar"
+          },
+          {
+            "file": "META-INF/jars/toml-3.8.3.jar"
+          }
+        ]
+      }
+    },
+    {
+      "file": "architectury-fabric-20.1.17.jar",
+      "sha512": "8ad5988c4d01c4396d67da1143d812507f515ab8d808147babb404978130662c146e4edad2cd415e928722105fbbae27507fd14eadcf05bc4d0fdc15bc6d4034",
+      "source": "modrinth:lhGA9TYQ",
+      "url": "https://cdn.modrinth.com/data/lhGA9TYQ/versions/9kMQ7HXI/architectury-fabric-20.1.17.jar",
+      "version": "20.1.17+fabric",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "architectury",
+        "version": "20.1.17",
+        "name": "Architectury",
+        "description": "A intermediary api aimed to ease developing multiplatform mods.",
+        "authors": [
+          "shedaniel"
+        ],
+        "contact": {
+          "issues": "https://github.com/architectury/architectury-api/issues",
+          "sources": "https://github.com/architectury/architectury-api",
+          "homepage": "https://architectury.github.io/architectury-documentations/"
+        },
+        "license": "LGPL-3",
+        "environment": "*",
+        "mixins": [
+          "architectury-common.mixins.json",
+          "architectury.mixins.json"
+        ],
+        "entrypoints": {
+          "main": [
+            "dev.architectury.utils.fabric.GameInstanceImpl::init"
+          ],
+          "server": [
+            "dev.architectury.init.fabric.ArchitecturyServer::init"
+          ],
+          "client": [
+            "dev.architectury.init.fabric.ArchitecturyClient::init"
+          ],
+          "modmenu": [
+            "dev.architectury.compat.fabric.ModMenuCompatibility"
+          ]
+        },
+        "icon": "icon.png",
+        "depends": {
+          "minecraft": ">=26.1.2",
+          "fabricloader": ">=0.18.5",
+          "fabric-api": ">=0.154.0"
+        },
+        "custom": {
+          "modmenu": {
+            "badges": [
+              "library"
+            ]
+          }
+        },
+        "accessWidener": "architectury.accessWidener"
+      }
+    },
+    {
+      "file": "codex-fabric-26.1.2-0.1.0.jar",
+      "sha512": "a05f9455bc1852abb3740131ae2239cc82d94cb9df91a00ffd252847da119539129bfa243b64041f93bc3e9a5239b952bd2a4a1fbd9aa2bb7180de65ad91aa29",
+      "source": "local:codex",
+      "version": "0.1.0",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "codex",
+        "version": "0.1.0",
+        "name": "Codex",
+        "description": "Minecraft-native advancement and quest authoring, party progression, and claimable rewards.",
+        "authors": [
+          "Vg34100"
+        ],
+        "license": "MIT",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "net.vg.codex.fabric.ModMainFabric"
+          ],
+          "client": [
+            "net.vg.codex.fabric.client.ModMainFabricClient"
+          ]
+        },
+        "mixins": [
+          "codex.mixins.json"
+        ],
+        "depends": {
+          "fabricloader": ">=0.19.3",
+          "minecraft": "26.1.2",
+          "java": ">=25",
+          "architectury": ">=20.0.0",
+          "fabric-api": "*"
+        }
+      }
+    },
+    {
+      "file": "spelunkery-fabric-26.1.2-1.0.2.jar",
+      "sha512": "9bcec3d09f7290578d90c0b0280ca8d126a41513fabf53046cdf111e3cbf225ebf148c07acbe402c5699d25c8aef00a8f6e4376523e967c0d9dcda38884b29ee",
+      "source": "local:spelunkery",
+      "version": "1.0.2",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "spelunkery",
+        "version": "1.0.2",
+        "name": "The Spelunker Update",
+        "description": "",
+        "authors": [
+          "VgLevelUp"
+        ],
+        "contact": {
+          "homepage": "https://github.com/Vg34100"
+        },
+        "license": "MIT",
+        "icon": "assets/spelunkery/icon.png",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "net.vg.spelunkery.fabric.SpelunkeryFabric"
+          ],
+          "client": [
+            "net.vg.spelunkery.fabric.client.SpelunkeryFabricClient"
+          ],
+          "jei_mod_plugin": [
+            "net.vg.spelunkery.compat.jei.SpelunkeryJeiPlugin"
+          ]
+        },
+        "mixins": [
+          "spelunkery.mixins.json",
+          "spelunkery.fabric.mixins.json"
+        ],
+        "depends": {
+          "fabricloader": ">=0.19.3",
+          "minecraft": "26.1.2",
+          "java": ">=25",
+          "architectury": ">=20.0.7",
+          "fabric-api": "*"
+        }
+      }
+    },
+    {
+      "file": "fishingfrenzy-fabric-26.1.2-1.2.3.jar",
+      "sha512": "95b8bd61699e18518e0a6b4e5f016ef7861203f7fd5064dd38c47b6c1b495ce7b46bd654e8c77501dc3e8bfadc55acccfd05b1aeda037a22590220b34bfa31c7",
+      "source": "local:fishingfrenzy",
+      "version": "1.2.3",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "fishingfrenzy",
+        "version": "1.2.3",
+        "name": "Fishing Frenzy",
+        "description": "A fishing expansion mod adding a wide variety of new fish, baits, and fishing mechanics.",
+        "authors": [
+          "Vg34100"
+        ],
+        "contact": {
+          "homepage": "https://github.com/Vg34100"
+        },
+        "license": "CC0-1.0",
+        "icon": "assets/fishingfrenzy/icon.png",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "net.vg.fishingfrenzy.fabric.FishingFrenzyFabric"
+          ],
+          "client": [
+            "net.vg.fishingfrenzy.fabric.client.FishingFrenzyFabricClient"
+          ],
+          "modmenu": [
+            "net.vg.fishingfrenzy.fabric.client.FishingFrenzyModMenu"
+          ],
+          "fabric-datagen": [
+            "net.vg.fishingfrenzy.fabric.data.ModDataGenerator"
+          ]
+        },
+        "mixins": [
+          "fishingfrenzy.mixins.json",
+          "fishingfrenzy-fabric.mixins.json"
+        ],
+        "depends": {
+          "fabricloader": ">=0.19.3",
+          "minecraft": "26.1.2",
+          "java": ">=25",
+          "architectury": ">=20.0.7",
+          "fabric-api": "*"
+        },
+        "suggests": {
+          "modmenu": "*"
+        }
+      }
+    },
+    {
+      "file": "combo-fabric-26.1.2-0.1.0.jar",
+      "sha512": "0910776ea80c4b50c9ff90a9398437219021b5bcda7df8f21b73ee14cce72783a8ff7f68108bac4889029e959fefd0b7c5b324f006394669928ebab34b335345",
+      "source": "local:combo",
+      "version": "0.1.0",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "combo",
+        "version": "0.1.0",
+        "name": "Combo",
+        "description": "Starter Architectury mod template for Minecraft 26.1.2.",
+        "authors": [
+          "Replace Me"
+        ],
+        "license": "MIT",
+        "icon": "assets/combo/icon.png",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "net.vg.combo.fabric.ComboFabric"
+          ],
+          "client": [
+            "net.vg.combo.fabric.client.ComboFabricClient"
+          ],
+          "modmenu": [
+            "net.vg.combo.fabric.client.ComboModMenu"
+          ]
+        },
+        "mixins": [
+          "combo.mixins.json"
+        ],
+        "depends": {
+          "fabricloader": ">=0.19.3",
+          "minecraft": "26.1.2",
+          "java": ">=25",
+          "architectury": ">=20.0.0",
+          "fabric-api": "*"
+        },
+        "suggests": {
+          "modmenu": "*"
+        }
+      }
+    },
+    {
+      "file": "sagittary-fabric-26.1.2-2.0.1.jar",
+      "sha512": "4e84deedc7d56b2aa6cf520b4087d6b10debeb076e357b2047d10acd896192de17450280bfdeab15a254db724d30c4a9bcd07dca6f18941e6c58864b18a7bbaa",
+      "source": "local:sagittary",
+      "version": "2.0.1",
+      "metadata": {
+        "schemaVersion": 1,
+        "id": "sagittary",
+        "version": "2.0.1",
+        "name": "Sagittary",
+        "description": "",
+        "authors": [
+          "VgLevelUp"
+        ],
+        "contact": {
+          "homepage": "https://github.com/Vg34100"
+        },
+        "license": "MIT",
+        "icon": "assets/sagittary/icon.png",
+        "environment": "*",
+        "entrypoints": {
+          "main": [
+            "net.vg.sagittary.fabric.SagittaryFabric"
+          ],
+          "client": [
+            "net.vg.sagittary.fabric.client.SagittaryFabricClient"
+          ],
+          "fabric-datagen": [
+            "net.vg.sagittary.fabric.data.ModDataGenerator"
+          ],
+          "jei_mod_plugin": [
+            "net.vg.sagittary.compat.jei.SagittaryJeiPlugin"
+          ]
+        },
+        "mixins": [
+          "sagittary.mixins.json",
+          "sagittary-fabric.mixins.json"
+        ],
+        "depends": {
+          "fabricloader": ">=0.19.3",
+          "minecraft": "26.1.2",
+          "java": ">=25",
+          "architectury": ">=20.0.7",
+          "fabric-api": "*"
+        },
+        "suggests": {
+          "jei": "*",
+          "trinkets_updated": "*",
+          "spelunkery": "*"
+        },
+        "breaks": {}
+      }
+    }
+  ]
+}

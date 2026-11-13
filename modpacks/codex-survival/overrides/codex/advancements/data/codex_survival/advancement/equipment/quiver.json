@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "sagittary:quiver"
+    },
+    "title": "Carry Ammunition",
+    "description": "Obtain a Sagittary quiver and check its tooltip for the controls.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "sagittary:quiver",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:equipment/root"
+}

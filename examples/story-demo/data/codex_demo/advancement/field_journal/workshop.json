@@ -1,0 +1,21 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:crafting_table"
+    },
+    "title": "A Place to Begin Again",
+    "description": "Craft a crafting table. A pack maker could branch this page toward technology, magic, or exploration using ordinary advancements from installed mods. This demo asks only that you begin.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "craft": {
+      "trigger": "minecraft:recipe_crafted",
+      "conditions": {
+        "recipe_id": "minecraft:crafting_table"
+      }
+    }
+  },
+  "parent": "codex_demo:field_journal/supplies"
+}

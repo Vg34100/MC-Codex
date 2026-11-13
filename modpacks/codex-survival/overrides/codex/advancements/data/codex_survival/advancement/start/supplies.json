@@ -1,0 +1,18 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:cobblestone"
+    },
+    "title": "Spare Building Supplies",
+    "description": "Optional exchange: deliver 16 cobblestone and 8 oak logs for 8 coal. Your equipment progression does not depend on this contract.",
+    "show_toast": false,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "deliver": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "parent": "codex_survival:start/root"
+}

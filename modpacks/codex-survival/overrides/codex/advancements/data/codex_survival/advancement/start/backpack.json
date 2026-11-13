@@ -1,0 +1,28 @@
+{
+  "display": {
+    "icon": {
+      "id": "backpacked:backpack"
+    },
+    "title": "Pack for the Trip",
+    "description": "Obtain a Backpacked backpack. Its pack recipe uses leather, canvas and bronze; check JEI.",
+    "show_toast": true,
+    "announce_to_chat": false,
+    "frame": "task"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "backpacked:backpack",
+            "count": {
+              "min": 1
+            }
+          }
+        ]
+      }
+    }
+  },
+  "parent": "codex_survival:start/iron"
+}

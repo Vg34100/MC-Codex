@@ -1,0 +1,39 @@
+{
+  "vanilla": [
+    "data/minecraft/advancement/story/root.json",
+    "data/minecraft/advancement/story/mine_stone.json",
+    "data/minecraft/advancement/story/smelt_iron.json",
+    "data/minecraft/advancement/story/upgrade_tools.json",
+    "data/minecraft/advancement/story/enter_the_nether.json",
+    "data/minecraft/advancement/husbandry/plant_seed.json",
+    "codex/quests.json",
+    "codex/claimable_rewards.json"
+  ],
+  "showcase": [
+    "codex/claimable_rewards.json",
+    "codex/quests.json",
+    "codex/statistic_tasks.json",
+    "codex/submission_tasks.json",
+    "codex/treasure_lists.json",
+    "data/codex_demo/advancement/camp_chronicle/builder.json",
+    "data/codex_demo/advancement/camp_chronicle/communal.json",
+    "data/codex_demo/advancement/camp_chronicle/daily.json",
+    "data/codex_demo/advancement/camp_chronicle/everyone.json",
+    "data/codex_demo/advancement/camp_chronicle/heading.json",
+    "data/codex_demo/advancement/camp_chronicle/letters.json",
+    "data/codex_demo/advancement/camp_chronicle/review_kit.json",
+    "data/codex_demo/advancement/camp_chronicle/root.json",
+    "data/codex_demo/advancement/camp_chronicle/supply.json",
+    "data/codex_demo/advancement/camp_chronicle/timber.json",
+    "data/codex_demo/advancement/camp_chronicle/trail.json",
+    "data/codex_demo/advancement/camp_chronicle/wanderer.json",
+    "data/codex_demo/loot_table/codex_treasure/field_provisions.json",
+    "codex/layout.json"
+  ],
+  "sagittary": [
+    "codex/quests.json"
+  ],
+  "sleepcycle": [
+    "codex/quests.json"
+  ]
+}

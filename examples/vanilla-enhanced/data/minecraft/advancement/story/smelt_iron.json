@@ -1,0 +1,28 @@
+{
+  "parent": "minecraft:story/upgrade_tools",
+  "criteria": {
+    "iron": {
+      "conditions": {
+        "items": [
+          {
+            "items": "minecraft:iron_ingot"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "display": {
+    "description": "The furnace glows, and the first iron ingot cools. This milestone opens the door to machines, expeditions, and the stories your modpack may add.",
+    "icon": {
+      "id": "minecraft:iron_ingot"
+    },
+    "title": "The First Iron"
+  },
+  "requirements": [
+    [
+      "iron"
+    ]
+  ],
+  "sends_telemetry_event": true
+}
