@@ -1,4 +1,4 @@
-# Reusable validation — November 1, 2026
+# Reusable validation — updated November 13, 2026
 
 ## Compact commands
 
@@ -16,23 +16,38 @@ python build-smart.py :26.1.2-fabric:packageTarget :26.1.2-neoforge:packageTarge
 
 If a running development client locks normal output JARs, append `--build-init runs/frame-mask-build.gradle` to the server/client/migration harnesses, and `--init-script runs/frame-mask-build.gradle` to build-smart.py. This session used that existing ignored local script to isolate outputs. Do not close unrelated Minecraft processes to release locks. Omit --offline only when dependencies/assets need downloading.
 
-## November 7 matrix update
+## Current matrix evidence
 
 Harnesses accept `--minecraft-version` (default `26.1.2`). New reports use full target directories: `runs/validation/26.1.2-fabric/results-{initial,restart,independent}.json`; older loader-only reports are historical. The current 26.1.2 dedicated run passed **169 initial + 11 restart + 7 independent-world checks per loader**, 374 total. The same 374 checks also pass on 26.3. These use simulated players. The separate real-client visual probe passed 29 checks including styled tooltips, full gold selected/unselected frames, chapter switching, claim receipts, JEI hover lookup and native node synchronization while paused.
 
-Use explicit package tasks or `compile:modern` during migration; unrestricted matrix tasks include unfinished legacy targets. See [version status](MULTIVERSION.md). The old local `frame-mask-build.gradle` workaround is not needed for the new target-specific outputs.
+All sixteen targets now compile, package and pass artifact inspection. Full dedicated progression/restart/separate-world reports now pass on all sixteen targets (3,018 checks); preserved summaries are in runs/ports-20261113/dedicated/. Actual one-client 85-stage editor journeys pass on 1.20.1 Fabric, 26.1.1 NeoForge and 26.3 NeoForge, with reports/screenshots in runs/ports-20261113/gui/. Runtime coverage varies by target; compilation alone does not establish GUI behavior. See [version status](MULTIVERSION.md). The old local `frame-mask-build.gradle` workaround is not needed for the new target-specific outputs.
+
+## Legacy transport and recipes
+
+On 1.20.1, `all` selects Fabric and Forge. The simulated suite adds 13 split-packet checks to the existing 169 initial checks. It verifies large client-to-server and server-to-client messages, native packet limits, malformed fragments, player/channel isolation and pending-fragment cleanup. Restart and independent-world checks remain separate. These are embedded connections, not actual socket clients.
+
+```text
+python scripts/test-server.py all --minecraft-version 1.20.1 --reset --offline
+python scripts/test-recipes.py all --minecraft-version 1.21.1
+python scripts/test-bundled-examples.py all --minecraft-version 1.20.1
+python scripts/test-clients.py fabric --minecraft-version 1.20.1 --gui-only --reset --offline
+python build-smart.py matrix:package --offline
+python scripts/verify-matrix-artifacts.py
+```
+
+Run builds sequentially when they share a build directory. Parallel Gradle invocations can race over prepared source trees. New test worlds use the native flat preset with structure generation disabled to avoid spending most of the run generating terrain; existing validation worlds retain their stored generator. Client test sources use the same version preparation as production sources and remain excluded from release jars.
 
 ## Simulated dedicated scenarios
 
 `test-server.py` starts a real dedicated server with two simulated ServerPlayers using embedded network connections. This is **not two actual clients**. Tests use native registries, advancement triggers, inventories, recipes, loot, functions, events and saved files. NeoForge uses its official mock-connection configuration. Embedded login explicitly restores player NBT before placing the player, matching the load step normally performed during login configuration.
 
-The final run passed 159 initial + 15 restart + nine independent-world checks on each loader (366 total, no failures). The three phases are initial, dedicated restart using the same world, and a separate independent world. Reports are under `runs/validation/<loader>/results-{initial,restart,independent}.json`. `--reset` removes only that loader's disposable validation folder. Run initial before restart/independent; a new full run should use --reset. Timeout cleanup stops only the harness process tree.
+The historical November 1 baseline passed 159 initial + 15 restart + nine independent-world checks on each loader (366 total, no failures). The three phases are initial, dedicated restart using the same world, and a separate independent world. Reports are under `runs/validation/<loader>/results-{initial,restart,independent}.json`. `--reset` removes only that loader's disposable validation folder. Run initial before restart/independent; a new full run should use --reset. Timeout cleanup stops only the harness process tree.
 
 Coverage includes native definitions/unknown JSON/AND-OR round trips, datapack reload, ordinary vanilla party sharing, partial and overlapping item/tag/property submissions, reward claims and duplicate rejection, treasure/bags/overflow, transaction fault boundaries, personal/shared cycles and policy snapshots, conditional dialogue, native branch gating, vanilla revoke resets, malformed packets/permissions, creator copy/gates, restart and world isolation. A 501-node server overview writes `performance.json`; this is a focused operation measurement, not a complete modpack benchmark.
 
 ## Two actual clients
 
-`test-clients.py` starts an isolated dedicated server and **two rendered Minecraft clients over loopback TCP**, on Fabric or NeoForge. It opens game windows. Warn the user first. This profile uses in-process client widget callbacks and screenshots; it does not move the operating-system pointer or type into the desktop. Never silently substitute `scripts/client-window.ps1` or other desktop-control tools.
+`test-clients.py` starts an isolated dedicated server and **two rendered Minecraft clients over loopback TCP**, on Fabric, NeoForge or Forge. It opens game windows. Warn the user first. This profile uses in-process client widget callbacks and screenshots; it does not move the operating-system pointer or type into the desktop. Never silently substitute `scripts/client-window.ps1` or other desktop-control tools.
 
 Each loader's completed profile records 49 initial checks and six restart checks in `runs/transport/<loader>/results-{initial,restart}.json`. The clients exercise invite/accept commands, native sharing, partial delivery/consumption, item/XP/recipe/function/loot claims, duplicate rejection, each-participant rewards, 24 repeated tree switches, saved choices, excluded-branch readability, reconnect and dedicated restart.
 
@@ -50,7 +65,7 @@ After a successful actual-client profile with its GUI-exported reward plan, `tes
 
 Put unmodified compatible JARs/dependencies under `runs/compat-mods/fabric` and `runs/compat-mods/neoforge`. The current profiles use Sagittary 2.0.1 and Sleep Cycle 1.0.5. The server compares loaded namespace counts, completes representative native inventory objectives, edits display data without changing criteria/requirements, and verifies reload/restart. JAR fingerprints are recorded in compatibility-mods.json; companion JARs are not redistributed in Codex.
 
-Normal development launch configuration also seeds missing editable examples. The current examples include 24 vanilla definitions, six sidecar-only companion enhancements and the separate Camp Chronicle. [GUI recipes](GUI_AUTHORING_RECIPES.md) explain how to reproduce them. Untouched legacy Field Journal content was retired with a backup; edited legacy copies are preserved.
+Normal development launch configuration also seeds missing editable examples. Extended validation profiles include 24 vanilla definitions, six sidecar-only companion enhancements and the separate Camp Chronicle. The normal download defaults to six enhanced vanilla advancements and the twelve-quest Camp Chronicle; see the included-examples wiki page. [GUI recipes](GUI_AUTHORING_RECIPES.md) explain how to reproduce them. Untouched legacy Field Journal content was retired with a backup; edited legacy copies are preserved.
 
 ## Remaining manual review
 
@@ -61,3 +76,15 @@ Normal development launch configuration also seeds missing editable examples. Th
 - Operator usability for interrupted arbitrary functions; fault injection is not a power-loss guarantee.
 
 Production packaging must exclude validation/transport/demo/partner resources, include both loader metadata/mixin configurations and the maintained offline migration utility, and avoid loading client-only classes on a dedicated server. See the current [multiversion evidence](MULTIVERSION.md); compilation, server startup, simulated progression and actual GUI checks are recorded separately.
+
+## One-client editor walkthrough
+
+`test-clients.py --gui-only` starts one actual rendered client over TCP and drives the same 85-stage authoring journey used by the two-client profile. Reports and screenshots are separate under `runs/gui-authoring/<target>/`. This verifies GUI widgets and server-side saved definitions; it is **not a multiplayer test**. The existing two-client mode remains available.
+
+Test-only mixins cancel Minecraft mouse capture and request nonactivating windows (GLFW hints before 26.3, SDL hint on 26.3; the 26.1/26.2 GLFW helper is separate from older constructors). They are excluded from release jars. Always warn before launching test windows. The driver waits for the resource-loading overlay to finish before connecting, reports disconnect reasons, bounds login retries, and fails a stalled login after 90 seconds. No desktop mouse/keyboard commands are used.
+
+November 13: the one-client 1.20.1 Fabric walkthrough passes all 85 stages and three top-level TCP/server verification checks. Actual screenshots cover branch conditions, linked chapters, delivery tags/properties, reward previews, copied native objectives and compact choice/outcome editors. It exposed and verified a production fix for delayed save/snapshot responses reopening the root editor over a child panel. Harness setup now explicitly enables manual claims and repeatability on a delivery objective before testing invalid-duration recovery. This is not a two-client multiplayer result.
+
+The same 85-stage journey and three TCP/server checks also pass on 26.1.1 NeoForge using the native binding. The author is placed in Creative mode only for the editor portion so incidental mobs cannot close the screen. GLFW focus hooks account for the separate native createGlfwWindow helper on 26.1–26.2.
+
+The 26.3 NeoForge one-client journey also passes all 85 stages and three TCP/server checks. Its disposable server explicitly sets white-list=false because native defaults now reject unlisted offline test actors. The test binding remains loopback-only; player servers are unaffected.

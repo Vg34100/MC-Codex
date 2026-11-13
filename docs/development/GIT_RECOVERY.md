@@ -22,3 +22,5 @@ Git commits protect against accidental edits and deletions. A copy of the recove
 The source checkpoint is `ffd2acf` (413 files). A full Git integrity check passes. Two damaged historical objects were restored from the existing GitHub repository and verified against their original object hashes. One damaged object was proven unreachable from every branch, reflog and the index; its original bytes were preserved outside the object database. Damaged-object copies remain on C: in `AppData/Local/MC-Codex-backups/damaged-git-objects-20261112/`. Normal dangling objects were left alone.
 
 The verified complete-history bundle is `C:\Users\video\AppData\Local\MC-Codex-backups\MC-Codex-recovery-20261112.bundle`. Its adjacent JSON file records the commit and SHA-256. Nothing was pushed.
+
+Subsequent tested port/editor milestones are saved as small local commits. New complete-history bundles use `MC-Codex-checkpoint-<commit>.bundle` in the same independent C: backup directory; each adjacent JSON records its exact commit, SHA-256 and size. The recovery bundle and damaged-object copies remain retained.

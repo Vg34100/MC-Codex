@@ -1,45 +1,33 @@
-# Active session — Minecraft ports and recovery (November 13, 2026)
+# Session checkpoint — November 13, 2026
 
-User explicitly says finish ALL16 suite targets; do not stop at compile milestones. Latest steering requests activeGittracking afterfilesystemcorruption. Keep working autonomously; no pushes/tags/publishing. Localmilestonecommits nowauthorized. No subagents or imagegeneration. NeverOSinput or user'sMinecraftprocess control. Warn immediatelybeforelaunchinganyownedGUIclient.
+## Current state
+All16 Stonecutter ports are implemented, packaged, inspected and validated on dedicated servers. Final JARs are copied/checksum-verified in build/libs/<target>; manifest runs/ports-20261113/artifact-manifest.json. No publication or launcher/world modifications. Ports work is complete for this milestone; GUI coverage limits remain explicit in MULTIVERSION.md.
 
-## Repository / builds
-- Workspace A:/Projects/The Experiment Lab/Minecraft/codex; Linuxcwd /mnt/a/projects/the experiment lab/minecraft/codex. SourcesmaintainedHERE. AGENTSread. Usebuild-smart.py exclusively forGradle.
-- OwnedC:buildmirror C:/Users/video/AppData/Local/Temp/codex-ports-20261108 (.codex-owned-build-mirror marker). Avoidscache/path/full-driveproblems. WindowsJava25configured; pertargetJava17/21/25.
-- Nativecmd /mnt/c/Windows/System32/cmd.exe requires exec_command require_escalated. Run `python scripts\build-port-mirror.py <smartcommand> --offline`. It copiesmaintainedroots only (no .git/worlds/runs) thenrunsnativewrapper. `--run-script test-server.py ...` runstestharnessinmirror.
-- `smoke-server:<EXACTtarget>` only. Multipleversions use `matrix:servers-runtime:1.20.1 -Pcodex_server_smoke`. Allworlds/profilesunderownedmirror/runs. NeveruserPrism/saves.
-- Smartservererrorcanprintgiantnativeadvancement dumps. Forpolls manuallytruncate toolresult.output via .slice beforetext(); inspectlogs withPython dedup/errorheading limits.
+## Passed validation
+- Full dedicated progression/restart/independent-world suites on ALL16 targets:14 targets187 each,1.20.1Fabric/Forge200 each (13 additional framing checks), total3,018 checks. Preserved reports/summary in runs/ports-20261113/dedicated/.
+- One actual TCP client,85 GUI authoring stages+3 saved-data/server checks EACH:1.20.1Fabric,26.1.1NeoForge,26.3NeoForge. Preserved reports/57 screenshots in runs/ports-20261113/gui/. Actual delivery/branch/compact captures inspected. These are not new two-client multiplayer results. Historical26.1.2two-client and29visual checks remain separate.
+- Bundled/native examples35 EACH on1.20.1Fabric/Forge and26.3Fabric/NeoForge. Native recipes19 EACH on1.20.1both and1.21.1both.
+- Final matrix:package50264 PASS; artifact verifier22037 PASS16/16 (metadata, bytecode, classes/resources, no test hooks). Final16 JARs copied with SHA-256 verification.
+- Git full integrity PASS; maintained text/JSON NUL/parse scan PASS;3 Python example unit tests PASS. See final handoff for final Git backup verification.
 
-## Git / recovered files
-- Branch codex/ports-and-recovery-2026-11-12. UserrequestedactiveGit. ffd2acf recoverycheckpoint413files;54e82b2 legacyAPI/dataformatmilestone. Nothingpushed. Futurecommits smallmeaningfulmilestones, keepC:bundlesupdated.
-- Recovered7NULL-filledsourcefiles withverifiedmatchingoldbytes frombefore-stonecutter.zip/packagedJAR. Corruptoriginals ignoredruns/multiversion-baseline/corrupt-source-20261112.
-- Gitlooseobjectsdamagedtoo: restored2historicalobjectsfromreadonlyGitHubclonewithexactSHA;thirdunreachablefromallrefs/reflogs/index quarantinedwithbytesretainedC:. gitfsckfullPASS. Nativeoldunreachableobjectsleftalone.
-- C:/Users/video/AppData/Local/MC-Codex-backups containsverifiedMC-Codex-recovery-20261112.bundle(ffd2acf), MC-Codex-checkpoint-54e82b2.bundle, checksumJSON, damagedobjectcopies,readonlyoriginmirror. GIT_RECOVERY.md details. Currentharness+laterrewardfix/modelworkuncommitted, preserveit.
+## Implemented / Git history
+Branch codex/ports-and-recovery-2026-11-12. Local milestone commits authorized; never push/tag/publish without explicit authorization. Recovery:7 damaged text files restored with corrupt originals retained;2 historicalGit objects repaired and1 proven unreachable corrupt object quarantined. GIT_RECOVERY.md records details.
+- ffd2acf recovery;54e82b2 native legacy APIs/data;9baf32d classic reward fixes.
+-985d8fc bounded1.20packet framing/native cooking counts;4e92905 native criteria/examples and classic GUI lifecycle/sprites/reward model fixes.
+-d6d0c82 native bindings ONLY26.1/26.1.1NeoForge; incompatible published Architectury removed only there. Other14 retain suite bindings.
+-6c5a114 delayed editor replies stay attached to their originating session; child screens no longer replaced by late save/snapshot replies. Closed/canceled snapshots dropped; dirty drafts preserved.
+-7ba4cc8 reusable actual-client GUI harness, native source prep, bounded login/resource loading, test-only no-capture/window focus hooks, Creative test author during editor steps, explicit loopback whitelist settings, reliable errors/screenshots and release test-hook rejection.
+- Final documentation checkpoint follows these commits. Complete-history bundles live independently on C: under AppData/Local/MC-Codex-backups; adjacent JSON records exact commit/SHA-256. Do not remove recovery bundles/corrupt-object copies.
 
-## Evidence (distinguish each)
-- TENmodern26.x compile/package/artifactinspection10/10PASS fromNov7.26.1.2+26.3 BOTHloaders simulated169initial+11restart+7independent PASS. 26.3bundled31each;26.2bundled29each. These predaterecentcanonicalJSON/recipechanges; runmodernregressionbeforefinal.
-- FOUR1.21/1.21.1 Fabric+NeoForge compile andsimulated169initial+11restart+7independent PERloaderPERversion PASS (748checks). Reportsmirror/runs/validation/<target>/results-*.json.
-- BOTH1.20.1 Fabric/Forge compileSUCCESS; BOTHdedicatedstartup/reloadSmokePASSwithzeroerrors. Forge retry55059PASSafterminVersion0.8config. Profilefailedbeforeiconrecoverypreservedunder1.20.1-fabric-before-icon-recovery.
-- 1.20.1Fabric firstgameplay144PASS/25FAIL: NativeitemStackrequiresCountnotcount,missingtagnotrejected. FixedItemFormats.nativeStack/LegacyItems+explicitSubmissionPlan taglookup. LATESTrun28023 `--run-script test-server.py all --minecraft-version1.20.1 --reset --offline`: Fabric169initial+11restart+7independent PASS. Forge159initialPASS/10FAIL, all failures in embedded-packet observation/navigation responses; restart/independent not run after failure. Investigate Forge outbound transport/observer before claiming parity.
-- Recipe1.20.1 native matching PASS19/19 EACH Fabric/Forge (session24843). Recipe1.21.1Fabric14PASS/4FAIL: all four cooking output quantity checks fail; investigate native cooking count support and validation. NeoForge not run after failure. Session52028 exited1.
-- LastactualGUIreview ONLY26.1.2Fabric29checks, oldtwo-clientbaselineprofiles. NOnewertargetorlegacyGUIproofyet. User'sPrism26.1.2stillpreviousreviewedJAR, NOTupdatedthisround. No desktopinputused.
+## Critical design / test workflow
+Canonical common/main/client sources remain shared. Targeted native adapters preserve raw advancement fields, AND/OR groups, native criteria/rewards/progress and authored dependencies. No whole-mod copies or disabled-feature stubs. Bundled vanilla examples overlay the running version's native definitions.1.20frames bounded32MiB/message,64MiBpending,30sexpiry/per-player-channel isolation and quit cleanup. Older cooking outputs restricted to native count1.
+Build sequentially through build-smart.py. Windows mirror C:\Users\video\AppData\Local\Temp\codex-ports-20261108; wrapper scripts/build-port-mirror.py copies maintained sources only, excludes Git/runs/builds/worlds. Never run concurrent Gradle preparation in the same mirror.
+Reusable commands: test-server.py all --minecraft-version <version> --reset --offline; test-clients.py <loader> --minecraft-version <version> --gui-only --reset --offline; build-smart.py matrix:package --offline; verify-matrix-artifacts.py. Use WindowsPython via cmd.exe, with mirror wrapper. Exact results/limits in MULTIVERSION.md and TESTING.md.
+Never generate images, inject OS input, focus windows, capture mouse or close user Minecraft. Warn before future owned client launches. Test-only window hooks: legacy GLFW constructor,26.1–26.2static createGlfwWindow,26.3SDL createWindow. No subagents authorized. No more client windows planned.
 
-## Implemented port architecture
-- NativeStonecutter suitebuild, canonicalcommon main/client+loader sources; gradle/source-compat.gradle exactAPIrenamegroups, legacy-onlycompatroots. No wholemodsourcecopies or disabledquestfeatures.
--1.21family: legacyinput/pose/widget adapters, NBTreceiptmixins,classicpermissions/registries, oldJEIcallbacks/getters, correctNeoForgeMODbus, AdvancementResetMixin old4argperform.
--1.20nativeAdvancement replacesHolder/Node throughversionrules; LegacyAdvancements Gsoncodecs/nativepreviewlist, Requirements120 preservesAND/OR/nativewire, boundedStreamCodec/ByteBufCodecs+CustomPacketPayload+nativeArchitectury9NetworkManager facade. GsonCodec120 preservesnativeJsonNulls bypassingDFU6PASSTHROUGH RegistryOpsbug. LegacyItems mapsknowncomponentproperties/nativeNBT, comparescustomnamessemantically, preservesremainingheldSNBT; unknownunsupportedpropertiesexpliciterrors.
-- ResourceFormats handles1.20pluralfolders, nativeiconitemfield(retainsid), generatedpredicateitemarrays/tags+readonlyreverse. BundledExamplesmapsTARGETpathsbutkeepsresource/ledgerkeys; nativevanillabody+displayoverlay, onlyuntouchedownedentriesauto-upgrade/backup. NativegetOrThrowDFUoldsignature, Java17collections, oldGsonsizechecks.
-- RecipeFormats preservesunknownfields/nativeoldobjectingredients/1.20itemoutputfield+cookingstringone-itemconstraint; serverreadsnormalizedauthoringview,validates/writesnativeformat, nativefolderlisting;GUIordinaryingredienticons; 1.20cookingcountlocked1. Rawunsupportedoutputcollisionadvancedfallback.
--1.20coreGUIclassicAtlas/nine-slice renderer+nativegradientbackdrop, Checkboxbuilder, mousewheel3->4bridge, floatHUD. Nativeatlascoordsinspectedbytecode. Needsvisualreviewselectedtab/nativeboxslicing.
-- NEWuncommitted legacybagvisualsupport: gradle/compat/resources/classic/assets/codex/models/item/treasure_bag.json; gradle/resource-compat addsoldmodel+client.TreasureBagModelMixin for<1.21.4; mixin delegatesappearance toselectednativebakeditemmodel, specialentityrenderersfallbackbag. Needscompile+actualGUI. No generatedrasterimages.
+## Next development / dialogue discussion
+User asks whether gameplay backdrop can work because advancements pause and wants to see both placements. A standalone dialogue screen can pause singleplayer over visible world; multiplayer continues. Recommend compact RPG panel inside advancement UI, dimmed tree, optional speaker/icon, paged passages and clear choice outcomes. New presentation is NOT implemented: existing quest dialogue/branches remain the current system.
+Interactive concept ONLY: /home/pablo/.codex/visualizations/2026/10/21/01a15cf1-9664-79e1-8b66-b3e02a8d181e/codex-rpg-dialogue.html. Syntax/static checked; no browser available. Include final-only visualize reference. Reload full visualize skill before creating/updating. No image generation.
+Next: user reviews dialogue placements; implement chosen presentation over existing metadata. Broaden GUI/JEI/HUD and realistic-pack playtesting on remaining combinations; no claim all16 GUIs manually verified. No publish authorized.
 
-## Harness specifics / next exact work
-1. Classic full suite28023 finished: Fabric187/187PASS, Forge159PASS/10FAIL (embedded outbound packet observations). FixANYrealfailure. ForgeScenarios+META-INFtestmod added; scriptstest-server/test-recipes/test-bundled-examples nowacceptForgeandall1.20resolvesFabric/Forge. FakeForgeconnectionsmightneedsnativeconfiguration; donotclaim2actualclients.
-2. LegacyFixtures convertsONLYdisposabletestpackfolders/icons/criteria; nativevanillafixturebasesfromrunninggame,MCfunctions movedplural. Alloriginal169scenariosreused. Nativeplayerctor/placeNewPlayer+oldpacketobserver, Java17threads,ScenarioBuffers; test-onlylegacyCraftingInput/SingleRecipeInputrealcontainers. Core1.20Source tests packetdecodeFacade.decode added; preservefullcoverage.
-3. Classic recipe profile finished19/19 eachloader, including unsupported cooking-count rejection. Investigate1.21.1 cooking output count failures before broader recipe validation.
-4. Run1.20bundled31checks/loader; mayneedadjustharnesshardcodedresourcepaths/nativeJSONcomparisons.
-5. IMPORTANT: implementlargepackettransportusingexistingArchitectury9SplitPacketTransformer, notnewprotocol. Facadecurrentlyrawoldnativechannel; maxC2S32767/S2C1MBcouldbreaklargeeditorpacks. Builtintransformer canbeappliedmanuallyoutbound/inboundbecausecodec-onlyS2Cregistrationdoesnotregisternativeoutboundtransformers. Inspectprimarysource first, enforcebounds/malformedsplit safety.
-6. All16compile+package+artifactverification(latestcanonicalchanges), representative26.xremainingserverchecks. CopyfinalartifactsfromownedC:mirror toworkspaceonlyaftervalidation.
-7. ActualGUIjourneys/prodclientchecks: extendgradle/validation nativepreparationtocodexClientTest (currentlyserveronly), reuseexistingtest-clients.pywidgetdriver, orownedcompactactual-clientprobe. WARNbeforewindowopens; noOSmouse/keyboard. Needlegacy+26.3GUI, delivery/branch/recipe/bag/rendering/network. CurrentproductionclienthelperonlystartupnotGUIjourney.
-8. UpdateMULTIVERSION/TESTING/README,evidencepagesandthischeckpoint, commitmilestones+offdrivebundles. No prematurefinalclaim.
-
-Historicaldetails archived in session-archive/SESSION_PROGRESS-through-2026-11-13.md.
+Detailed milestones/failures: session-archive/SESSION_PROGRESS-through-ports-2026-11-13.md and earlier archive. Test failures fixed: wrong repeatable fixture setup, native focus-hook API placement, incidental slime killing author,26.3default whitelist. Failed owned profiles remain preserved separately; successful results above supersede them.
