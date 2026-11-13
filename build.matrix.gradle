@@ -20,8 +20,13 @@ def loader = required('loader')
 def minecraftVersion = required('minecraft_version')
 def javaVersion = required('java_version') as int
 def legacy = required('loom_generation') == 'legacy'
+def nativeNeoForge = matrix.getProperty('codex_native_platform','false').toBoolean()
+if (nativeNeoForge && (loader != 'neoforge' || !(minecraftVersion in ['26.1','26.1.1']))) throw new GradleException('Native compatibility applies only to early26.1 NeoForge')
+ext.codexNativeNeoForge = nativeNeoForge
 ext.codexLoader = loader
 ext.codexMinecraft = minecraftVersion
+// Explicit layers are required by modern flat-world codecs; only isolated tests use this.
+ext.codexFlatTestSettings = groovy.json.JsonOutput.toJson([layers: [[block:'minecraft:bedrock',height:1],[block:'minecraft:dirt',height:2],[block:'minecraft:grass_block',height:1]], biome:'minecraft:plains', structure_overrides:[]])
 def isFabric = loader == 'fabric'
 def isForge = loader == 'forge'
 if (isForge && (!legacy || minecraftVersion != '1.20.1' || javaVersion != 17)) {
@@ -72,13 +77,15 @@ sourceSets.main {
 
 // Stonecutter's default pipeline assumes a single root src/. Feed its native
 // preparer our canonical trees instead; no Java text rewriting happens here.
+def compatibility = legacy || nativeNeoForge
+def compatFamily = nativeNeoForge ? 'early-neoforge' : 'legacy'
 def processedJava = layout.buildDirectory.dir('stonecutter/changes')
 def compatRoots = ['common', loader].collectEntries { tree ->
-    [(tree): rootProject.file("gradle/compat/legacy/${tree}")]
+    [(tree): rootProject.file("gradle/compat/${compatFamily}/${tree}")]
 }
 def overrides = compatRoots.collectEntries { tree, dir ->
     def paths = [] as Set
-    if (legacy && dir.isDirectory()) {
+    if (compatibility && dir.isDirectory()) {
         fileTree(dir).visit { element ->
             if (!element.directory && element.path.endsWith('.java')) paths.add(element.path)
         }
@@ -94,7 +101,7 @@ prepareJava.configure {
             exclude overrides[tree]
         }
     })
-    if (legacy) source.from(compatRoots.values().collect { dir -> fileTree(dir) { include '**/*.java' } })
+    if (compatibility) source.from(compatRoots.values().collect { dir -> fileTree(dir) { include '**/*.java' } })
     source.from(rootProject.fileTree('common/src/client/java') { include '**/*.java'; exclude overrides['common'] })
     destination.set(processedJava)
 }
@@ -116,12 +123,12 @@ def generateJava = tasks.register('prepareTargetSources', Sync) {
                 new File(processedJava.get().asFile, "${tree}/src/main/java/${element.path}").isFile()
             }
         }
-        if (legacy) {
-            from(processedJava.map { it.dir("gradle/compat/legacy/${tree}") }) { into "${tree}/src/main/java" }
+        if (compatibility) {
+            from(processedJava.map { it.dir("gradle/compat/${compatFamily}/${tree}") }) { into "${tree}/src/main/java" }
             from(compatRoots[tree]) {
                 into "${tree}/src/main/java"
                 exclude { element ->
-                    new File(processedJava.get().asFile, "gradle/compat/legacy/${tree}/${element.path}").isFile()
+                    new File(processedJava.get().asFile, "gradle/compat/${compatFamily}/${tree}/${element.path}").isFile()
                 }
             }
         }
@@ -145,7 +152,7 @@ tasks.named('compileJava') {
 }
 // Give inactive IDE modules distinct processed roots. Legacy's structural
 // overrides also require this view; edit canonical/compat files, never this cache.
-if (!stonecutter.current.active || legacy) {
+if (!stonecutter.current.active || compatibility) {
     sourceSets.main.java.setSrcDirs(['common/src/main/java','common/src/client/java',loader+'/src/main/java'].collect { path -> layout.buildDirectory.dir('stonecutter/sources/'+path) })
 }
 
@@ -164,7 +171,7 @@ dependencies {
         // Common client annotations compile against Fabric Loader on both loaders.
         compileOnly "net.fabricmc:fabric-loader:${required('fabric_loader_version')}"
     }
-    modDependency("dev.architectury:architectury-${loader}:${required('architectury_api_version')}")
+    if (!nativeNeoForge) modDependency("dev.architectury:architectury-${loader}:${required('architectury_api_version')}")
     def jeiVersion=matrix.getProperty('jei_version')
     if (jeiVersion) add(legacy ? 'modCompileOnly' : 'compileOnly', "mezz.jei:jei-${minecraftVersion}-common-api:${jeiVersion}")
 }
@@ -183,6 +190,13 @@ def metadata = [
     minecraft_version: minecraftVersion,
     java_version: javaVersion,
     architectury_api_version: required('architectury_api_version'),
+    architectury_dependency: nativeNeoForge ? '' : """[[dependencies.codex]]
+modId = "architectury"
+type = "required"
+versionRange = "[${required('architectury_api_version')},)"
+ordering = "AFTER"
+side = "BOTH"
+""",
     fabric_loader_version: required('fabric_loader_version'),
     neoforge_version: matrix.getProperty('neoforge_version', ''),
     forge_version: matrix.getProperty('forge_version', ''),
@@ -212,7 +226,7 @@ if (providers.gradleProperty('codex_server_smoke').isPresent()) {
         doFirst {
             smokeDir.mkdirs()
             new File(smokeDir,'eula.txt').text='eula=true\n'
-            new File(smokeDir,'server.properties').text='online-mode=false\nserver-ip=127.0.0.1\nserver-port=0\nlevel-name=smoke-world\nview-distance=2\nsimulation-distance=2\nmax-tick-time=120000\n'
+            new File(smokeDir,'server.properties').text='online-mode=false\nserver-ip=127.0.0.1\nserver-port=0\nlevel-name=smoke-world\nlevel-type=minecraft:flat\ngenerator-settings=' + codexFlatTestSettings + '\ngenerate-structures=false\nview-distance=2\nsimulation-distance=2\nmax-tick-time=120000\n'
         }
     }
 }

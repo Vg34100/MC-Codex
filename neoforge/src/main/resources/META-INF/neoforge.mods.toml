@@ -28,12 +28,7 @@ versionRange = "[${minecraft_version}]"
 ordering = "NONE"
 side = "BOTH"
 
-[[dependencies.codex]]
-modId = "architectury"
-type = "required"
-versionRange = "[${architectury_api_version},)"
-ordering = "AFTER"
-side = "BOTH"
+${architectury_dependency}
 
 [[mixins]]
 config = "codex.mixins.json"

@@ -233,3 +233,24 @@ if (stonecutter.eval(stonecutter.current.version, '<1.21')) {
         replace('packet.getResourceLocation()', 'packet.getIdentifier()')
     }
 }
+
+// The published Architectury builds do not bind the early26.1 NeoForge event API.
+// Keep this exception at the loader boundary; shared quests/packets remain identical.
+if (project.codexNativeNeoForge) {
+    stonecutter.replacements.string(true) {
+        replace('dev.architectury.networking.NetworkManager', 'net.vg.codex.compat.earlyneoforge.NetworkManager')
+        replace('dev.architectury.platform.Platform', 'net.vg.codex.compat.earlyneoforge.Platform')
+        replace('dev.architectury.utils.Env', 'net.vg.codex.compat.earlyneoforge.Platform.Env')
+        ['LifecycleEvent','PlayerEvent','TickEvent','CommandRegistrationEvent'].each { name ->
+            replace('dev.architectury.event.events.common.'+name, 'net.vg.codex.compat.earlyneoforge.NativeHooks.'+name)
+        }
+        ['ClientGuiEvent','ClientTickEvent'].each { name ->
+            replace('dev.architectury.event.events.client.'+name, 'net.vg.codex.compat.earlyneoforge.NativeClientHooks.'+name)
+        }
+        replace('dev.architectury.event.CompoundEventResult', 'net.vg.codex.compat.earlyneoforge.NativeClientHooks.CompoundEventResult')
+        // Native payload codecs are registered on both physical sides before client setup.
+        replace('Platform.getEnvironment() == Env.SERVER', 'true')
+        replace('Platform.getEnvironment()==Env.SERVER', 'true')
+        replace('items.register(modEventBus);', 'items.register(modEventBus); net.vg.codex.compat.earlyneoforge.NetworkManager.install(modEventBus);')
+    }
+}

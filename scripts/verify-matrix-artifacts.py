@@ -55,6 +55,11 @@ def inspect(matrix):
                      'client/advancements/CodexAdvancementsScreen']:
             assert PACKAGE + name + '.class' in files, 'Missing class: ' + name
         classes = [n for n in names if n.endswith('.class')]
+        native_neoforge = pins.get('codex_native_platform') == 'true'
+        if native_neoforge:
+            assert loader == 'neoforge'
+            assert PACKAGE+'compat/earlyneoforge/NetworkManager.class' in files
+            assert all(b'dev/architectury/' not in jar.read(n) for n in classes), 'Unexpected Architectury linkage on native target'
         assert all(n.startswith(PACKAGE) and '/validation/' not in n for n in classes), 'Bundled dependency/test classes'
         for name in classes:
             data = jar.read(name)
@@ -85,6 +90,7 @@ def inspect(matrix):
             text = jar.read(filename).decode()
             assert quoted(text,'modId') == MOD_ID and quoted(text,'version') == version
             assert '['+pins['minecraft_version']+']' in text, 'Wrong Minecraft constraint'
+            if native_neoforge: assert 'modId = \"architectury\"' not in text, 'Native target must not require the incompatible dependency'
             if tomllib is not None: tomllib.loads(text)
             name = 'forge/ModMainForge.class' if loader == 'forge' else 'neoforge/ModMainNeoForge.class'
             assert PACKAGE+name in files

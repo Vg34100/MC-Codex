@@ -776,11 +776,16 @@ public final class ServerScenarios {
                     } finally {data.release();}
                 }
                 *///?} else {
-                if (message instanceof net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket packet
-                        && packet.payload() instanceof dev.architectury.impl.NetworkAggregator.BufCustomPacketPayload raw) {
+                if (message instanceof net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket packet) {
+                    var raw = packet.payload();
                     var type = raw.type().id();
                     if (type.equals(net.vg.codex.network.QuestInfoPayload.TYPE.id()) || type.equals(net.vg.codex.network.QuestPresentationPayload.TYPE.id()) || type.equals(net.vg.codex.network.TabSummaryPayload.TYPE.id()) || type.equals(net.vg.codex.network.ClaimableRewardsPayload.TYPE.id())) {
-                        var buf = ScenarioBuffers.create(io.netty.buffer.Unpooled.wrappedBuffer(raw.payload()), player.registryAccess());
+                        if (raw instanceof net.vg.codex.network.QuestInfoPayload || raw instanceof net.vg.codex.network.QuestPresentationPayload || raw instanceof net.vg.codex.network.TabSummaryPayload || raw instanceof net.vg.codex.network.ClaimableRewardsPayload) {
+                            QUEST_PACKETS.computeIfAbsent(id, ignored -> new ArrayList<>()).add(raw);
+                            ctx.write(message, promise);return;
+                        }
+                        byte[] bytes=(byte[])raw.getClass().getMethod("payload").invoke(raw);
+                        var buf = ScenarioBuffers.create(io.netty.buffer.Unpooled.wrappedBuffer(bytes), player.registryAccess());
                         try {
                             net.minecraft.network.protocol.common.custom.CustomPacketPayload decoded;
                             if (type.equals(net.vg.codex.network.QuestInfoPayload.TYPE.id())) decoded = net.vg.codex.network.QuestInfoPayload.STREAM_CODEC.decode(buf);
