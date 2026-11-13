@@ -1,1 +1,13 @@
-// Target-specific serialized resource adaptation belongs here.
+// Native item assets and mixins for the suite's pre-item_model targets.
+if (stonecutter.eval(stonecutter.current.version, '<1.21.4')) {
+    processResources {
+        from(rootProject.file('gradle/compat/resources/classic'))
+        doLast {
+            def config = new File(destinationDir, 'codex.mixins.json')
+            def json = new groovy.json.JsonSlurper().parse(config)
+            def mixin = 'client.TreasureBagModelMixin'
+            if (!json.client.contains(mixin)) json.client.add(mixin)
+            config.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(json)) + '\n'
+        }
+    }
+}

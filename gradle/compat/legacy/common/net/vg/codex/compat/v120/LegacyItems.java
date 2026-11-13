@@ -50,6 +50,15 @@ public final class LegacyItems {
   }
   return out;
  }
+ public static JsonObject nativeStack(JsonObject source){
+  JsonObject result=source.deepCopy();if(result.has("count"))result.add("Count",result.remove("count"));
+  if(result.has("components")){
+   JsonObject values=result.remove("components").getAsJsonObject();CompoundTag tag=result.has("tag")?parse(result.get("tag")):new CompoundTag();tag.merge(components(values));
+   if(values.has("minecraft:custom_name")){JsonElement value=values.get("minecraft:custom_name");Component text=Component.Serializer.fromJson(value.isJsonPrimitive()?value.getAsString():value.toString());if(text==null)throw new IllegalArgumentException("Invalid item name");CompoundTag display=tag.getCompound("display");display.putString("Name",Component.Serializer.toJson(text));tag.put("display",display);}
+   result.add("tag",NbtOps.INSTANCE.convertTo(com.mojang.serialization.JsonOps.INSTANCE,tag));
+  }
+  return result;
+ }
  public static JsonObject heldProperties(ItemStack stack){
   JsonObject out=new JsonObject();if(!stack.hasTag())return out;CompoundTag tag=stack.getTag().copy();
   CompoundTag display=tag.getCompound("display");if(display.contains("Name")){out.addProperty("minecraft:custom_name",display.getString("Name"));display.remove("Name");if(display.isEmpty())tag.remove("display");else tag.put("display",display);}

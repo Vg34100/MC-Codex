@@ -213,3 +213,23 @@ if (stonecutter.eval(stonecutter.current.version, '<1.21')) {
         replace('display().getType().getSerializedName()', 'display().getFrame().getName()')
     }
 }
+
+if (stonecutter.eval(stonecutter.current.version, '<1.21')) {
+    stonecutter.replacements.string(true) {
+        replace('net.minecraft.advancements.Advancement.CODEC', 'net.vg.codex.compat.v120.LegacyAdvancements.CODEC')
+        ['shaped','shapeless','cooking'].each { name -> replace('Recipe.CODEC.parse(ops,net.vg.codex.recipe.RecipeFormats.nativeDefinition('+name+'))', 'net.vg.codex.compat.v120.LegacyRecipes.parse(net.vg.codex.recipe.RecipeFormats.nativeDefinition('+name+'))') }
+    }
+}
+
+if (stonecutter.eval(stonecutter.current.version, '<1.21')) {
+    stonecutter.replacements.string(true) {
+        ['root','vanilla','hidden','builderHolder','wandererHolder','offlineMilestone','entry','enhancedVanilla'].each { name ->
+            replace(name+'.value().criteria()',name+'.getCriteria()')
+            replace(name+'.value().display()', 'java.util.Optional.ofNullable('+name+'.getDisplay())')
+            replace(name+'.id()',name+'.getId()')
+        }
+        replace('holder.value().parent()', 'net.vg.codex.compat.v120.LegacyAdvancements.view(holder).parent()')
+        replace('holder.parent()', 'net.vg.codex.compat.v120.LegacyAdvancements.view(holder).parent()')
+        replace('packet.getResourceLocation()', 'packet.getIdentifier()')
+    }
+}

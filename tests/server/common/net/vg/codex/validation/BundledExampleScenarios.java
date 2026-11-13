@@ -51,7 +51,7 @@ final class BundledExampleScenarios {
         try{BundledExamples.apply(malformed,malformedHistory,Set.of());}catch(RuntimeException e){rejected=true;}
         check.accept("Malformed authored metadata aborts before removing files",rejected&&Files.exists(malformed.resolve("data/codex_demo/advancement/camp_chronicle/root.json")));
         check.accept("Fresh server loads bundled showcase root",server.getAdvancements().get(Identifier.parse("codex_demo:camp_chronicle/root"))!=null);
-        check.accept("Fresh server loads all twelve showcase quests",server.getAdvancements().getAllAdvancements().stream().filter(a->a.id().toString().startsWith("codex_demo:camp_chronicle/")).count()==12);
+        check.accept("Fresh server loads all twelve showcase quests",server.getAdvancements().getAllAdvancements().stream().filter(entry->entry.id().toString().startsWith("codex_demo:camp_chronicle/")).count()==12);
         for(String id:List.of("story/root","story/mine_stone","story/smelt_iron","story/upgrade_tools","story/enter_the_nether","husbandry/plant_seed")) {
             Identifier resource=Identifier.parse("minecraft:advancement/"+id+".json");JsonObject original=null;
             for(var r:server.getResourceManager().getResourceStack(resource))if(!r.sourcePackId().contains(AdvancementPackSync.PACK_ID))try(var reader=r.openAsReader()){original=JsonParser.parseReader(reader).getAsJsonObject();}

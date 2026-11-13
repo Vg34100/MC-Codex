@@ -5,6 +5,14 @@ import com.google.gson.*;
 /** Native item-component representation at the codec boundary; stored authoring data is untouched. */
 public final class ItemFormats {
     private ItemFormats() { }
+    public static JsonObject nativeStack(JsonObject source) {
+        JsonObject result=source.deepCopy();if(result.has("components"))result.add("components",nativeComponents(result.getAsJsonObject("components")));
+        //? if <1.21 {
+        /*return net.vg.codex.compat.v120.LegacyItems.nativeStack(result);
+        *///?} else {
+        return result;
+        //?}
+    }
     public static JsonObject nativeComponents(JsonObject source) {
         JsonObject result=source.deepCopy();
         //? if <26.1 {

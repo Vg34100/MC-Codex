@@ -15,6 +15,7 @@ public final class NetworkManager {
   public void queue(Runnable action){nativeContext.queue(action);}
   public dev.architectury.utils.Env getEnvironment(){return nativeContext.getEnvironment();}
  }
+ public static CustomPacketPayload decode(ResourceLocation id,FriendlyByteBuf buffer){var codec=CODECS.get(id);if(codec==null)throw new io.netty.handler.codec.DecoderException("Unknown Codex payload: "+id);var decoded=codec.decode(buffer);if(buffer.isReadable())throw new io.netty.handler.codec.DecoderException("Unexpected trailing Codex packet bytes");return (CustomPacketPayload)decoded;}
  public static <T extends CustomPacketPayload> void registerS2CPayloadType(CustomPacketPayload.Type<T> type,StreamCodec<FriendlyByteBuf,T> codec){CODECS.put(type.id(),codec);}
  public static <T extends CustomPacketPayload> void registerReceiver(dev.architectury.networking.NetworkManager.Side side,CustomPacketPayload.Type<T> type,StreamCodec<FriendlyByteBuf,T> codec,BiConsumer<T,PacketContext> receiver){
   CODECS.put(type.id(),codec);

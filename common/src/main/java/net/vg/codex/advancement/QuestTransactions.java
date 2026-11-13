@@ -117,7 +117,7 @@ public final class QuestTransactions {
             case ITEM -> {
                 JsonObject item = entry.deepCopy(); item.remove("type"); item.remove("codex_id");
                 int count = item.has("count") ? item.get("count").getAsInt() : 1; item.addProperty("count", 1);
-                transaction.add(ItemStack.CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, player.registryAccess()), item).getOrThrow().copyWithCount(count));
+                transaction.add(ItemStack.CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, player.registryAccess()), ItemFormats.nativeStack(item)).getOrThrow().copyWithCount(count));
             }
             case TREASURE_BAG -> transaction.add(TreasureBagItem.create(Identifier.parse(entry.get("id").getAsString()), entry.get("count").getAsInt(),
                 entry.has("bag_name") ? entry.get("bag_name").getAsString() : "Treasure Bag", entry.has("bag_model") ? Identifier.parse(entry.get("bag_model").getAsString()) : null));

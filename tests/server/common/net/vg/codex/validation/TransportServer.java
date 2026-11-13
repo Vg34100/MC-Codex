@@ -91,6 +91,6 @@ public final class TransportServer {
         if(finished)return;finished=true;if(failure!=null)failed.add(failure);
         JsonObject report=new JsonObject();JsonArray ok=new JsonArray(),bad=new JsonArray();passed.forEach(ok::add);failed.forEach(bad::add);report.add("passed",ok);report.add("failures",bad);report.addProperty("players","two actual rendered Minecraft clients over loopback TCP");report.add("alice",ack("alice"));report.add("bob",ack("bob"));AtomicJson.write(Path.of("results.json"),report);
         issue("alice",command("quit",null,null,null));issue("bob",command("quit",null,null,null));
-        Thread.ofPlatform().daemon().name("codex-transport-shutdown").start(()->{try{Thread.sleep(1500);}catch(InterruptedException ignored){}s.halt(true);System.exit(failed.isEmpty()?0:1);});
+        Thread shutdown=new Thread(()->{try{Thread.sleep(1500);}catch(InterruptedException ignored){}s.halt(true);System.exit(failed.isEmpty()?0:1);},"codex-transport-shutdown");shutdown.setDaemon(true);shutdown.start();
     }
 }

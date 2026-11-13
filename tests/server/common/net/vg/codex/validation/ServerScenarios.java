@@ -11,7 +11,9 @@ import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+//? if >=1.21 {
 import net.minecraft.server.network.CommonListenerCookie;
+//?}
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.vg.codex.advancement.*;
@@ -51,7 +53,7 @@ public final class ServerScenarios {
             report.add("passed", passed); report.add("failures", failures);
             report.addProperty("players", Boolean.getBoolean("codex.test.bundled_probe") ? "native server example loading; no player clients" : Boolean.getBoolean("codex.test.recipe_probe") ? "native server recipe matching; no player clients" : "two simulated players using embedded connections; no real clients");
             AtomicJson.write(Path.of("results.json"), report);
-            Thread.ofPlatform().daemon().name("codex-test-shutdown").start(() -> { server.halt(true); System.exit(FAILURES.isEmpty() ? 0 : 1); });
+            Thread shutdown=new Thread(() -> { server.halt(true); System.exit(FAILURES.isEmpty() ? 0 : 1); },"codex-test-shutdown");shutdown.setDaemon(true);shutdown.start();
         });
     }
 
@@ -123,6 +125,9 @@ public final class ServerScenarios {
             Files.writeString(function, "give @s minecraft:emerald 1\n");
             Files.writeString(function.resolveSibling("refund.mcfunction"), "give @s minecraft:iron_ingot 1\n");
         } catch (Exception error) { throw new IllegalStateException(error); }
+        //? if <1.21 {
+        /*LegacyFixtures.adapt(pack);
+        *///?}
         //? if >=26.2 {
         /*modernFixtureSchemas(pack);
         *///?}
@@ -160,7 +165,7 @@ public final class ServerScenarios {
         compatibilityScenarios(server, phase);
         if (phase.equals("independent")) {
             check("Second world has independent vanilla progress", !a.getAdvancements().getOrStartProgress(server.getAdvancements().get(REWARD)).isDone());
-            check("Second world has independent quest cycles and dialogue", QuestRuntime.states(a).isEmpty());
+            check("Second world has independent quest cycles and dialogue", (QuestRuntime.states(a).size() == 0));
             check("Second world has independent claims", CodexQuestIO.readClaimIndexes(state, ALICE).isEmpty());
             check("Second world has independent submissions", CodexQuestIO.readSubmissionProgress(state, ALICE).isEmpty());
             check("Second world has independent parties", CodexPartyService.progressOwner(server, ALICE).equals(ALICE));
@@ -182,7 +187,9 @@ public final class ServerScenarios {
         }
         check("Incomplete advancement cannot claim", QuestTransactions.claim(a, REWARD, -1) == 0);
         check("Separate story-demo tree loads as ordinary advancements", server.getAdvancements().get(Identifier.parse("codex_demo:field_journal/root")) != null && server.getAdvancements().get(Identifier.parse("codex_demo:field_journal/workshop")) != null);
-        check("Vanilla enhancement loads without replacing vanilla objectives", server.getAdvancements().get(Identifier.parse("minecraft:story/mine_stone")).value().criteria().containsKey("get_stone"));
+        Identifier enhancedVanillaId=Identifier.parse("minecraft:story/mine_stone");
+        var enhancedVanilla=server.getAdvancements().get(enhancedVanillaId);
+        check("Vanilla enhancement loads without replacing vanilla objectives", enhancedVanilla.value().criteria().containsKey("get_stone"));
         documentScenarios(server);
         migrationScenarios();
         resetAndBranchScenarios(server, a, b);
@@ -347,7 +354,7 @@ public final class ServerScenarios {
         Identifier sibling = Identifier.parse("codex_test:unrelated"); AdvancementPackIO.writeRaw(pack, sibling, source, AdvancementValidation.registries(server));
         AdvancementPackIO.deleteWithDescendants(pack, List.of(id));
         check("Deleting an advancement preserves unrelated definitions", AdvancementPackIO.readBaseJson(pack, server.getResourceManager(), sibling).equals(source));
-        var buffer = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(), server.registryAccess());
+        var buffer = ScenarioBuffers.create(io.netty.buffer.Unpooled.buffer(), server.registryAccess());
         var packet = new net.vg.codex.network.SaveAdvancementTreePayload(List.of(new net.vg.codex.network.RawAdvancement(id, source.toString())));
         net.vg.codex.network.SaveAdvancementTreePayload.STREAM_CODEC.encode(buffer, packet);
         check("Save payload preserves arbitrary source JSON on a codec round trip", net.vg.codex.network.SaveAdvancementTreePayload.STREAM_CODEC.decode(buffer).equals(packet));
@@ -429,7 +436,13 @@ public final class ServerScenarios {
             check("Overlapping tag and exact item allocate the maximum valid delivery",allocation.total()==4&&allocation.removals().get(0)==2&&allocation.removals().get(1)==2);
             check("Planning overlapping requirements leaves inventory untouched",count(a,Items.OAK_LOG)==2&&count(a,Items.BIRCH_LOG)==2);
             JsonObject properties=json("{\"items\":[{\"id\":\"minecraft:oak_log\",\"count\":1},{\"id\":\"minecraft:oak_log\",\"components\":{\"minecraft:custom_name\":\"Delivery Sample\"},\"count\":2}]}");
-            ItemStack named=new ItemStack(Items.OAK_LOG,2);named.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("Delivery Sample"));a.getInventory().setItem(0,named);a.getInventory().setItem(1,new ItemStack(Items.OAK_LOG));
+            ItemStack named=new ItemStack(Items.OAK_LOG,2);
+            //? if <1.21 {
+            /*named.setHoverName(net.minecraft.network.chat.Component.literal("Delivery Sample"));
+            *///?} else {
+            named.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("Delivery Sample"));
+            //?}
+            a.getInventory().setItem(0,named);a.getInventory().setItem(1,new ItemStack(Items.OAK_LOG));
             var exact=SubmissionPlan.allocate(a.getInventory(),SubmissionPlan.resolve(properties,a.registryAccess()),Map.of(),Optional.empty());
             check("Component delivery and ordinary delivery have distinct stable ledgers",SubmissionPlan.requirements(properties).size()==2&&exact.total()==3&&exact.consumed().get(Identifier.parse("minecraft:oak_log"))==3);
             Identifier predicate=Identifier.parse("codex_test:predicate_delivery");var tasks=CodexQuestIO.readSubmissionTasks(AdvancementPackSync.externalPackDir());tasks.put(CodexQuestIO.taskKey(predicate,"done"),properties);CodexQuestIO.writeSubmissionTasks(AdvancementPackSync.externalPackDir(),tasks);
@@ -544,9 +557,9 @@ public final class ServerScenarios {
         b.getAdvancements().award(server.getAdvancements().get(REWARD), "done");
         int inventory = a.getInventory().countItem(Items.APPLE);
         server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "advancement revoke CodexAlice everything");
-        check("Vanilla revoke-everything clears native and sidecar completion", !a.getAdvancements().getOrStartProgress(server.getAdvancements().get(supply)).isDone() && QuestRuntime.state(a, supply).isEmpty() && !QuestRuntime.ready(a, supply));
+        check("Vanilla revoke-everything clears native and sidecar completion", !a.getAdvancements().getOrStartProgress(server.getAdvancements().get(supply)).isDone() && (QuestRuntime.state(a, supply).size() == 0) && !QuestRuntime.ready(a, supply));
         check("Vanilla reset clears story choices and ordinary submissions", !QuestRuntime.state(a, root).has("choice") && CodexQuestIO.readSubmissionProgress(QuestState.directory(server), ALICE).isEmpty());
-        check("Vanilla reset clears stable and legacy reward claims", CodexQuestIO.readClaimIndexes(QuestState.directory(server), ALICE).isEmpty() && QuestRewardIdentity.ledger(a, REWARD).isEmpty());
+        check("Vanilla reset clears stable and legacy reward claims", CodexQuestIO.readClaimIndexes(QuestState.directory(server), ALICE).isEmpty() && (QuestRewardIdentity.ledger(a, REWARD).size() == 0));
         check("Reset retains inventory and unrelated player's native progress", a.getInventory().countItem(Items.APPLE) == inventory && b.getAdvancements().getOrStartProgress(server.getAdvancements().get(REWARD)).isDone());
         check("Reset writes a recoverable backup", Files.isDirectory(QuestState.directory(server).resolve("codex/reset_backups")));
         QuestRuntime.accept(a, supply); a.getInventory().add(new ItemStack(Items.OAK_LOG, 4)); a.getInventory().add(new ItemStack(Items.COBBLESTONE, 8)); QuestTransactions.submit(a, supply, "deliver", Optional.empty());
@@ -559,7 +572,7 @@ public final class ServerScenarios {
         QuestRuntime.choose(b, root, "wanderer"); QuestRuntime.accept(a, communal);
         a.getInventory().add(new ItemStack(Items.COBBLESTONE, 8)); QuestTransactions.submit(a, communal, "deliver", Optional.empty()); QuestTransactions.claim(a, communal, -1);
         server.getCommands().performPrefixedCommand(server.createCommandSourceStack(), "advancement revoke CodexAlice everything");
-        check("Administrator reset clears the shared cycle for both members without dissolving the party", QuestRuntime.state(b, communal).isEmpty() && !QuestRuntime.ready(b, communal) && QuestTransactions.claim(b, communal, -1) == 0 && CodexPartyService.members(server, ALICE).size() == 2);
+        check("Administrator reset clears the shared cycle for both members without dissolving the party", (QuestRuntime.state(b, communal).size() == 0) && !QuestRuntime.ready(b, communal) && QuestTransactions.claim(b, communal, -1) == 0 && CodexPartyService.members(server, ALICE).size() == 2);
         check("Reset does not clear another member's personal story choice", QuestRuntime.state(b, root).get("choice").getAsString().equals("wanderer"));
         QuestRuntime.accept(b, communal); b.getInventory().add(new ItemStack(Items.COBBLESTONE, 8)); QuestTransactions.submit(b, communal, "deliver", Optional.empty());
         check("Reset shared cycle grants one fresh group reward set", QuestTransactions.claim(b, communal, -1) == 2 && QuestTransactions.claim(a, communal, -1) == 0);
@@ -578,7 +591,7 @@ public final class ServerScenarios {
         check("Dialogue choice persists and cannot be changed by replay", QuestRuntime.choose(a, root, "campkeeper") && !QuestRuntime.choose(a, root, "wanderer") && QuestRuntime.state(a, root).get("choice").getAsString().equals("campkeeper"));
         check("Chosen branch opens only for the choosing player", QuestRuntime.accept(a, builder) && !QuestRuntime.accept(b, builder));
         JsonObject beforeAcceptance = QuestActions.perform(a, supply, "submit", "deliver", Optional.empty(), -1);
-        check("Rejected delivery returns an accept-first GUI result without consumption", !beforeAcceptance.get("success").getAsBoolean() && beforeAcceptance.get("message").getAsString().contains("Accept this quest first") && beforeAcceptance.getAsJsonObject("items").isEmpty());
+        check("Rejected delivery returns an accept-first GUI result without consumption", !beforeAcceptance.get("success").getAsBoolean() && beforeAcceptance.get("message").getAsString().contains("Accept this quest first") && (beforeAcceptance.getAsJsonObject("items").size() == 0));
         check("Saved story outcome links only the chosen chapter", java.util.stream.StreamSupport.stream(QuestRuntime.info(a, root).getAsJsonArray("outcomes").spliterator(),false).anyMatch(e -> e.getAsJsonObject().get("id").getAsString().equals(builder.toString())) && java.util.stream.StreamSupport.stream(QuestRuntime.info(a, root).getAsJsonArray("outcomes").spliterator(),false).noneMatch(e -> e.getAsJsonObject().get("id").getAsString().endsWith("/wanderer")));
         check("Unaccepted repeat quest cannot consume items or grant rewards", QuestTransactions.submit(a, supply, "deliver", Optional.empty()) == 0 && QuestTransactions.claim(a, supply, -1) == 0);
         JsonObject rule = QuestDefinitions.get(supply); rule.getAsJsonObject("repeat").addProperty("cooldown_seconds", 0); QuestDefinitions.save(supply, rule);
@@ -722,8 +735,12 @@ public final class ServerScenarios {
     }
 
     private static ServerPlayer player(MinecraftServer server, UUID id, String name) {
+        //? if <1.21 {
+        /*ServerPlayer player = new ServerPlayer(server, server.overworld(), new GameProfile(id,name)) { };
+        *///?} else {
         CommonListenerCookie cookie = CommonListenerCookie.createInitial(new GameProfile(id, name), false);
         ServerPlayer player = new ServerPlayer(server, server.overworld(), cookie.gameProfile(), cookie.clientInformation()) { };
+        //?}
         // Normal 26.1 login restores NBT during PrepareSpawnTask, before placeNewPlayer.
         // Embedded connections bypass configuration, so perform that step explicitly.
         // Legacy placeNewPlayer performs its own native NBT load.
@@ -735,14 +752,26 @@ public final class ServerScenarios {
         Connection connection = new Connection(PacketFlow.SERVERBOUND);
         EmbeddedChannel channel = new EmbeddedChannel(connection);
         configureConnection.accept(connection);
+        //? if <1.21 {
+        /*server.getPlayerList().placeNewPlayer(connection, player);
+        *///?} else {
         server.getPlayerList().placeNewPlayer(connection, player, cookie);
+        //?}
         channel.pipeline().addLast("codex-scenario-payloads", new io.netty.channel.ChannelOutboundHandlerAdapter() {
             @Override public void write(io.netty.channel.ChannelHandlerContext ctx, Object message, io.netty.channel.ChannelPromise promise) throws Exception {
+                //? if <1.21 {
+                /*if(message instanceof net.minecraft.network.protocol.game.ClientboundCustomPayloadPacket packet) {
+                    var type=packet.getIdentifier();
+                    if(type.equals(net.vg.codex.network.QuestInfoPayload.TYPE.id())||type.equals(net.vg.codex.network.QuestPresentationPayload.TYPE.id())||type.equals(net.vg.codex.network.TabSummaryPayload.TYPE.id())||type.equals(net.vg.codex.network.ClaimableRewardsPayload.TYPE.id())) {
+                        var data=packet.getData();try{QUEST_PACKETS.computeIfAbsent(id,ignored->new ArrayList<>()).add(net.vg.codex.compat.v120.NetworkManager.decode(type,data));}finally{data.release();}
+                    }
+                }
+                *///?} else {
                 if (message instanceof net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket packet
                         && packet.payload() instanceof dev.architectury.impl.NetworkAggregator.BufCustomPacketPayload raw) {
                     var type = raw.type().id();
                     if (type.equals(net.vg.codex.network.QuestInfoPayload.TYPE.id()) || type.equals(net.vg.codex.network.QuestPresentationPayload.TYPE.id()) || type.equals(net.vg.codex.network.TabSummaryPayload.TYPE.id()) || type.equals(net.vg.codex.network.ClaimableRewardsPayload.TYPE.id())) {
-                        var buf = new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.wrappedBuffer(raw.payload()), player.registryAccess());
+                        var buf = ScenarioBuffers.create(io.netty.buffer.Unpooled.wrappedBuffer(raw.payload()), player.registryAccess());
                         try {
                             net.minecraft.network.protocol.common.custom.CustomPacketPayload decoded;
                             if (type.equals(net.vg.codex.network.QuestInfoPayload.TYPE.id())) decoded = net.vg.codex.network.QuestInfoPayload.STREAM_CODEC.decode(buf);
@@ -753,6 +782,7 @@ public final class ServerScenarios {
                         } finally { buf.release(); }
                     }
                 }
+                //?}
                 ctx.write(message, promise);
             }
         });

@@ -56,6 +56,10 @@ public final class SubmissionPlan {
         for (JsonElement value : items(task)) {
             JsonObject row = value.getAsJsonObject(), predicate = new JsonObject(); Identifier key = key(row);
             Identifier id = Identifier.parse(row.get(row.has("id") ? "id" : "tag").getAsString());
+            if(row.has("tag")) {
+                var tag=TagKey.create(Registries.ITEM,id);
+                if(BuiltInRegistries.ITEM.get(tag).isEmpty())throw new IllegalArgumentException("Unknown delivery item tag: "+id);
+            }
             predicate.addProperty("items", row.has("tag") ? "#" + id : id.toString());
             if (row.has("components")) predicate.add("components", ItemFormats.nativeComponents(row.getAsJsonObject("components")));
             ItemPredicate test = ItemPredicate.CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, registries), predicate).getOrThrow();

@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('loader', choices=['fabric', 'neoforge', 'all'], nargs='?', default='all')
+    parser.add_argument('loader', choices=['fabric', 'neoforge', 'forge', 'all'], nargs='?', default='all')
     parser.add_argument('--minecraft-version', default='26.1.2', help='Stonecutter Minecraft target')
     parser.add_argument('--reset', action='store_true')
     parser.add_argument('--phase', choices=['all', 'initial', 'restart', 'independent'], default='all')
@@ -30,7 +30,7 @@ def main():
     parser.add_argument('--build-init', type=Path, help='Optional Gradle init script for isolated build outputs')
     parser.add_argument('--offline', action='store_true', help='Use cached Gradle dependencies')
     args = parser.parse_args()
-    for loader in (['fabric', 'neoforge'] if args.loader == 'all' else [args.loader]):
+    for loader in (['fabric', 'forge' if args.minecraft_version=='1.20.1' else 'neoforge'] if args.loader == 'all' else [args.loader]):
         target = f'{args.minecraft_version}-{loader}'
         folder = ROOT / 'runs' / 'validation' / target
         if args.reset and folder.exists():
