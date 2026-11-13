@@ -9,11 +9,12 @@ public abstract class CodexScreen extends Screen {
 
     @Override public void added() {
         super.added();
-        minecraft.getWindow().setGuiScale(CodexClientSettings.effectiveScale());
+        // Older Screen lifecycles call added() before init() assigns the minecraft field.
+        net.minecraft.client.Minecraft.getInstance().getWindow().setGuiScale(CodexClientSettings.effectiveScale());
     }
 
     @Override public void removed() {
-        minecraft.getWindow().setGuiScale(CodexClientSettings.nativeScale());
+        net.minecraft.client.Minecraft.getInstance().getWindow().setGuiScale(CodexClientSettings.nativeScale());
         super.removed();
     }
 

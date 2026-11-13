@@ -80,7 +80,7 @@ public final class BundledExamples {
         JsonObject manifest = resource("manifest.json"), ledger = read(history), previous = ledger.deepCopy();
         Map<Path, JsonObject> documents = new LinkedHashMap<>(), before = new LinkedHashMap<>();
         for (String group : GROUPS) for (JsonElement name : manifest.getAsJsonArray(group)) {
-            Path file = pack.resolve(name.getAsString()).toAbsolutePath().normalize();
+            Path file = pack.resolve(ResourceFormats.relative(name.getAsString())).toAbsolutePath().normalize();
             if (!file.startsWith(pack.toAbsolutePath().normalize())) throw new IOException("Invalid example path");
             if (!documents.containsKey(file)) { JsonObject current = read(file); documents.put(file, current); before.put(file, current.deepCopy()); }
         }

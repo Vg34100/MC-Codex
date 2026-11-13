@@ -28,7 +28,7 @@ public final class ClientRewardPresentation {
                 case EXPERIENCE -> new ItemStack(Items.EXPERIENCE_BOTTLE);
                 case ITEM -> {
                     JsonObject stack = reward.deepCopy(); stack.addProperty("count", 1);
-                    yield ItemStack.CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, Minecraft.getInstance().level.registryAccess()), stack).getOrThrow();
+                    yield ItemStack.CODEC.parse(RegistryOps.create(JsonOps.INSTANCE, Minecraft.getInstance().level.registryAccess()), net.vg.codex.advancement.ItemFormats.nativeStack(stack)).getOrThrow();
                 }
                 case TREASURE_BAG -> TreasureBagItem.create(Identifier.parse(reward.get("id").getAsString()), 1, reward.has("bag_name") ? reward.get("bag_name").getAsString() : "Treasure Bag", reward.has("bag_model") ? Identifier.parse(reward.get("bag_model").getAsString()) : null);
                 case RECIPE -> new ItemStack(Items.KNOWLEDGE_BOOK);

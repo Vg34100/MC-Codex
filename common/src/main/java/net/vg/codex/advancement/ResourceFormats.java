@@ -41,6 +41,26 @@ public final class ResourceFormats {
         if(value.isJsonArray()) {for(JsonElement entry:value.getAsJsonArray())legacyPredicates(entry,forward);return;}
         if(!value.isJsonObject())return;
         JsonObject object=value.getAsJsonObject();
+        if(object.has("location") && object.get("location").isJsonObject()) {
+            JsonObject location=object.getAsJsonObject("location");
+            for(String plural:java.util.List.of("biomes","structures")) {
+                String singular=plural.substring(0,plural.length()-1),from=forward?plural:singular,to=forward?singular:plural;
+                if(location.has(from) && location.get(from).isJsonPrimitive() && !location.has(to))location.add(to,location.remove(from));
+            }
+        }
+        // Block tags share the old "tag" key with item predicates; normalize in context.
+        if(!forward && object.has("block") && object.get("block").isJsonObject()) {
+            JsonObject block=object.getAsJsonObject("block");
+            if(block.has("tag") && block.get("tag").isJsonPrimitive() && !block.has("blocks"))block.addProperty("blocks","#"+block.remove("tag").getAsString());
+        }
+        if(object.has("blocks")) {
+            JsonElement blocks=object.get("blocks");
+            if(forward && blocks.isJsonPrimitive()) {
+                String id=blocks.getAsString();
+                if(id.startsWith("#")){object.remove("blocks");object.addProperty("tag",id.substring(1));}
+                else{JsonArray values=new JsonArray();values.add(id);object.add("blocks",values);}
+            } else if(!forward && blocks.isJsonArray() && blocks.getAsJsonArray().size()==1 && blocks.getAsJsonArray().get(0).isJsonPrimitive())object.add("blocks",blocks.getAsJsonArray().get(0).deepCopy());
+        }
         if(forward && object.has("items") && object.get("items").isJsonPrimitive()) {
             String id=object.get("items").getAsString();
             if(id.startsWith("#")){object.remove("items");object.addProperty("tag",id.substring(1));}

@@ -15,8 +15,9 @@ public final class ClassicSprites120 {
    g.blit(WIDGETS,x,y,FrameType.byName(frame).getTexture(),128+index*26,width,height);return;
   }
   if(path.contains("box_")){g.blitNineSliced(WIDGETS,x,y,width,height,10,200,26,0,path.endsWith("unobtained")?26:0);return;}
+  if(path.equals("advancements/title_box")){g.blitNineSliced(WIDGETS,x,y,width,height,10,200,26,0,52);return;}
   if(path.startsWith("advancements/tab_above_")){
-   int u=path.contains("left")?0:path.contains("right")?56:28;int v=path.endsWith("_selected")?0:32;
+   int u=path.contains("left")?0:path.contains("right")?56:28;int v=path.endsWith("_selected")?32:0;
    g.blit(TABS,x,y,u,v,width,height);return;
   }
   throw new IllegalArgumentException("No classic advancement sprite mapping: "+sprite);
