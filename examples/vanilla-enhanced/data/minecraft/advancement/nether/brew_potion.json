@@ -6,11 +6,11 @@
     }
   },
   "display": {
-    "description": "Brew a potion with the ordinary vanilla objective. A small workshop can change the odds of a much larger adventure.",
+    "description": "Set up a brewing stand and try making a potion. Fire Resistance is a pretty useful one for Nether trips.",
     "icon": {
       "id": "minecraft:potion"
     },
-    "title": "A Bottle of Possibility"
+    "title": "Brew Something"
   },
   "requirements": [
     [

@@ -5,7 +5,7 @@
       "id": "minecraft:apple"
     },
     "title": "A Share for Everyone",
-    "description": "A shared optional contract: deliver four sticks together. Each participant at acceptance can claim one apple. Offline members keep their share; leaving forfeits it.",
+    "description": "Deliver 4 sticks between you. Each party member gets an apple. Leaving the party gives up an unclaimed share.",
     "show_toast": true,
     "announce_to_chat": false
   },

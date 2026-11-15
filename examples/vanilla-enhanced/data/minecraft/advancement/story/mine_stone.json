@@ -13,11 +13,11 @@
     }
   },
   "display": {
-    "description": "Stone remembers every strike. Find a suitable pickaxe and bring cobblestone into your inventory. Your first tools are the start of a much larger workshop.",
+    "description": "Wooden tools don't last long. Mine some stone and grab the cobblestone for a stone pickaxe.",
     "icon": {
       "id": "minecraft:wooden_pickaxe"
     },
-    "title": "Stone in Your Hands"
+    "title": "Stone Tools"
   },
   "requirements": [
     [

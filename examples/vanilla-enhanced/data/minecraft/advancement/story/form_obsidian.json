@@ -13,11 +13,11 @@
     }
   },
   "display": {
-    "description": "Two familiar materials make something stubbornly new. Obtain obsidian with the usual vanilla objective.",
+    "description": "Water over a lava source makes obsidian. You'll need a diamond pickaxe to collect it.",
     "icon": {
       "id": "minecraft:obsidian"
     },
-    "title": "Water Meets Fire"
+    "title": "Get Some Obsidian"
   },
   "requirements": [
     [

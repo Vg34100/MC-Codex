@@ -1,25 +1,26 @@
 {
   "codex_demo:camp_chronicle/root": {
     "dialogue": {
-      "intro": "A little daylight is left. You could spend it putting down a workbench and lighting a camp, or take enough supplies to keep walking.\n\nA place to return to makes the next trip easier. A chest for the things you cannot carry. A table for repairs. A light you can spot on the way home.\n\nThen again, there is a river beyond the trees, and you have not seen what lies on the other side.\n\nPick a first chapter. The camp and trail chapters are alternatives in this journal; the rest of the world is still yours to explore.",
-      "complete": "A little daylight is left. You could spend it putting down a workbench and lighting a camp, or take enough supplies to keep walking.\n\nA place to return to makes the next trip easier. A chest for the things you cannot carry. A table for repairs. A light you can spot on the way home.\n\nThen again, there is a river beyond the trees, and you have not seen what lies on the other side.\n\nPick a first chapter. The camp and trail chapters are alternatives in this journal; the rest of the world is still yours to explore.",
+      "intro": "You could get a camp sorted, or take some food and keep exploring.\n\nIf you're staying, start with a crafting table, somewhere to put your stuff, and a few torches. It doesn't need to be a whole base yet.\n\nIf you'd rather keep moving, find a forest and see what's around. You can figure out where to settle later.\n\nPick whichever you feel like doing first.",
+      "complete": "You could get a camp sorted, or take some food and keep exploring.\n\nIf you're staying, start with a crafting table, somewhere to put your stuff, and a few torches. It doesn't need to be a whole base yet.\n\nIf you'd rather keep moving, find a forest and see what's around. You can figure out where to settle later.\n\nPick whichever you feel like doing first.",
       "choices": [
         {
           "id": "campkeeper",
-          "label": "Build a place worth returning to",
-          "text": "You fold a corner of the page. A camp does not need a castle. A table, a light, and a reason to come back will do.",
+          "label": "Set up camp",
+          "text": "Alright, let's get a camp sorted. Start with a crafting table. You can deal with the rest as you need it.",
           "next_quest": "codex_demo:camp_chronicle/builder"
         },
         {
           "id": "wanderer",
-          "label": "Keep the horizon for company",
-          "text": "You leave the page uncreased. There will be time to settle later. For now, a forest path is enough.",
+          "label": "Keep exploring",
+          "text": "Fair enough. Grab some food and head out. Find a forest to get started.",
           "next_quest": "codex_demo:camp_chronicle/wanderer"
         }
       ],
       "speaker": "Field Notes",
       "speaker_icon": "minecraft:book",
-      "animate": true
+      "animate": true,
+      "progress": "You could get a camp sorted, or take some food and keep exploring.\n\nIf you're staying, start with a crafting table, somewhere to put your stuff, and a few torches. It doesn't need to be a whole base yet.\n\nIf you'd rather keep moving, find a forest and see what's around. You can figure out where to settle later.\n\nPick whichever you feel like doing first."
     }
   },
   "codex_demo:camp_chronicle/supply": {
@@ -29,9 +30,9 @@
       "cooldown_seconds": 30
     },
     "dialogue": {
-      "intro": "A small camp runs on ordinary things. A few logs. A little stone. Accept this contract when you are ready to contribute.",
-      "progress": "The supply box is open. Send what you have; you can finish the delivery later.",
-      "complete": "The supply box is stocked. Take your provisions and satchel; there will be another delivery when you are ready.",
+      "intro": "The camp could use a few more supplies. Bring over 4 oak logs and 8 cobblestone when you've got them.",
+      "progress": "Send over what you have. You don't need to deliver it all at once.",
+      "complete": "That's enough for now. Grab your food and satchel. You can do another delivery in a bit.",
       "speaker": "Field Notes",
       "speaker_icon": "minecraft:chest",
       "animate": true
@@ -44,9 +45,9 @@
       "cooldown_seconds": 15
     },
     "dialogue": {
-      "intro": "Before heading out, get moving. This contract starts counting jumps when you accept it.",
-      "progress": "Five jumps. No marked route, no destination. Just a little momentum.",
-      "complete": "Ready for the road. Claim the torches and carry on."
+      "intro": "Bit of a warm-up before heading out. Accept this one and jump five times.",
+      "progress": "Five jumps. Only the ones after accepting count.",
+      "complete": "Alright, take the torches and get going."
     }
   },
   "codex_demo:camp_chronicle/builder": {
@@ -56,16 +57,16 @@
       "choice": "campkeeper"
     },
     "dialogue": {
-      "intro": "Find a place you would like to return to. A workbench is enough to begin. Accept this chapter, then make or find a crafting table.",
-      "complete": "A workbench is a modest beginning. It is still a beginning.",
+      "intro": "First thing: a crafting table. Make one, or pick one up if you've already got one nearby.",
+      "complete": "There we go. Take your supplies, then pick a spot for the rest of your camp.",
       "speaker": "Field Notes",
       "speaker_icon": "minecraft:crafting_table",
       "animate": true,
-      "progress": "The workbench can go wherever you decide to settle. Make or find a crafting table, then return for your supplies."
+      "progress": "Get a crafting table into your inventory, then claim your supplies."
     },
     "celebration": {
       "enabled": true,
-      "title": "A place to return to",
+      "title": "Camp Started",
       "sound": "minecraft:ui.toast.challenge_complete"
     }
   },
@@ -76,11 +77,12 @@
       "choice": "wanderer"
     },
     "dialogue": {
-      "intro": "Your choice opens the wanderer chapter. Accept and find any forest.",
-      "complete": "Leaves overhead. Room to keep walking. The world has plenty of chapters left.",
+      "intro": "Want to keep moving? Accept this one, then find a forest.",
+      "complete": "Found one. Grab what you need, then have a look around.",
       "speaker": "Field Notes",
       "speaker_icon": "minecraft:compass",
-      "animate": true
+      "animate": true,
+      "progress": "Look for a regular forest biome. The other forest types won't count for this one."
     },
     "celebration": {
       "enabled": true,
@@ -90,20 +92,23 @@
   },
   "minecraft:story/mine_stone": {
     "dialogue": {
-      "intro": "The journal starts with something ordinary: a loose piece of stone. Obtain stone using the original Minecraft objective.",
-      "complete": "Cold in the hand, heavy enough to trust. Stone will not make this world safe, but it gives you somewhere to begin.\n\nThe original advancement is still yours. Claim the small field ration when you are ready."
+      "intro": "Wooden tools don't last long. Mine some stone and grab the cobblestone for a stone pickaxe.",
+      "complete": "Keep some cobblestone for a furnace too. There's a bit of food here if you need it.",
+      "progress": "Mine stone with a pickaxe and collect the cobblestone."
     }
   },
   "minecraft:story/smelt_iron": {
     "dialogue": {
-      "intro": "A furnace turns patience into possibility. Smelt your first iron ingot; this is the unchanged vanilla trigger.",
-      "complete": "The first ingot catches the firelight. Tools, a bucket, a new direction: the metal promises none of them, but permits all of them."
+      "intro": "Put some raw iron in a furnace and let it smelt. An iron pickaxe and a bucket are both useful early on.",
+      "complete": "There we go. Save up a few more ingots for a pickaxe or a bucket.",
+      "progress": "Smelt raw iron in a furnace and take the ingot out."
     }
   },
   "minecraft:adventure/root": {
     "dialogue": {
-      "intro": "There are stories beyond the circle of light. Follow the original Adventure objectives and let the journal keep the margins.",
-      "complete": "Your first encounter belongs to the same world as every quiet evening. Adventure needs no appointed hero."
+      "intro": "Get some food and a few tools together, then have a look around.",
+      "complete": "Hopefully you brought enough space for whatever you found.",
+      "progress": "Explore and deal with whatever you run into."
     }
   },
   "codex_demo:camp_chronicle/daily": {
@@ -114,9 +119,9 @@
       "scope": "personal"
     },
     "dialogue": {
-      "intro": "Small habits keep a camp going. Two sticks are enough to start today’s page.",
-      "progress": "Use Submit Items. Its receipt shows exactly what left your inventory.",
-      "complete": "Today’s page is complete. Claim your ration; tomorrow’s can wait."
+      "intro": "Got a couple of spare sticks? Deliver two and take some food for the day.",
+      "progress": "Submit two sticks when you're ready. They'll come out of your inventory.",
+      "complete": "That's today's one done. Grab your food; you can do it again tomorrow."
     }
   },
   "codex_demo:camp_chronicle/communal": {
@@ -128,51 +133,51 @@
       "scope": "party"
     },
     "dialogue": {
-      "intro": "A camp is easier to keep when everyone lends a hand. This contract keeps one shared tally and one shared reward chest.",
-      "progress": "Use Submit Items. Its receipt shows exactly what left your inventory.",
-      "complete": "The camp has its stone. One participant can collect the group’s provisions. Decide how to share them in the world."
+      "intro": "The camp needs 8 cobblestone. Bring it together if you're in a party; on your own is fine too.",
+      "progress": "Everyone in the party can chip in. There's one set of rewards to share.",
+      "complete": "Stone delivered. One of you can claim the supplies, then split them however you like."
     }
   },
   "sagittary:arsenal": {
     "dialogue": {
-      "intro": "This is an ordinary sagittary advancement. Its original objective, requirements, parent and rewards remain owned by the mod. Codex adds this optional journal page. Open Edit Mode to customize the story or attach rewards without converting the tree.",
-      "progress": "Continue with the native objective shown in the advancement. Your mod gameplay remains the source of progress.",
-      "complete": "This page follows your native achievement. The story belongs alongside the mod, while the objective still belongs to it."
+      "intro": "Get your ranged gear together. Bring spare arrows so you don't run out halfway through a fight.",
+      "progress": "Check your gear and ammo before heading out.",
+      "complete": "That's the ranged gear sorted. Keep some spare ammo on you."
     }
   },
   "sagittary:bamboo": {
     "dialogue": {
-      "intro": "This is an ordinary sagittary advancement. Its original objective, requirements, parent and rewards remain owned by the mod. Codex adds this optional journal page. Open Edit Mode to customize the story or attach rewards without converting the tree.",
-      "progress": "Continue with the native objective shown in the advancement. Your mod gameplay remains the source of progress.",
-      "complete": "This page follows your native achievement. The story belongs alongside the mod, while the objective still belongs to it."
+      "intro": "Found some bamboo? Bring a bit back and grow your own.",
+      "progress": "Look for bamboo around jungles.",
+      "complete": "Plant some near your base so you don't have to keep looking for it."
     }
   },
   "sagittary:compound_bow": {
     "dialogue": {
-      "intro": "This is an ordinary sagittary advancement. Its original objective, requirements, parent and rewards remain owned by the mod. Codex adds this optional journal page. Open Edit Mode to customize the story or attach rewards without converting the tree.",
-      "progress": "Continue with the native objective shown in the advancement. Your mod gameplay remains the source of progress.",
-      "complete": "This page follows your native achievement. The story belongs alongside the mod, while the objective still belongs to it."
+      "intro": "Want a better bow? Check the compound bow recipe and get the materials together.",
+      "progress": "Gather what you need and make a compound bow.",
+      "complete": "Give it a try somewhere you've got room to aim."
     }
   },
   "sleepcycle:root": {
     "dialogue": {
-      "intro": "This is an ordinary sleepcycle advancement. Its original objective, requirements, parent and rewards remain owned by the mod. Codex adds this optional journal page. Open Edit Mode to customize the story or attach rewards without converting the tree.",
-      "progress": "Continue with the native objective shown in the advancement. Your mod gameplay remains the source of progress.",
-      "complete": "This page follows your native achievement. The story belongs alongside the mod, while the objective still belongs to it."
+      "intro": "Take a bed if you're going on a longer trip. You'll want somewhere safe to sleep.",
+      "progress": "Keep an eye on how tired you're getting.",
+      "complete": "A decent rest helps. Get your food and gear sorted before heading out again."
     }
   },
   "sleepcycle:tired": {
     "dialogue": {
-      "intro": "This is an ordinary sleepcycle advancement. Its original objective, requirements, parent and rewards remain owned by the mod. Codex adds this optional journal page. Open Edit Mode to customize the story or attach rewards without converting the tree.",
-      "progress": "Continue with the native objective shown in the advancement. Your mod gameplay remains the source of progress.",
-      "complete": "This page follows your native achievement. The story belongs alongside the mod, while the objective still belongs to it."
+      "intro": "Getting tired? Probably worth finding somewhere safe to sleep.",
+      "progress": "Find a safe spot and get some rest.",
+      "complete": "Time for a break. The rest can wait."
     }
   },
   "sleepcycle:well_rested": {
     "dialogue": {
-      "intro": "This is an ordinary sleepcycle advancement. Its original objective, requirements, parent and rewards remain owned by the mod. Codex adds this optional journal page. Open Edit Mode to customize the story or attach rewards without converting the tree.",
-      "progress": "Continue with the native objective shown in the advancement. Your mod gameplay remains the source of progress.",
-      "complete": "This page follows your native achievement. The story belongs alongside the mod, while the objective still belongs to it."
+      "intro": "Get a full rest before heading out if you can.",
+      "progress": "Sleep somewhere safe.",
+      "complete": "That's better. Ready when you are."
     }
   },
   "codex_demo:camp_chronicle/timber": {
@@ -186,9 +191,9 @@
       "choice": "campkeeper"
     },
     "dialogue": {
-      "intro": "Any kind of log will help. One piece should carry a name: Camp Timber. You can name an oak log in an anvil, or copy the property from an example while authoring.",
-      "progress": "The delivery receipt names the actual items consumed. A named oak log can satisfy only one outstanding requirement at a time.",
-      "complete": "A small mark turns a supply into a memory."
+      "intro": "Bring 4 logs of any kind, plus an oak log named Camp Timber. Use an anvil to name that one.",
+      "progress": "The named oak log is a separate part of the delivery. Bring an extra log for it.",
+      "complete": "That's all of it. Grab your supplies."
     }
   },
   "codex_demo:camp_chronicle/everyone": {
@@ -200,19 +205,20 @@
       "cooldown_seconds": 15
     },
     "dialogue": {
-      "intro": "Accept together, contribute to one tally, then collect your own share. The next cycle waits until the remaining participants have claimed.",
-      "complete": "Everyone who stayed with this cycle has a share waiting."
+      "intro": "Bring 4 sticks between you. Everyone in the party when you accept gets their own apple.",
+      "complete": "Delivery done. Make sure everyone grabs their share before starting another one.",
+      "progress": "You can all contribute to the same delivery. Everyone claims their own reward afterwards."
     }
   },
   "codex_demo:camp_chronicle/letters": {
     "dialogue": {
-      "intro": "A blank page waits for news. Each reply appears when its conditions are met; hover a locked option to read its requirements.",
-      "complete": "The journal can hold news from any kind of play.",
+      "intro": "Got something to write home about? Pick a reply below. Locked replies show what you still need to do.",
+      "complete": "Got something to write home about? Pick a reply below.",
       "choices": [
         {
           "id": "camp_report",
-          "label": "Tell the camp what you built",
-          "text": "You describe ordinary materials becoming a place that matters. The reply is short: leave a light for whoever returns next.",
+          "label": "Write about the camp",
+          "text": "You've got a start on the camp. There's still plenty to build, but at least there's somewhere to leave your stuff.",
           "when": [
             [
               {
@@ -231,8 +237,8 @@
         },
         {
           "id": "road_report",
-          "label": "Write about the unfamiliar horizon",
-          "text": "Your page carries no coordinates. It carries a reason to keep exploring, and a reminder that you may always return.",
+          "label": "Write about the trip",
+          "text": "Found a forest and had a look around. Might stay a bit longer, or head back once your inventory's full.",
           "when": [
             [
               {
@@ -249,17 +255,19 @@
             ]
           ]
         }
-      ]
+      ],
+      "progress": "Pick whichever reply fits what you've been up to."
     }
   },
   "codex_demo:camp_chronicle/heading": {
     "dialogue": {
-      "intro": "A compass can help you return without telling you where to go. This page marks a tool, not a prescribed journey.",
-      "complete": "You have a heading of your own. Change the celebration title or sound in the Effects tab to make this milestone yours."
+      "intro": "Make or find a compass. It'll point you towards world spawn, which might help if you've wandered off.",
+      "complete": "Worth keeping on you. Just remember it points to world spawn, not your bed.",
+      "progress": "Get a compass into your inventory."
     },
     "celebration": {
       "enabled": true,
-      "title": "A heading of your own",
+      "title": "A Way Back",
       "sound": "minecraft:ui.toast.challenge_complete"
     }
   }

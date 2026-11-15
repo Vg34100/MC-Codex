@@ -13,11 +13,11 @@
     }
   },
   "display": {
-    "description": "A blue glint interrupts an ordinary mining trip. Keep a diamond; decide later what it deserves to become.",
+    "description": "Keep an eye out while you're mining. Bring an iron pickaxe or better so you can actually collect the diamonds.",
     "icon": {
       "id": "minecraft:diamond"
     },
-    "title": "Beneath the Everyday"
+    "title": "Found Diamonds"
   },
   "requirements": [
     [

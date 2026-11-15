@@ -43,11 +43,11 @@
     }
   },
   "display": {
-    "description": "Exploration includes mistakes. A suit of iron gives you time to learn from the next one.",
+    "description": "If you're heading into caves, bring some armor. Iron will do the job.",
     "icon": {
       "id": "minecraft:iron_chestplate"
     },
-    "title": "A Little Insurance"
+    "title": "Some Protection"
   },
   "requirements": [
     [

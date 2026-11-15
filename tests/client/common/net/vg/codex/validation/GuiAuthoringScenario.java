@@ -197,7 +197,7 @@ public final class GuiAuthoringScenario {
                 }
                 shot(mc,"rpg-choices");
             }
-            case 89 -> {if(!ClientQuests.info(Identifier.parse("codex_demo:camp_chronicle/root")).getAsJsonObject("state").has("choice"))prefix(mc,"› Build a place");}
+            case 89 -> {if(!ClientQuests.info(Identifier.parse("codex_demo:camp_chronicle/root")).getAsJsonObject("state").has("choice"))prefix(mc,"› Set up camp");}
             case 90 -> {
                 JsonObject state=ClientQuests.info(Identifier.parse("codex_demo:camp_chronicle/root")).getAsJsonObject("state");
                 if(!state.has("choice"))return false;

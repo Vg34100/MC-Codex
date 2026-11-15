@@ -19,11 +19,11 @@
     }
   },
   "display": {
-    "description": "Let an eye suggest a direction. The supplies, detours and company are still yours to choose.",
+    "description": "Throw an Eye of Ender and follow where it goes. Bring a few spares; they don't always survive the trip.",
     "icon": {
       "id": "minecraft:ender_eye"
     },
-    "title": "A Direction, Not a Map"
+    "title": "Find a Stronghold"
   },
   "requirements": [
     [

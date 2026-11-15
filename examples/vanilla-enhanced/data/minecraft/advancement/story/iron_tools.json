@@ -13,11 +13,11 @@
     }
   },
   "display": {
-    "description": "Iron opens a longer working day. Make a pick that can follow your curiosity beneath the surface.",
+    "description": "Stone tools have their limits. Make an iron pickaxe before you go looking for diamonds.",
     "icon": {
       "id": "minecraft:iron_pickaxe"
     },
-    "title": "Work That Lasts"
+    "title": "An Iron Pick"
   },
   "requirements": [
     [

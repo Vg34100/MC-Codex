@@ -4,8 +4,8 @@
     "icon": {
       "id": "minecraft:compass"
     },
-    "title": "A Heading of Your Own",
-    "description": "Obtain a compass. This ordinary inventory advancement demonstrates an optional chapter banner and sound; its story never prescribes a destination.",
+    "title": "A Way Back",
+    "description": "Get a compass. It points towards world spawn, not your bed.",
     "show_toast": true,
     "announce_to_chat": false
   },

@@ -14,7 +14,7 @@
   "display": {
     "announce_to_chat": false,
     "background": "minecraft:gui/advancements/backgrounds/stone",
-    "description": "A world without a script. Begin with familiar discoveries, and use this journal to record what you make of them. These are still the original Minecraft objectives.",
+    "description": "Grab some wood and make a crafting table. Food and a few tools are probably a good idea after that.",
     "icon": {
       "id": "minecraft:grass_block"
     },

@@ -4,7 +4,7 @@
       "id": "minecraft:bundle"
     },
     "title": "A Small Head Start",
-    "description": "Claim logs, stone, a Camp Satchel, a fletching table and a bed. The latter two unlock the unchanged native Sagittary and Sleep Cycle tabs. Right-click the satchel in your hand to roll its treasure.",
+    "description": "Take a few building supplies and a Camp Satchel if you want them. Hold the satchel and use it to open it.",
     "show_toast": true,
     "announce_to_chat": false
   },

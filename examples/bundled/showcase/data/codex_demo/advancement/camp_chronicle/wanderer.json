@@ -3,8 +3,8 @@
     "icon": {
       "id": "minecraft:oak_sapling"
     },
-    "title": "Let the Trees Be Your Roof",
-    "description": "For the wanderer: find a forest. Follow whichever horizon catches your eye.",
+    "title": "Keep Exploring",
+    "description": "Find a regular forest biome. Bring some food and see what's around.",
     "show_toast": true,
     "announce_to_chat": false
   },

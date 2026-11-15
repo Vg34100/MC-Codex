@@ -6,12 +6,12 @@
     }
   },
   "display": {
-    "description": "Some encounters offer more than a fight. Cure a zombie villager whenever your travels bring the opportunity.",
+    "description": "Found a zombie villager? Get it somewhere safe, give it Weakness, then use a golden apple.",
     "frame": "goal",
     "icon": {
       "id": "minecraft:golden_apple"
     },
-    "title": "A Second Morning"
+    "title": "Help a Villager"
   },
   "requirements": [
     [

@@ -13,11 +13,11 @@
     }
   },
   "display": {
-    "description": "A bucket can carry more than water. Bring the heat home, wherever home happens to be.",
+    "description": "Lava works as furnace fuel, and a bucket of it might come in handy for a portal too.",
     "icon": {
       "id": "minecraft:lava_bucket"
     },
-    "title": "Carry the Heat"
+    "title": "A Bucket of Lava"
   },
   "requirements": [
     [

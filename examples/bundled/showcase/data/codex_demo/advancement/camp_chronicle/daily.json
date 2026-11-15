@@ -5,7 +5,7 @@
       "id": "minecraft:stick"
     },
     "title": "A Little Kindling",
-    "description": "A daily personal errand: accept and deliver 2 sticks. Claim a field ration. The next cycle unlocks at 00:00 UTC; unfinished work and rewards remain available.",
+    "description": "Deliver 2 sticks for some food. You can do this again after 00:00 UTC. Unfinished deliveries and unclaimed rewards stay available.",
     "show_toast": true,
     "announce_to_chat": false
   },

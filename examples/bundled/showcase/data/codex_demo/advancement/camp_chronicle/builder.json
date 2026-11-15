@@ -3,8 +3,8 @@
     "icon": {
       "id": "minecraft:crafting_table"
     },
-    "title": "A Place to Return To",
-    "description": "For the campkeeper: obtain a crafting table. Even a small shelter starts with somewhere to work.",
+    "title": "Set Up Camp",
+    "description": "Make or pick up a crafting table to get your camp started.",
     "show_toast": true,
     "announce_to_chat": false
   },

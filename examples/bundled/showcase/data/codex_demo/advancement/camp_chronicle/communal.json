@@ -5,7 +5,7 @@
       "id": "minecraft:campfire"
     },
     "title": "For Everyone at Camp",
-    "description": "One party contract: accept and deliver 8 cobblestone together. Party members at acceptance share progress and ONE reward set. Any participant may claim it for the group. Solo players can try it too.",
+    "description": "Deliver 8 cobblestone between you. There's one set of rewards for the group. You can do it alone too.",
     "show_toast": true,
     "announce_to_chat": false
   },

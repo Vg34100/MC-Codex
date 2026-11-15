@@ -4,8 +4,8 @@
     "icon": {
       "id": "minecraft:oak_log"
     },
-    "title": "Timber with a Story",
-    "description": "Accept the contract, deliver four logs of any type and one oak log named Camp Timber. Each log is consumed once, even when requirements overlap.",
+    "title": "Marked Timber",
+    "description": "Deliver 4 logs of any kind, plus a separate oak log named Camp Timber. Use an anvil to name it.",
     "show_toast": true,
     "announce_to_chat": false
   },

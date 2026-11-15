@@ -9,11 +9,11 @@ These retain the original identifiers, parents, objectives, requirement groups a
 | Vanilla advancement | Included title | Addition |
 | --- | --- | --- |
 | Minecraft root | Minecraft: Field Notes | Introduction |
-| Stone Age | Stone in Your Hands | Journal entry and optional claim of 3 bread/5 XP |
-| Acquire Hardware | The First Iron | Journal entry |
-| Getting an Upgrade | A Stronger Foundation | Journal entry |
-| We Need to Go Deeper | The Other Side of the Flame | Journal entry |
-| A Seedy Place | Something for Tomorrow | Journal entry |
+| Stone Age | Stone Tools | Journal entry and optional claim of 3 bread/5 XP |
+| Acquire Hardware | First Iron | Journal entry |
+| Getting an Upgrade | A Better Pick | Journal entry |
+| We Need to Go Deeper | Into the Nether | Journal entry |
+| A Seedy Place | Grow Some Food | Journal entry |
 
 The rest of the vanilla trees keep their normal presentation. Vanilla advancement progress remains vanilla progress; the optional bread/XP claim is separate Codex state.
 
@@ -25,16 +25,16 @@ This independent tab opens automatically in a fresh world. Its twelve quests dem
 | --- | --- |
 | The Camp Chronicle | Page through Field Notes in the RPG dialogue panel; choose campkeeper or wanderer, read the confirmed outcome and open the linked chapter |
 | A Small Head Start | Optional one-time starter gift: 4 logs, 8 cobblestone and a treasure satchel |
-| A Place to Return To | Campkeeper branch: obtain a crafting table |
-| Let the Trees Be Your Roof | Wanderer branch: find a forest |
-| Keeping the Camp Supplied | Accept, deliver 4 oak logs/8 cobblestone, claim provisions, repeat |
+| Set Up Camp | Campkeeper branch: obtain a crafting table |
+| Keep Exploring | Wanderer branch: find a forest |
+| Camp Supplies | Accept, deliver 4 oak logs/8 cobblestone, claim provisions, repeat |
 | Stretch Your Legs | Accept, jump five times, claim, repeat after cooldown |
 | A Little Kindling | Personal daily stick delivery, resetting at 00:00 UTC |
 | For Everyone at Camp | Shared cobblestone delivery; one group reward set |
 | A Share for Everyone | Shared stick delivery; a reward for each participant |
-| Timber with a Story | Deliver any logs plus an oak log named Camp Timber |
-| Letters from the Road | Dialogue replies that depend on your story progress |
-| A Heading of Your Own | Obtain a compass; see an optional completion celebration |
+| Marked Timber | Deliver any logs plus an oak log named Camp Timber |
+| Checking In | Dialogue replies that depend on your story progress |
+| A Way Back | Obtain a compass; see an optional completion celebration |
 
 The opening journal demonstrates a book icon, speaker label, skippable text reveal, multiple pages and saved branch outcomes. The camp/trail chapters and supply contract use their own item icons. To recreate these settings, use Edit Mode → Quest Story & Rules → Story → Speaker & Presentation. Untouched installer-owned examples update automatically; author-edited entries are preserved.
 

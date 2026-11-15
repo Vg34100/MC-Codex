@@ -10,12 +10,12 @@
   "display": {
     "announce_to_chat": false,
     "background": "minecraft:gui/advancements/backgrounds/adventure",
-    "description": "There is no prescribed destination. Follow a river, cross a ridge, or walk toward the horizon. Let each discovery become another page.",
+    "description": "Get some food and a few tools together, then have a look around.",
     "icon": {
       "id": "minecraft:map"
     },
     "show_toast": false,
-    "title": "Adventure: Beyond the Campfire"
+    "title": "Head Out"
   },
   "requirements": [
     [

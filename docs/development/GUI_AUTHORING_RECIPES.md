@@ -8,12 +8,12 @@ In Edit Mode, create a tab, choose its icon/title/background, then create child 
 | --- | --- | --- | --- |
 | The Camp Chronicle | **Always (tick)**, no parameters | Introduction/completion pages. Two Choices: campkeeper and wanderer; write outcome text. Link each Next Chapter using the picker. | None |
 | A Small Head Start | **Always (tick)** | Optional explanatory text | Item rows: 16 oak logs, 32 cobblestone, fletching table, black bed; Treasure Bag named Camp Satchel, Field Provisions pool |
-| Keeping the Camp Supplied | **Submit Items → Edit Items**:4 oak logs and8 cobblestone | Acceptance On; Repeatable On; After cooldown30 seconds; Personal; intro/progress/completion pages | XP5; Treasure Bag/Camp Satchel/Field Provisions; Random Treasure/Field Provisions |
+| Camp Supplies | **Submit Items → Edit Items**:4 oak logs and8 cobblestone | Acceptance On; Repeatable On; After cooldown30 seconds; Personal; intro/progress/completion pages | XP5; Treasure Bag/Camp Satchel/Field Provisions; Random Treasure/Field Provisions |
 | Stretch Your Legs | **Statistic Threshold → Edit Statistic**:custom statistic → Jump, target5 | Acceptance On; Repeatable On; After cooldown15 seconds; Personal |4 torches |
 | A Little Kindling | **Submit Items**:2 sticks | Acceptance On; Repeatable On; Daily (00:00 UTC); Personal | XP2 and1 bread |
 | For Everyone at Camp | **Submit Items**:8 cobblestone | Acceptance On; Repeatable On; After cooldown30 seconds; Party: shared progress & loot |4 bread and8 torches: ONE set for the group |
-| A Place to Return To | **Item Obtained**:crafting table | Acceptance On; Branch → Chronicle root → campkeeper; intro/completion pages | XP10 and3 bread |
-| Let the Trees Be Your Roof | **Reached Location (Biome)**:forest | Acceptance On; Branch → Chronicle root → wanderer; intro/completion pages | XP10 and3 apples |
+| Set Up Camp | **Item Obtained**:crafting table | Acceptance On; Branch → Chronicle root → campkeeper; intro/completion pages | XP10 and3 bread |
+| Keep Exploring | **Reached Location (Biome)**:forest | Acceptance On; Branch → Chronicle root → wanderer; intro/completion pages | XP10 and3 apples |
 
 The table uses display descriptions rather than registry syntax. Internal criterion/choice IDs are generated/retained by the editor. Names can differ from historical copies of the examples; the criterion, rules and rewards identify the recipe.
 
@@ -47,12 +47,12 @@ Delivery receipts show the latest action while connected. Persistent delivery to
 
 [Dialogue/branch authoring, diagnostics, local preview, duplication, bulk rules and tag/property deliveries](CREATOR_TOOLS.md) describes the current controls. Linked chapters can now receive their matching branch requirement in the same Apply operation.
 
-**Timber with a Story:** create a child of A Place to Return To; Deliver Items → Add Tag → Logs, quantity4; Add Item → Oak Log, quantity1 → Props → Exact custom name `Camp Timber`. Rules: acceptance and repeatable,15-second cooldown; manual apple/XP rewards. Branch: Chronicle → campkeeper. No registry syntax or component JSON is required.
+**Marked Timber:** create a child of Set Up Camp; Deliver Items → Add Tag → Logs, quantity4; Add Item → Oak Log, quantity1 → Props → Exact custom name `Camp Timber`. Rules: acceptance and repeatable,15-second cooldown; manual apple/XP rewards. Branch: Chronicle → campkeeper. No registry syntax or component JSON is required.
 
 The vanilla example set now contains24 advancements: the entire16-node Minecraft Story tree, Adventure root, four Nether milestones, two End milestones and planting a seed. Existing native criteria, requirement groups and parents are retained. Modify each existing advancement's display/story pages to reproduce the enhancement. The six Sagittary/Sleep Cycle examples add only sidecar dialogue; the mod JAR advancement JSON remains untouched. See NATIVE_DEMO_SOURCES.json for exact native examples and source fingerprints.
 
 **A Share for Everyone:** Deliver Items → four Sticks; require acceptance; Repeatable → Party → Each participant;15-second cooldown; manual reward one Apple. Both participants contribute to one tally and each claims once.
 
-**Letters from the Road:** Always (tick); story choice controls → Show Choice When → one required group for the Chronicle branch choice, another for the relevant completed chapter. Outcomes are plain authored text; no NPC or coordinates.
+**Checking In:** Always (tick); story choice controls → Show Choice When → one required group for the Chronicle branch choice, another for the relevant completed chapter. Outcomes are plain authored text; no NPC or coordinates.
 
-**A Heading of Your Own:** Obtain Item → Compass; Effects → Chapter Celebration On, heading `A heading of your own`, sound picker → Toast Challenge Complete. Obtain a compass normally or use `/give @s minecraft:compass` in the disposable review world. This new node demonstrates the effect even on an existing development pack, whose prior edited chapter metadata is preserved.
+**A Way Back:** Obtain Item → Compass; Effects → Chapter Celebration On, heading `A Way Back`, sound picker → Toast Challenge Complete. Obtain a compass normally or use `/give @s minecraft:compass` in the disposable review world. This new node demonstrates the effect even on an existing development pack, whose prior edited chapter metadata is preserved.

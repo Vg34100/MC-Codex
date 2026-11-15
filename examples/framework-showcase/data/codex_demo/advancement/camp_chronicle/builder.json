@@ -3,8 +3,8 @@
     "icon": {
       "id": "minecraft:crafting_table"
     },
-    "title": "A Place to Return To",
-    "description": "The campkeeper branch: obtain a crafting table. This remains an ordinary inventory_changed advancement; your story choice gates acceptance and the optional claim.",
+    "title": "Set Up Camp",
+    "description": "Make or pick up a crafting table to get your camp started.",
     "show_toast": true,
     "announce_to_chat": false
   },

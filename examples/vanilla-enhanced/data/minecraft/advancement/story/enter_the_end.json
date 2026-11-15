@@ -9,11 +9,11 @@
     }
   },
   "display": {
-    "description": "Prepare on your own terms, then enter the End. This keeps the vanilla dimension objective and its place in the tree.",
+    "description": "Get your food, gear and blocks sorted before you jump through the portal.",
     "icon": {
       "id": "minecraft:end_stone"
     },
-    "title": "Past the Last Familiar Door"
+    "title": "Into the End"
   },
   "requirements": [
     [

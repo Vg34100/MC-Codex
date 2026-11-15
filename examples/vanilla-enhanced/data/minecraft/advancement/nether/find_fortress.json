@@ -19,11 +19,11 @@
     }
   },
   "display": {
-    "description": "Discover a Nether fortress through ordinary exploration. No fixed structure or world seed is required.",
+    "description": "You'll need to look around the Nether for a fortress. Bring enough blocks to get across the awkward bits.",
     "icon": {
       "id": "minecraft:nether_bricks"
     },
-    "title": "Old Walls, New Questions"
+    "title": "Find a Fortress"
   },
   "requirements": [
     [

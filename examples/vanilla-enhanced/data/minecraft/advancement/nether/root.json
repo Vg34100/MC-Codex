@@ -10,12 +10,12 @@
   "display": {
     "announce_to_chat": false,
     "background": "minecraft:gui/advancements/backgrounds/nether",
-    "description": "A new dimension is a place to explore, not an itinerary. Find your footing and choose your next curiosity.",
+    "description": "Bring food and some spare blocks. Leave yourself a way to find the portal again.",
     "icon": {
       "id": "minecraft:red_nether_bricks"
     },
     "show_toast": false,
-    "title": "An Unfamiliar Sky"
+    "title": "A Trip to the Nether"
   },
   "requirements": [
     [

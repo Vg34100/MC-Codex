@@ -80,11 +80,11 @@
     }
   },
   "display": {
-    "description": "Plant a seed. The smallest investment in a place can make it worth returning to.",
+    "description": "A small farm saves you having to hunt for food every time you head out. Plant a few seeds near water.",
     "icon": {
       "id": "minecraft:wheat"
     },
-    "title": "Something for Tomorrow"
+    "title": "Grow Some Food"
   },
   "requirements": [
     [

@@ -13,11 +13,11 @@
     }
   },
   "display": {
-    "description": "Obtain a blaze rod. It can become a tool for experiments or a step toward another journey.",
+    "description": "Find some blazes in a fortress. Leave yourself somewhere to hide between shots.",
     "icon": {
       "id": "minecraft:blaze_rod"
     },
-    "title": "Fire You Can Keep"
+    "title": "Get a Blaze Rod"
   },
   "requirements": [
     [

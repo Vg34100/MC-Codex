@@ -13,11 +13,11 @@
     }
   },
   "display": {
-    "description": "The furnace glows, and the first iron ingot cools. This milestone opens the door to machines, expeditions, and the stories your modpack may add.",
+    "description": "Put some raw iron in a furnace and let it smelt. An iron pickaxe and a bucket are both useful early on.",
     "icon": {
       "id": "minecraft:iron_ingot"
     },
-    "title": "The First Iron"
+    "title": "First Iron"
   },
   "requirements": [
     [

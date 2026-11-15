@@ -43,11 +43,11 @@
     }
   },
   "display": {
-    "description": "Some discoveries become equipment. Diamond armor is a milestone, not a requirement to stop exploring your own way.",
+    "description": "If you've got enough diamonds left over, some better armor would help.",
     "icon": {
       "id": "minecraft:diamond_chestplate"
     },
-    "title": "Dressed for Trouble"
+    "title": "Diamond Armor"
   },
   "requirements": [
     [

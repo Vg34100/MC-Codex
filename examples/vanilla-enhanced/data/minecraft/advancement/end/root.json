@@ -10,12 +10,12 @@
   "display": {
     "announce_to_chat": false,
     "background": "minecraft:gui/advancements/backgrounds/end",
-    "description": "Arrive in the End. Take your time; a milestone does not prescribe the order of everything that follows.",
+    "description": "Get your gear sorted before going through. Bring blocks in case the platform is awkward.",
     "icon": {
       "id": "minecraft:end_stone"
     },
     "show_toast": false,
-    "title": "A Different Kind of Quiet"
+    "title": "The End"
   },
   "requirements": [
     [

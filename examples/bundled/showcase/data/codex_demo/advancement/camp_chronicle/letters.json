@@ -4,8 +4,8 @@
     "icon": {
       "id": "minecraft:writable_book"
     },
-    "title": "Letters from the Road",
-    "description": "News travels further when someone writes it down. Return after your chosen chapter has something to report.",
+    "title": "Checking In",
+    "description": "Write about the camp or your trip. Replies unlock as you finish the related quests.",
     "show_toast": false,
     "announce_to_chat": false
   },

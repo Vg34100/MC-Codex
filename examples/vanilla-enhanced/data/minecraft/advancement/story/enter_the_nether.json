@@ -9,11 +9,11 @@
     }
   },
   "display": {
-    "description": "Build a doorway and step through when you are ready. Pack supplies; this chapter has no prescribed route.",
+    "description": "Get an obsidian portal built, then light it. Bring food, spare blocks and a flint and steel.",
     "icon": {
       "id": "minecraft:flint_and_steel"
     },
-    "title": "The Other Side of the Flame"
+    "title": "Into the Nether"
   },
   "requirements": [
     [

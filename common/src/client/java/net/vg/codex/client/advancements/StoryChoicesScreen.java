@@ -255,13 +255,13 @@ final class StoryChoicesScreen extends CodexScreen {
         g.fill(left + 2, top + 2, left + size - 2, top + panelHeight - 2, 0xFF3E4439);
         g.fill(left + 4, top + 4, left + size - 4, top + panelHeight - 4, 0xFA242722);
         JsonObject info = ClientQuests.info(id), d = dialogue(info);
-        int headingX = left + 16;
+        int headingX = left + 16, headingCenterY = top + 21;
         if (d.has("speaker_icon")) {
             var item = BuiltInRegistries.ITEM.getValue(Identifier.parse(d.get("speaker_icon").getAsString()));
-            g.fakeItem(item.getDefaultInstance(), headingX, top + 13); headingX += 24;
+            g.fakeItem(item.getDefaultInstance(), headingX, headingCenterY - 8); headingX += 24;
         }
         String speaker = d.has("speaker") && !d.get("speaker").getAsString().isBlank() ? d.get("speaker").getAsString() : title.getString();
-        g.text(font, font.plainSubstrByWidth(speaker, size - (headingX - left) - 20), headingX, top + 14, 0xFFE4C76A, false);
+        g.text(font, font.plainSubstrByWidth(speaker, size - (headingX - left) - 20), headingX, headingCenterY - font.lineHeight / 2, 0xFFE4C76A, false);
         g.fill(left + 16, top + 34, left + size - 16, top + 35, 0xFF444B3D);
         int remaining = revealed();
         for (int i = page * rows; i < Math.min(lines.size(), (page + 1) * rows); i++) {

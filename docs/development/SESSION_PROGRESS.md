@@ -1,26 +1,29 @@
-# Session checkpoint — November 13, 2026
+# Session checkpoint — November 14, 2026
 
-## Completed RPG dialogue milestone
-User selected Within advancements and approved implementation with shipped examples. Implemented, tested and packaged. Restart dev client; Camp Chronicle root demonstrates paged opening/choices, confirmed outcome and linked camp/trail chapter. Existing choices remain saved; fresh test world shows full introduction. Untouched installer-owned examples upgrade; author edits retained. No publication or launcher/world edits.
+## Current milestone
+User requested the book/speaker label be aligned and all included quest writing use a casual/direct voice. Specifically rejected “Stone remembers every strike.” Implemented text pass and shared vertical header-center anchor. Main examples39checks EACH and final16matrixbuilds/artifact inspection PASS. Final local JAR copies and Git checkpoint/backup complete this milestone.
 
-## Implementation
-- StoryChoicesScreen now compact content-sized RPG panel over dimmed advancement tree. Optional speaker/item icon, wrapped pages, skippable text reveal respecting global Animations, stage text, conditional/confirmed choices, linked chapters, accept/claim and retry. Quest Details preserves deliveries/tracking/reward previews; Read Story reuses the existing panel for clean Back navigation.
-- Canvas keeps progress listener active behind dialogue and preserves pan/viewport. Only panel receives input. Feedback notices appear ABOVE controls. Positive authoritative snapshots clear pending actions even when a separate result is late; mutations are never blindly retried.
-- GUI Story → Speaker & Presentation: name, searchable item icon, reveal toggle, Apply/Cancel private draft. Normal Apply to Draft/Save publishes; server validates new optional fields. Existing raw advancement fields, criteria, branch rules, packets and progression/persistence formats unchanged.
-- Camp Chronicle root/builder/wanderer/supply have Field Notes speaker/icons and grounded passages. Root intro/complete demonstrate paging. Bundled and optional framework-showcase variants updated. No NPCs/coordinates/assets required, no new dependencies/images.
+## Changes
+- StoryChoicesScreen uses one headingCenterY for16px item and font-height-based text positioning. Header stays left aligned; fixes vertical alignment, no interaction/gameplay changes.
+- Rewrote dialogue, choice labels/outcomes and display titles/descriptions in60 example JSON documents: bundled vanilla/showcase/companion notes plus matching optional vanilla-enhanced/framework-showcase examples. Clear practical instructions; contractions, brief comments, no grand narration or implementation jargon. No invented nearby world features/time of day.
+- Choice labels Set up camp / Keep exploring; quest IDs/conditions/requirements/criteria/rewards unchanged. GUI test selection label and documentation references updated.
+- Added docs/development/QUEST_WRITING.md with user's copy preference and examples for future writing. Preserve author-edited quest data through existing ownership ledger.
 
-## Validation / artifacts
-- Actual TCP client113-stage GUI journeys PASS on26.1.2Fabric (85536) andNeoForge (74002),3top-level/serverchecks EACH. Verifies paging/reveal, saved campkeeper decision, alternate branch lock, linked chapter acceptance, compact controls, Details/Read Story, GUI speaker+book-icon/reveal authoring and saved fields. Fabric capture precedes final content-sized polish; NeoForge verifies final layout. These are one-client tests, NOT new two-client multiplayer evidence.
-- Bundled/native example checks39 EACH on26.1.2Fabric/NeoForge (92666), including untouched-example upgrade, authored speaker retention and invalid-icon validation.3 Python example tests PASS.
-- All16 final matrix packages PASS18727; artifact inspection PASS16/16 (17577), including loader metadata, Java bytecode, resources and test-hook exclusion. Workspace build/libs/<target> refreshed with SHA-256 manifest runs/ports-20261113/artifact-manifest.json.
-- Actual captures/reports preserved under runs/rpg-dialogue-20261113/gui/ and bundled/. Final choices/accepted/compact/speaker editor images inspected. Prior full16 progression/restart/independent-world suites3,018checks remain preserved in runs/ports-20261113; optional dialogue update does not claim those were rerun.
-- Old Gson JsonObject.isEmpty compile issue corrected to size()==0. New fixture duplicate local variable fixed before successfulNeoForge run. No remaining known test failures.
+## Validation / running jobs
+- Structural text-only comparison against HEAD passed all60JSONdocuments, retaining dialogue choice IDs/stages/when/next_quest and all mechanics.3 Python tests PASS; search finds no cited rejected phrases in updated example sets.
+-35990 all16matrix package PASS, but source shared-center rounding adjusted AFTER mirror sync; needs final matrix rebuild before copying outputs.
+-20967 bundled examples PASS39 EACH mainFabric/NeoForge;55382 final16matrix:package PASS with shared-center anchor. No actual-client windows or desktop input for this small fix; user is actively playtesting.
+-76454 final artifact inspection PASS16/16. Workspace build/libs/target JARs refreshed with SHA manifest.451 source text/JSON files pass NUL/parse integrity checks. No new GUI window launched for this small alignment/copy change; live visual review requires user restart.
+-Next: user reviews new alignment/copy after restarting when ready. Keep future writing consistent with QUEST_WRITING.md. Existing authored text is preserved; untouched examples update. Local style checkpoint and independent backup saved; nothing published.
 
-## Git / safe workflow
-Branch codex/ports-and-recovery-2026-11-12. PriorHEAD402454e complete-history independentC:backup verified. New feature checkpoint follows; exact backup commit/hash recorded in adjacent C:JSON after final handoff. Local milestone commits authorized; never push/tag/publish without explicit authorization. Retain recovery bundles/corrupt-object copies (GIT_RECOVERY.md).
-No image generation or OS input/focus/mouse capture. No subagents. Warn before future owned test-client windows. Tests use widget callbacks; no more windows planned.
-Use Windows cmd + build-smart.py, sequential Gradle invocations. Owned mirror C:\Users\video\AppData\Local\Temp\codex-ports-20261108. scripts/build-port-mirror.py syncs maintained source only, excludes Git/runs/builds/worlds. JAR copy helper changes no launcher/player files. Early26.1/26.1.1NeoForge retain native bindings; other14 suite bindings; canonical shared sources with targeted version adapters.
+## Current user client — DO NOT CLOSE/RESTART
+User requested launch. Normal A: Fabric26.1.2 runClient initially failed on old cached ClientRecipeIds.class with all-zero header. Preserved target generated classes and compiler state under ignored runs/damaged-generated-cache-20261114-1794703386157519625; rebuilt using smart runClient --rerun-tasks. Rebuilt headerCAFEBABE verified. Client now runs in execsession33228, profile runs/26.1.2-fabric/client. Do not stop it or move mouse/focus. Current text/alignment changes require user-chosen restart; don't silently replace their world files.
 
-## Next review
-User reviews current in-game panel and included example. Broader singleplayer/JEI/HUD, keyboard/accessibility and other-version GUI playtests remain; no claim every version GUI was exercised with new dialogue. Existing dialogue choices are one saved decision per quest/cycle; no new arbitrary NPC conversation graph, custom portrait system or forced quest format introduced.
-Docs: GUI_AUTHORING_RECIPES.md, wiki/included-examples.md, TESTING.md and MULTIVERSION.md. Previous port milestones and runtime limits remain in session archive. Final response should show actual in-game screenshot and exact review/editor path, brief validation, no speculative new work.
+## Prior milestone
+HEADa9c7aa0 implements content-sized RPG panels, optional speaker/item icons, paged/skippable text, authoritative choices/outcomes, linked chapters, accept/claim, GUI Speaker & Presentation, live tree backdrop/pan preservation and notices above controls. Both26.1.2 loaders113-stage actual-client +39bundled checks PASS;16artifacts built/inspected. Separate older16 fullsimulated progression reports total3,018checks. Independent C:backupMC-Codex-checkpoint-a9c7aa0.bundle verified. Previous details preserved in Git/docs/session archive. No claim this copy-only task reruns fullGUI or progression suites.
+
+## Rules / workflow
+No image generation; no OS input/mouse/focus/user-game termination. No subagents. Local milestone commits authorized, never push/tag/publish. Build sequentially through Windows build-smart.py; owned C:mirror codex-ports-20261108. scripts/build-port-mirror.py syncs maintained sources only. Existing ignored copy-port-artifacts.py verifies16JARs; backup-final-checkpoint.py copies verified full Gitbundle to independent C:backup. Keep prior recovery bundles/corrupt copies. Main source canonical with16native target adapters remains intact.
+
+## Handoff
+Keep final concise: aligned header, example before/after, included copy rewritten, verified builds/tests, restart when user is ready. Do not claim live-game update or screenshots of new alignment yet.

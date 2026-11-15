@@ -13,11 +13,11 @@
     }
   },
   "display": {
-    "description": "A sturdier tool makes longer journeys possible. Craft a stone pickaxe, then decide where your workshop should grow next.",
+    "description": "You'll need a stone pickaxe before you can mine iron. Might as well make one now.",
     "icon": {
       "id": "minecraft:stone_pickaxe"
     },
-    "title": "A Stronger Foundation"
+    "title": "A Better Pick"
   },
   "requirements": [
     [

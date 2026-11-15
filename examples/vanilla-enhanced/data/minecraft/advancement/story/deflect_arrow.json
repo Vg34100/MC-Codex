@@ -19,11 +19,11 @@
     }
   },
   "display": {
-    "description": "You do not have to win every fight by rushing forward. Raise a shield when an arrow finds you.",
+    "description": "Skeletons get a lot less annoying once you've got a shield. Try blocking an arrow.",
     "icon": {
       "id": "minecraft:shield"
     },
-    "title": "A Moment to Breathe"
+    "title": "Use Your Shield"
   },
   "requirements": [
     [

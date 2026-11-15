@@ -4,7 +4,7 @@
       "id": "minecraft:writable_book"
     },
     "title": "The Camp Chronicle",
-    "description": "An optional story for any world. Open a quest to read its dialogue. Choose a direction, try repeatable contracts, open a treasure bag, and pin a quest to your HUD.",
+    "description": "Set up a camp or keep exploring. Pick a starting point, then try the supply runs and other jobs when you feel like it.",
     "show_toast": true,
     "announce_to_chat": false,
     "background": "minecraft:block/stone"

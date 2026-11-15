@@ -4,8 +4,8 @@
     "icon": {
       "id": "minecraft:compass"
     },
-    "title": "A Heading of Your Own",
-    "description": "Obtain a compass. Keep a way home while you discover somewhere new.",
+    "title": "A Way Back",
+    "description": "Get a compass. It points towards world spawn, not your bed.",
     "show_toast": true,
     "announce_to_chat": false
   },

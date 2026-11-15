@@ -6,11 +6,11 @@
     }
   },
   "display": {
-    "description": "A workshop can hold books as well as tools. Enchant an item using the ordinary vanilla table.",
+    "description": "Got an enchanting table set up? Try it on a tool or a piece of armor. You'll need some lapis and levels.",
     "icon": {
       "id": "minecraft:enchanted_book"
     },
-    "title": "Words That Hold Power"
+    "title": "Try Enchanting"
   },
   "requirements": [
     [
